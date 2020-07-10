@@ -24,7 +24,7 @@
 
 namespace FW {
 
-class TelescopeTrackingAlgorithm final : public BareAlgorithm {
+class TelescopeFittingAlgorithm final : public BareAlgorithm {
  public:
   using FitterResult = Acts::Result<Acts::KalmanFitterResult<PixelSourceLink>>;
   /// Fit function that takes input measurements, initial trackstate and fitter
@@ -61,7 +61,7 @@ class TelescopeTrackingAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorihtm
   /// @param level is the logging level
-  TelescopeTrackingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TelescopeFittingAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Framework execute method of the fitting algorithm
   ///

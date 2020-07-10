@@ -21,7 +21,7 @@
 #include "ObjTelescopeTrackWriter.hpp"
 #include "RootTelescopeTrackWriter.hpp"
 #include "TelescopeDetector.hpp"
-#include "TelescopeTrackingAlgorithm.hpp"
+#include "TelescopeFittingAlgorithm.hpp"
 #include "TelescopeTrackingPerformanceWriter.hpp"
 
 #include "myrapidjson.h"
@@ -312,7 +312,7 @@ int main(int argc, char* argv[]) {
   trackReader.detectorSurfaces = surfaces;
 
   // setup the fitter
-  TelescopeTrackingAlgorithm::Config fitter;
+  TelescopeFittingAlgorithm::Config fitter;
   //@Todo: add run number information in the file name
   fitter.inputFileName = inputDir + "/alpide-data.json";
   fitter.outputTrajectories = "trajectories";
@@ -320,10 +320,10 @@ int main(int argc, char* argv[]) {
   // The number of tracks you want to process (in default, all of tracks will be
   // read and fitted)
   fitter.maxNumTracks = 10000;
-  fitter.fit = TelescopeTrackingAlgorithm::makeFitterFunction(
+  fitter.fit = TelescopeFittingAlgorithm::makeFitterFunction(
       trackingGeometry, magneticField, logLevel);
   sequencer.addAlgorithm(
-      std::make_shared<TelescopeTrackingAlgorithm>(fitter, logLevel));
+      std::make_shared<TelescopeFittingAlgorithm>(fitter, logLevel));
 
   // write tracks as root tree
   RootTelescopeTrackWriter::Config trackRootWriter;

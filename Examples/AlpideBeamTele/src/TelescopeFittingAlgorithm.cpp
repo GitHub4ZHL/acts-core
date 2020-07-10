@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "TelescopeTrackingAlgorithm.hpp"
+#include "TelescopeFittingAlgorithm.hpp"
 
 #include <stdexcept>
 
@@ -14,9 +14,9 @@
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-FW::TelescopeTrackingAlgorithm::TelescopeTrackingAlgorithm(
+FW::TelescopeFittingAlgorithm::TelescopeFittingAlgorithm(
     Config cfg, Acts::Logging::Level level)
-    : FW::BareAlgorithm("TelescopeTrackingAlgorithm", level),
+    : FW::BareAlgorithm("TelescopeFittingAlgorithm", level),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputFileName.empty()) {
     throw std::invalid_argument("Missing input data file");
@@ -26,7 +26,7 @@ FW::TelescopeTrackingAlgorithm::TelescopeTrackingAlgorithm(
   }
 }
 
-FW::ProcessCode FW::TelescopeTrackingAlgorithm::execute(
+FW::ProcessCode FW::TelescopeFittingAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
 

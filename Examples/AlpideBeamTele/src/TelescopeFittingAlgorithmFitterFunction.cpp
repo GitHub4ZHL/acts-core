@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "TelescopeTrackingAlgorithm.hpp"
+#include "TelescopeFittingAlgorithm.hpp"
 
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -35,7 +35,7 @@ struct FitterFunctionImpl {
 
   FitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
 
-  FW::TelescopeTrackingAlgorithm::FitterResult operator()(
+  FW::TelescopeFittingAlgorithm::FitterResult operator()(
       const std::vector<FW::PixelSourceLink>& sourceLinks,
       const FW::TrackParameters& initialParameters,
       const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>& options) const {
@@ -44,8 +44,8 @@ struct FitterFunctionImpl {
 };
 }  // namespace
 
-FW::TelescopeTrackingAlgorithm::FitterFunction
-FW::TelescopeTrackingAlgorithm::makeFitterFunction(
+FW::TelescopeFittingAlgorithm::FitterFunction
+FW::TelescopeFittingAlgorithm::makeFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     Options::BFieldVariant magneticField, Acts::Logging::Level lvl) {
   using Updater = Acts::GainMatrixUpdater;
