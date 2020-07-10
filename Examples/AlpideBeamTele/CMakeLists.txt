@@ -33,6 +33,9 @@ target_link_libraries(
   ActsExamplesIoRoot
   ActsExamplesIoObj
   ActsExamplesIoCsv
+
+  ActsExamplesAlignment
+
   
   PRIVATE
   ROOT::Core
