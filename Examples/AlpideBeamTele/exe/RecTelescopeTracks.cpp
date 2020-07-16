@@ -228,7 +228,7 @@ struct TelescopeTrackReader {
       ++ev_it;
 
       std::vector<PixelHit> track = cpool.m_ccenter_col;
-      std::cout << "track size " << track.size() << std::endl;
+      // std::cout << "track size " << track.size() << std::endl;
 
       std::vector<uint16_t> cluster_counter(6, 0);
       for (auto& c : track) {
@@ -248,10 +248,11 @@ struct TelescopeTrackReader {
         continue;
       }
 
-      std::fprintf(stdout, "\nadd track clusters:");
-      for (auto& h : track) {
-        std::fprintf(stdout, " [%f, %f, %lu] ", h.locX, h.locY, h.surfaceIndex);
-      }
+      // std::fprintf(stdout, "\nadd track clusters:");
+      // for (auto& h : track) {
+      //  std::fprintf(stdout, " [%f, %f, %lu] ", h.locX, h.locY,
+      //  h.surfaceIndex);
+      //}
       // push the track to the track container
       rawTracks.push_back(track);
       itrack++;
