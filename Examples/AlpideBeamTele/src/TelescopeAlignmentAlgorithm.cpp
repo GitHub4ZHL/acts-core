@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "TelescopeAlignmentAlgorithm.hpp"
+#include "PixelSourceLink.hpp"
 
 #include <stdexcept>
 
@@ -30,6 +31,9 @@ FW::TelescopeAlignmentAlgorithm::TelescopeAlignmentAlgorithm(
 FW::ProcessCode FW::TelescopeAlignmentAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
+  using Measurement =
+      Acts::Measurement<FW::PixelSourceLink, Acts::ParDef::eLOC_0,
+                        Acts::ParDef::eLOC_1>;
 
   // Read input data
   std::vector<SourceLinkTrack> sourcelinkTracks =
@@ -49,7 +53,19 @@ FW::ProcessCode FW::TelescopeAlignmentAlgorithm::execute(
         0., 0., 0., 0., 0., 0.0001, 0., 0., 0., 0., 0., 0., 0.0001, 0., 0., 0.,
         0., 0., 0., 0.0001, 0., 0., 0., 0., 0., 0., 1.;
 
-    Acts::Vector3D rPos(-200_mm, 0, 0);
+    // The position is taken from the first measurement
+    const auto& sourcelinks = sourcelinkTracks.at(iTrack);
+    const auto& sl = sourcelinks.front();
+    const auto& meas = std::get<Measurement>(*sl);
+    // get local position
+    Acts::Vector2D local(meas.parameters()[Acts::ParDef::eLOC_0],
+                         meas.parameters()[Acts::ParDef::eLOC_1]);
+    // get global position
+    Acts::Vector3D global(0, 0, 0);
+    Acts::Vector3D mom(1, 1, 1);
+    meas.referenceSurface().localToGlobal(ctx.geoContext, local, mom, global);
+    // shift along the beam by 100_mm
+    Acts::Vector3D rPos(global.x() - 100_mm, global.y(), global.z());
     Acts::Vector3D rMom(4_GeV, 0, 0);
     Acts::SingleCurvilinearTrackParameters<Acts::ChargedPolicy> rStart(
         cov, rPos, rMom, 1., 0);
