@@ -32,7 +32,7 @@ FW::ProcessCode FW::TelescopeAlignmentAlgorithm::execute(
   using namespace Acts::UnitLiterals;
 
   // Read input data
-  const std::vector<SourceLinkTrack> sourcelinkTracks =
+  std::vector<SourceLinkTrack> sourcelinkTracks =
       m_cfg.trackReader(m_cfg.inputFileName, m_cfg.maxNumTracks);
 
   std::cout << "There are " << sourcelinkTracks.size() << " tracks read-in"
@@ -45,11 +45,11 @@ FW::ProcessCode FW::TelescopeAlignmentAlgorithm::execute(
   while (iTrack < sourcelinkTracks.size()) {
     // Create initial parameters
     Acts::BoundSymMatrix cov;
-    cov << std::pow(10_mm, 2), 0., 0., 0., 0., 0., 0., std::pow(10_mm, 2), 0.,
+    cov << std::pow(15_mm, 2), 0., 0., 0., 0., 0., 0., std::pow(15_mm, 2), 0.,
         0., 0., 0., 0., 0., 0.0001, 0., 0., 0., 0., 0., 0., 0.0001, 0., 0., 0.,
         0., 0., 0., 0.0001, 0., 0., 0., 0., 0., 0., 1.;
 
-    Acts::Vector3D rPos(-120_mm, 0, 0);
+    Acts::Vector3D rPos(-200_mm, 0, 0);
     Acts::Vector3D rMom(4_GeV, 0, 0);
     Acts::SingleCurvilinearTrackParameters<Acts::ChargedPolicy> rStart(
         cov, rPos, rMom, 1., 0);
@@ -74,7 +74,7 @@ FW::ProcessCode FW::TelescopeAlignmentAlgorithm::execute(
   // Set the alignment options
   AlignmentOptions<Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>>
       alignOptions(kfOptions, m_cfg.alignedTransformUpdater,
-                   m_cfg.alignedDetElements);
+                   m_cfg.alignedDetElements, 0.05, 60, m_cfg.covariance);
 
   ACTS_DEBUG("Invoke alignment");
   auto result = m_cfg.align(sourcelinkTracks, initialParameters, alignOptions);

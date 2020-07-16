@@ -62,6 +62,10 @@ class SimSourceLink {
     }
   }
 
+  // reset the covariance
+  // should be done by calibrator?
+  void setCovariance(const Acts::BoundMatrix& cov) { m_cov = cov; }
+
  private:
   Acts::BoundVector m_values;
   Acts::BoundMatrix m_cov;

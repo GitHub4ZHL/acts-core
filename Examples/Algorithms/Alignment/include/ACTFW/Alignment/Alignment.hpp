@@ -47,14 +47,16 @@ struct AlignmentOptions {
   /// @param aDetElements The alignable detector elements
   /// @param chi2CufOff The alignment chi2 tolerance
   /// @param maxIters The alignment maximum iterations
-  //  @param iterState The alignment mask for each
+  //  @param iterState The source link covariance and alignment mask for each
   //  iteration @Todo: use a json file to handle this
   AlignmentOptions(
       const fit_options_t& fOptions,
       const AlignedTransformUpdater& aTransformUpdater,
       const std::vector<Acts::DetectorElementBase*>& aDetElements = {},
       double chi2CutOff = 0.05, size_t maxIters = 5,
-      const std::map<unsigned int, std::bitset<Acts::eAlignmentParametersSize>>&
+      const std::map<unsigned int,
+                     std::pair<Acts::BoundMatrix,
+                               std::bitset<Acts::eAlignmentParametersSize>>>&
           iterState = {})
       : fitOptions(fOptions),
         alignedTransformUpdater(aTransformUpdater),
@@ -80,7 +82,8 @@ struct AlignmentOptions {
 
   // The covariance of the source links and alignment mask for different
   // iterations
-  std::map<unsigned int, std::bitset<Acts::eAlignmentParametersSize>>
+  std::map<unsigned int, std::pair<Acts::BoundMatrix,
+                                   std::bitset<Acts::eAlignmentParametersSize>>>
       iterationState;
 };
 
@@ -188,6 +191,8 @@ struct Alignment {
   /// @param alignedTransformUpdater The updater for updating the aligned
   /// transform of the detector element
   /// @param alignResult [in, out] The aligned result
+  /// @param covPtr The source link covariance (same for all source links now.
+  /// This is not correct)
   /// @param alignMask The alignment mask (same for all measurements now)
   template <typename trajectory_container_t,
             typename start_parameters_container_t, typename fit_options_t>
@@ -197,7 +202,7 @@ struct Alignment {
       const fit_options_t& fitOptions,
       const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
       const AlignedTransformUpdater& alignedTransformUpdater,
-      AlignmentResult& alignResult,
+      AlignmentResult& alignResult, const Acts::BoundMatrix* covPtr = nullptr,
       const std::bitset<Acts::eAlignmentParametersSize>& alignMask =
           std::bitset<Acts::eAlignmentParametersSize>(std::string("111111")))
       const {
@@ -230,7 +235,11 @@ struct Alignment {
     alignResult.chi2 = 0;
     alignResult.measurementDim = 0;
     for (unsigned int iTraj = 0; iTraj < trajectoryCollection.size(); iTraj++) {
-      const auto& sourcelinks = trajectoryCollection.at(iTraj);
+      auto& sourcelinks = trajectoryCollection.at(iTraj);
+      if (covPtr) {
+        for (auto& sl : sourcelinks) {
+        }
+      }
       const auto& sParameters = startParametersCollection.at(iTraj);
       // Set the target surface
       fitOptionsWithRefSurface.referenceSurface =
@@ -384,16 +393,19 @@ struct Alignment {
     ACTS_INFO("Max number of iterations: " << alignOptions.maxIterations);
     for (unsigned int iIter = 0; iIter < alignOptions.maxIterations; iIter++) {
       // Perform the fit to the trajectories and update alignment parameters
+      const Acts::BoundMatrix* covPtr = nullptr;
       std::bitset<Acts::eAlignmentParametersSize> alignmentMask(
           std::string("111111"));
       auto iter_it = alignOptions.iterationState.find(iIter);
       if (iter_it != alignOptions.iterationState.end()) {
-        alignmentMask = iter_it->second;
+        covPtr = &(iter_it->second.first);
+        alignmentMask = iter_it->second.second;
       }
       auto updateRes = updateAlignmentParameters(
           trajectoryCollection, startParametersCollection,
           alignOptions.fitOptions, alignOptions.alignedDetElements,
-          alignOptions.alignedTransformUpdater, alignRes, alignmentMask);
+          alignOptions.alignedTransformUpdater, alignRes, covPtr,
+          alignmentMask);
       if (not updateRes.ok()) {
         ACTS_ERROR("Update alignment parameters failed: " << updateRes.error());
         return updateRes.error();

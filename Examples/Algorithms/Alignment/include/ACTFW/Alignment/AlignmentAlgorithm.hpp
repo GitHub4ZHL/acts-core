@@ -29,8 +29,7 @@ class AlignmentAlgorithm final : public BareAlgorithm {
   /// Fit function that takes input measurements, initial trackstate and fitter
   /// options and returns some fit-specific result.
   using AlignmentFunction = std::function<AlignResult(
-      const std::vector<std::vector<SimSourceLink>>&,
-      const TrackParametersContainer&,
+      std::vector<std::vector<SimSourceLink>>&, const TrackParametersContainer&,
       const AlignmentOptions<
           Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>>&)>;
 

@@ -22,7 +22,7 @@ namespace FW {
 class PixelSourceLink {
  public:
   PixelSourceLink(const Acts::Surface& surface, Acts::Vector2D values,
-                  Acts::ActsSymMatrixD<2> cov)
+                  Acts::BoundMatrix cov)
       : m_values(values), m_cov(cov), m_surface(&surface) {}
   /// Must be default_constructible to satisfy SourceLinkConcept.
   PixelSourceLink() = default;
@@ -36,12 +36,17 @@ class PixelSourceLink {
   Acts::FittableMeasurement<PixelSourceLink> operator*() const {
     return Acts::Measurement<PixelSourceLink, Acts::ParDef::eLOC_0,
                              Acts::ParDef::eLOC_1>{
-        m_surface->getSharedPtr(), *this, m_cov, m_values[0], m_values[1]};
+        m_surface->getSharedPtr(), *this, m_cov.topLeftCorner<2, 2>(),
+        m_values[0], m_values[1]};
   }
+
+  // reset the covariance
+  // should be done by calibrator?
+  void setCovariance(const Acts::BoundMatrix& cov) { m_cov = cov; }
 
  private:
   Acts::Vector2D m_values;
-  Acts::ActsSymMatrixD<2> m_cov;
+  Acts::BoundMatrix m_cov;
   // need to store pointers to make the object copyable
   const Acts::Surface* m_surface;
   friend bool operator==(const PixelSourceLink& lhs,
