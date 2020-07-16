@@ -20,7 +20,9 @@
 
 #include "ObjTelescopeTrackWriter.hpp"
 #include "RootTelescopeTrackWriter.hpp"
+#include "TelescopeAlignmentAlgorithm.hpp"
 #include "TelescopeDetector.hpp"
+#include "TelescopeDetectorElement.hpp"
 #include "TelescopeFittingAlgorithm.hpp"
 #include "TelescopeTrackingPerformanceWriter.hpp"
 
@@ -122,13 +124,13 @@ struct TelescopeTrackReader {
   size_t nPixY = 512;
 
   /// The size of pixel pitch in local x direction
-  double pitchX = 26.88_um;
+  double pitchX = 29.24_um;
 
   /// The size of pixel pitch in local y direction
-  double pitchY = 29.24_um;
+  double pitchY = 26.8_um;
 
   /// The pixel detector resolution
-  std::array<double, 2> resolution = {100_um, 100_um};
+  std::array<double, 2> resolution = {150_um, 150_um};
 
   /// The ordered detector surfaces
   std::vector<const Acts::Surface*> detectorSurfaces;
@@ -158,9 +160,9 @@ struct TelescopeTrackReader {
       assert(rtrack.size() <= detectorSurfaces.size());
 
       // Setup local covariance
-      Acts::ActsSymMatrixD<2> cov2D;
-      cov2D << resolution[0] * resolution[0], 0., 0.,
-          resolution[1] * resolution[1];
+      Acts::BoundMatrix cov = Acts::BoundMatrix::Zero();
+      cov(0, 0) = resolution[0] * resolution[0];
+      cov(1, 1) = resolution[1] * resolution[1];
       // Create the track sourcelinks
       std::vector<PixelSourceLink> sourcelinks;
       sourcelinks.reserve(rtrack.size());
@@ -169,7 +171,7 @@ struct TelescopeTrackReader {
         loc << hit.locX, hit.locY;
         // push a hit
         sourcelinks.emplace_back(*detectorSurfaces.at(hit.surfaceIndex), loc,
-                                 cov2D);
+                                 cov);
       }
       // push the sourcelinks into the trajectory container
       sourcelinkTracks.push_back(sourcelinks);
@@ -311,7 +313,79 @@ int main(int argc, char* argv[]) {
   TelescopeTrackReader trackReader;
   trackReader.detectorSurfaces = surfaces;
 
-  // setup the fitter
+  // setup the alignment algorithm
+  TelescopeAlignmentAlgorithm::Config alignment;
+  //@Todo: add run number information in the file name
+  alignment.inputFileName = inputDir + "/alpide-data.json";
+  alignment.outputTrajectories = "trajectories";
+  alignment.trackReader = trackReader;
+  // The number of tracks you want to process (in default, all of tracks will be
+  // read and fitted)
+  alignment.maxNumTracks = 20000;
+  alignment.alignedTransformUpdater = [](Acts::DetectorElementBase* detElement,
+                                         const Acts::GeometryContext& gctx,
+                                         const Acts::Transform3D& aTransform) {
+    Telescope::TelescopeDetectorElement* telescopeDetElement =
+        dynamic_cast<Telescope::TelescopeDetectorElement*>(detElement);
+    auto alignContext =
+        std::any_cast<Telescope::TelescopeDetectorElement::ContextType>(gctx);
+    if (telescopeDetElement) {
+      telescopeDetElement->addAlignedTransform(
+          std::make_unique<Acts::Transform3D>(aTransform), alignContext.iov);
+      return true;
+    }
+    return false;
+  };
+  std::vector<Acts::DetectorElementBase*> dets;
+  dets.reserve(detector.detectorStore.size());
+  unsigned int idet = 0;
+  for (const auto& det : detector.detectorStore) {
+    idet++;
+    // Skip the first detector element
+    if (idet == 1) {
+      continue;
+    }
+    dets.push_back(det.get());
+  }
+  std::cout << "There are " << dets.size() << " detector elements to be aligned"
+            << std::endl;
+  alignment.alignedDetElements = std::move(dets);
+  // set up the source link covariance for each iteration
+  std::map<unsigned int, std::pair<Acts::BoundMatrix, std::bitset<6>>>
+      covariance;
+  for (unsigned int iIter = 0; iIter < 60; iIter++) {
+    Acts::BoundMatrix cov = Acts::BoundMatrix::Zero();
+    std::bitset<6> mask(std::string("000110"));
+    //  if(iIter <=20){
+    cov(0, 0) = std::pow(150_um, 2);
+    cov(1, 1) = std::pow(150_um, 2);
+    //  } else if(iIter<=30){
+    //	  cov(0,0) = std::pow(50_um,2);
+    //  cov(1,1) = std::pow(50_um,2);
+    //  } else {
+    //  cov(0,0) = std::pow(50_um,2);
+    //  cov(1,1) = std::pow(50_um,2);
+    //  }
+
+    if (iIter % 4 == 0 or iIter % 4 == 1) {
+      // fix the x offset (i.e. offset along the beam) and rotation around y
+      mask = std::bitset<6>(std::string("101110"));
+    } else if (iIter % 4 == 2) {
+      // align only the x offset
+      mask = std::bitset<6>(std::string("000001"));
+    } else {
+      // fix the x offset and rotation around x, z
+      mask = std::bitset<6>(std::string("010110"));
+    }
+    covariance.emplace(iIter, std::make_pair(cov, mask));
+  }
+  alignment.covariance = std::move(covariance);
+  alignment.align = TelescopeAlignmentAlgorithm::makeAlignmentFunction(
+      trackingGeometry, magneticField, logLevel);
+  sequencer.addAlgorithm(
+      std::make_shared<TelescopeAlignmentAlgorithm>(alignment, logLevel));
+
+  // setup the fitting algorithm
   TelescopeFittingAlgorithm::Config fitter;
   //@Todo: add run number information in the file name
   fitter.inputFileName = inputDir + "/alpide-data.json";
@@ -319,7 +393,7 @@ int main(int argc, char* argv[]) {
   fitter.trackReader = trackReader;
   // The number of tracks you want to process (in default, all of tracks will be
   // read and fitted)
-  fitter.maxNumTracks = 10000;
+  fitter.maxNumTracks = 20000;
   fitter.fit = TelescopeFittingAlgorithm::makeFitterFunction(
       trackingGeometry, magneticField, logLevel);
   sequencer.addAlgorithm(

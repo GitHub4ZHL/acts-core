@@ -238,6 +238,7 @@ struct Alignment {
       auto& sourcelinks = trajectoryCollection.at(iTraj);
       if (covPtr) {
         for (auto& sl : sourcelinks) {
+          sl.setCovariance(*covPtr);
         }
       }
       const auto& sParameters = startParametersCollection.at(iTraj);
