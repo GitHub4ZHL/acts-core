@@ -17,13 +17,15 @@
 namespace FW {
 namespace Telescope {
 class TelescopeDetectorElement;
-}
+class TelescopeAlignmentDecorator;
+}  // namespace Telescope
 }  // namespace FW
 
 struct TelescopeDetector : public FW::IBaseDetector {
   using DetectorElement = FW::Telescope::TelescopeDetectorElement;
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
-  using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;
+  using Decorator = FW::Telescope::TelescopeAlignmentDecorator;
+  using DetectorStore = std::vector<DetectorElementPtr>;
 
   /// The Store of the detector elements (lifetime: job)
   DetectorStore detectorStore;

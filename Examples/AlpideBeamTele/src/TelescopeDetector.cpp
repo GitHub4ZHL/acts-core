@@ -8,6 +8,7 @@
 
 #include "TelescopeDetector.hpp"
 #include "BuildTelescopeDetector.hpp"
+#include "TelescopeAlignmentDecorator.hpp"
 #include "TelescopeDetectorElement.hpp"
 
 #include <boost/program_options.hpp>
@@ -29,8 +30,17 @@ auto TelescopeDetector::finalize(
   /// Return the generic detector
   TrackingGeometryPtr gGeometry = FW::Telescope::buildDetector<DetectorElement>(
       nominalContext, detectorStore, std::move(mdecorator));
-  ContextDecorators gContextDeocrators = {};
+
+  // Add the iov decorator
+  // @Todo: add command line options for iovSize and logLevel
+  Decorator::Config agcsConfig;
+  agcsConfig.iovSize = 10000;
+
+  ContextDecorators gContextDecorators = {std::make_shared<Decorator>(
+      agcsConfig, Acts::getDefaultLogger("TelescopeAlignmentDecorator",
+                                         Acts::Logging::INFO))};
+
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(gGeometry), std::move(gContextDeocrators));
+      std::move(gGeometry), std::move(gContextDecorators));
 }
