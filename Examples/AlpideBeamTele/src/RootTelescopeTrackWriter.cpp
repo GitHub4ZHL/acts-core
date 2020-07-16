@@ -345,10 +345,10 @@ FW::ProcessCode FW::RootTelescopeTrackWriter::writeT(
             sqrt(covariance(Acts::ParDef::eT, Acts::ParDef::eT)));
 
         // predicted residual
-        m_res_eLOC0_prt.push_back(parameter.parameters()[Acts::ParDef::eLOC_0] -
-                                  local.x());
-        m_res_eLOC1_prt.push_back(parameter.parameters()[Acts::ParDef::eLOC_1] -
-                                  local.y());
+        m_res_eLOC0_prt.push_back(local.x() -
+                                  parameter.parameters()[Acts::ParDef::eLOC_0]);
+        m_res_eLOC1_prt.push_back(local.y() -
+                                  parameter.parameters()[Acts::ParDef::eLOC_1]);
 
         // predicted parameter pull
         m_pull_eLOC0_prt.push_back(
@@ -434,10 +434,10 @@ FW::ProcessCode FW::RootTelescopeTrackWriter::writeT(
             sqrt(covariance(Acts::ParDef::eT, Acts::ParDef::eT)));
 
         // filtered residual
-        m_res_eLOC0_flt.push_back(parameter.parameters()[Acts::ParDef::eLOC_0] -
-                                  local.x());
-        m_res_eLOC1_flt.push_back(parameter.parameters()[Acts::ParDef::eLOC_1] -
-                                  local.y());
+        m_res_eLOC0_flt.push_back(local.x() -
+                                  parameter.parameters()[Acts::ParDef::eLOC_0]);
+        m_res_eLOC1_flt.push_back(local.y() -
+                                  parameter.parameters()[Acts::ParDef::eLOC_1]);
 
         // filtered parameter pull
         m_pull_eLOC0_flt.push_back(
@@ -518,10 +518,10 @@ FW::ProcessCode FW::RootTelescopeTrackWriter::writeT(
             sqrt(covariance(Acts::ParDef::eT, Acts::ParDef::eT)));
 
         // smoothed residual
-        m_res_eLOC0_smt.push_back(parameter.parameters()[Acts::ParDef::eLOC_0] -
-                                  local.x());
-        m_res_eLOC1_smt.push_back(parameter.parameters()[Acts::ParDef::eLOC_1] -
-                                  local.y());
+        m_res_eLOC0_smt.push_back(local.x() -
+                                  parameter.parameters()[Acts::ParDef::eLOC_0]);
+        m_res_eLOC1_smt.push_back(local.y() -
+                                  parameter.parameters()[Acts::ParDef::eLOC_1]);
 
         // smoothed parameter pull
         m_pull_eLOC0_smt.push_back(
