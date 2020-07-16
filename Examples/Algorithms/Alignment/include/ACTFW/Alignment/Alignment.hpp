@@ -427,6 +427,22 @@ struct Alignment {
       ACTS_ERROR("Alignment is not converged.");
       alignRes.result = AlignmentError::ConvergeFailure;
     }
+    // Print out the final aligned parameters
+    unsigned int iDetElement = 0;
+    for (const auto& det : alignOptions.alignedDetElements) {
+      const auto& transform =
+          det->transform(alignOptions.fitOptions.geoContext);
+      const auto& translation = transform.translation();
+      const auto& rotation = transform.rotation();
+      const Acts::Vector3D rotAngles = rotation.eulerAngles(2, 1, 0);
+      ACTS_INFO("Detector element "
+                << iDetElement
+                << " has aligned geometry position as below: \n");
+      ACTS_INFO("Center (cenX, cenY, cenZ) = " << translation.transpose());
+      ACTS_INFO("Euler angles (rotZ, rotY, rotX) = " << rotAngles.transpose());
+      ACTS_INFO("Rotation marix = \n" << rotation);
+      iDetElement++;
+    }
 
     return alignRes;
   }
