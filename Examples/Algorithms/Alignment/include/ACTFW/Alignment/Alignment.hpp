@@ -30,6 +30,7 @@ namespace FW {
 using AlignedTransformUpdater =
     std::function<bool(Acts::DetectorElementBase*, const Acts::GeometryContext&,
                        const Acts::Transform3D&)>;
+using namespace Acts::UnitLiterals;
 ///
 /// @brief Options for align() call
 ///
@@ -47,16 +48,14 @@ struct AlignmentOptions {
   /// @param aDetElements The alignable detector elements
   /// @param chi2CufOff The alignment chi2 tolerance
   /// @param maxIters The alignment maximum iterations
-  //  @param iterState The source link covariance and alignment mask for each
+  //  @param iterState The alignment mask for each
   //  iteration @Todo: use a json file to handle this
   AlignmentOptions(
       const fit_options_t& fOptions,
       const AlignedTransformUpdater& aTransformUpdater,
       const std::vector<Acts::DetectorElementBase*>& aDetElements = {},
       double chi2CutOff = 0.05, size_t maxIters = 5,
-      const std::map<unsigned int,
-                     std::pair<Acts::BoundMatrix,
-                               std::bitset<Acts::eAlignmentParametersSize>>>&
+      const std::map<unsigned int, std::bitset<Acts::eAlignmentParametersSize>>&
           iterState = {})
       : fitOptions(fOptions),
         alignedTransformUpdater(aTransformUpdater),
@@ -82,8 +81,7 @@ struct AlignmentOptions {
 
   // The covariance of the source links and alignment mask for different
   // iterations
-  std::map<unsigned int, std::pair<Acts::BoundMatrix,
-                                   std::bitset<Acts::eAlignmentParametersSize>>>
+  std::map<unsigned int, std::bitset<Acts::eAlignmentParametersSize>>
       iterationState;
 };
 
@@ -191,8 +189,6 @@ struct Alignment {
   /// @param alignedTransformUpdater The updater for updating the aligned
   /// transform of the detector element
   /// @param alignResult [in, out] The aligned result
-  /// @param covPtr The source link covariance (same for all source links now.
-  /// This is not correct)
   /// @param alignMask The alignment mask (same for all measurements now)
   template <typename trajectory_container_t,
             typename start_parameters_container_t, typename fit_options_t>
@@ -202,7 +198,7 @@ struct Alignment {
       const fit_options_t& fitOptions,
       const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
       const AlignedTransformUpdater& alignedTransformUpdater,
-      AlignmentResult& alignResult, const Acts::BoundMatrix* covPtr = nullptr,
+      AlignmentResult& alignResult,
       const std::bitset<Acts::eAlignmentParametersSize>& alignMask =
           std::bitset<Acts::eAlignmentParametersSize>(std::string("111111")))
       const {
@@ -234,14 +230,29 @@ struct Alignment {
     // @Todo: How to update the source link error iteratively?
     alignResult.chi2 = 0;
     alignResult.measurementDim = 0;
+    std::cout << "starting loop for " << trajectoryCollection.size() << "tracks"
+              << std::endl;
     for (unsigned int iTraj = 0; iTraj < trajectoryCollection.size(); iTraj++) {
-      auto& sourcelinks = trajectoryCollection.at(iTraj);
-      if (covPtr) {
-        for (auto& sl : sourcelinks) {
-          sl.setCovariance(*covPtr);
-        }
-      }
-      const auto& sParameters = startParametersCollection.at(iTraj);
+      const auto& sourcelinks = trajectoryCollection.at(iTraj);
+      const Acts::Vector3D global1 =
+          sourcelinks.at(0).globalPosition(fitOptions.geoContext);
+      const Acts::Vector3D global2 =
+          sourcelinks.at(1).globalPosition(fitOptions.geoContext);
+      Acts::Vector3D direction = global2 - global1;
+      const double phi = Acts::VectorHelpers::phi(direction);
+      const double theta = Acts::VectorHelpers::theta(direction);
+      Acts::Vector3D rPos = global1 - direction / 2;
+      Acts::Vector3D rMom(4_GeV * sin(theta) * cos(phi),
+                          4_GeV * sin(theta) * sin(phi), 4_GeV * cos(theta));
+      Acts::BoundSymMatrix cov;
+      cov << std::pow(50_um, 2), 0., 0., 0., 0., 0., 0., std::pow(50_um, 2), 0.,
+          0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0., 0., 0., 0.1, 0., 0., 0., 0.,
+          0., 0., 0.0001, 0., 0., 0., 0., 0., 0., 1.;
+
+      Acts::SingleCurvilinearTrackParameters<Acts::ChargedPolicy> sParameters(
+          cov, rPos, rMom, 1., 0);
+
+      //     const auto& sParameters = startParametersCollection.at(iTraj);
       // Set the target surface
       fitOptionsWithRefSurface.referenceSurface =
           &sParameters.referenceSurface();
@@ -280,6 +291,8 @@ struct Alignment {
       alignResult.chi2 += alignState.chi2;
       alignResult.measurementDim += alignState.measurementDim;
     }
+    std::cout << "end loop for " << trajectoryCollection.size() << "tracks"
+              << std::endl;
     alignResult.averageChi2ONdf = alignResult.chi2 / alignResult.measurementDim;
 
     // Get the inverse of chi2 second derivative matrix (we need this to
@@ -394,19 +407,16 @@ struct Alignment {
     ACTS_INFO("Max number of iterations: " << alignOptions.maxIterations);
     for (unsigned int iIter = 0; iIter < alignOptions.maxIterations; iIter++) {
       // Perform the fit to the trajectories and update alignment parameters
-      const Acts::BoundMatrix* covPtr = nullptr;
       std::bitset<Acts::eAlignmentParametersSize> alignmentMask(
           std::string("111111"));
       auto iter_it = alignOptions.iterationState.find(iIter);
       if (iter_it != alignOptions.iterationState.end()) {
-        covPtr = &(iter_it->second.first);
-        alignmentMask = iter_it->second.second;
+        alignmentMask = iter_it->second;
       }
       auto updateRes = updateAlignmentParameters(
           trajectoryCollection, startParametersCollection,
           alignOptions.fitOptions, alignOptions.alignedDetElements,
-          alignOptions.alignedTransformUpdater, alignRes, covPtr,
-          alignmentMask);
+          alignOptions.alignedTransformUpdater, alignRes, alignmentMask);
       if (not updateRes.ok()) {
         ACTS_ERROR("Update alignment parameters failed: " << updateRes.error());
         return updateRes.error();
@@ -427,6 +437,7 @@ struct Alignment {
       ACTS_ERROR("Alignment is not converged.");
       alignRes.result = AlignmentError::ConvergeFailure;
     }
+
     // Print out the final aligned parameters
     unsigned int iDetElement = 0;
     for (const auto& det : alignOptions.alignedDetElements) {

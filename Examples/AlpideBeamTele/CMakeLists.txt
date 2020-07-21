@@ -41,6 +41,9 @@ target_link_libraries(
   ROOT::Core
   ROOT::Hist
   ROOT::Tree
+
+  rapidjson
+
   )
 
 # set(LIB_PUBLIC_HEADERS include/xx.hh)

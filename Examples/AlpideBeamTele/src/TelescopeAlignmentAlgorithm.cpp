@@ -15,6 +15,7 @@
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 FW::TelescopeAlignmentAlgorithm::TelescopeAlignmentAlgorithm(
     Config cfg, Acts::Logging::Level level)
@@ -48,25 +49,27 @@ FW::ProcessCode FW::TelescopeAlignmentAlgorithm::execute(
   unsigned int iTrack = 0;
   while (iTrack < sourcelinkTracks.size()) {
     // Create initial parameters
+    // The position is taken from the first measurement
+    const auto& sourcelinks = sourcelinkTracks.at(iTrack);
+    const Acts::Vector3D global0 =
+        sourcelinks.at(0).globalPosition(ctx.geoContext);
+    const Acts::Vector3D global1 =
+        sourcelinks.at(1).globalPosition(ctx.geoContext);
+    Acts::Vector3D distance = global1 - global0;
+
+    const double phi = Acts::VectorHelpers::phi(distance);
+    const double theta = Acts::VectorHelpers::theta(distance);
+
+    // shift along the beam by 100_mm
+    Acts::Vector3D rPos = global0 - distance / 2;
+    Acts::Vector3D rMom(4.8_GeV * sin(theta) * cos(phi),
+                        4.8_GeV * sin(theta) * sin(phi), 4.8_GeV * cos(theta));
+
     Acts::BoundSymMatrix cov;
-    cov << std::pow(15_mm, 2), 0., 0., 0., 0., 0., 0., std::pow(15_mm, 2), 0.,
+    cov << std::pow(50_um, 2), 0., 0., 0., 0., 0., 0., std::pow(50_um, 2), 0.,
         0., 0., 0., 0., 0., 0.0001, 0., 0., 0., 0., 0., 0., 0.0001, 0., 0., 0.,
         0., 0., 0., 0.0001, 0., 0., 0., 0., 0., 0., 1.;
 
-    // The position is taken from the first measurement
-    const auto& sourcelinks = sourcelinkTracks.at(iTrack);
-    const auto& sl = sourcelinks.front();
-    const auto& meas = std::get<Measurement>(*sl);
-    // get local position
-    Acts::Vector2D local(meas.parameters()[Acts::ParDef::eLOC_0],
-                         meas.parameters()[Acts::ParDef::eLOC_1]);
-    // get global position
-    Acts::Vector3D global(0, 0, 0);
-    Acts::Vector3D mom(1, 1, 1);
-    meas.referenceSurface().localToGlobal(ctx.geoContext, local, mom, global);
-    // shift along the beam by 100_mm
-    Acts::Vector3D rPos(global.x() - 100_mm, global.y(), global.z());
-    Acts::Vector3D rMom(4_GeV, 0, 0);
     Acts::SingleCurvilinearTrackParameters<Acts::ChargedPolicy> rStart(
         cov, rPos, rMom, 1., 0);
     initialParameters.push_back(rStart);
@@ -90,7 +93,8 @@ FW::ProcessCode FW::TelescopeAlignmentAlgorithm::execute(
   // Set the alignment options
   AlignmentOptions<Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>>
       alignOptions(kfOptions, m_cfg.alignedTransformUpdater,
-                   m_cfg.alignedDetElements, 0.05, 60, m_cfg.covariance);
+                   m_cfg.alignedDetElements, m_cfg.chi2ONdfCutOff,
+                   m_cfg.maxNumIterations, m_cfg.iterationState);
 
   ACTS_DEBUG("Invoke alignment");
   auto result = m_cfg.align(sourcelinkTracks, initialParameters, alignOptions);

@@ -62,9 +62,23 @@ class SimSourceLink {
     }
   }
 
-  // reset the covariance
-  // should be done by calibrator?
-  void setCovariance(const Acts::BoundMatrix& cov) { m_cov = cov; }
+  // get the global position
+  Acts::Vector3D globalPosition(const Acts::GeometryContext& gctx) const {
+    Acts::Vector3D global(0, 0, 0);
+    Acts::Vector2D local(0, 0);
+    Acts::Vector3D mom(1, 1, 1);
+    if (m_dim == 1) {
+      local(0) = m_values[0];
+    } else if (m_dim == 2) {
+      local(0) = m_values[0];
+      local(1) = m_values[1];
+    } else {
+      throw std::runtime_error("Dim " + std::to_string(m_dim) +
+                               " currently not supported.");
+    }
+    m_surface->localToGlobal(gctx, local, mom, global);
+    return global;
+  }
 
  private:
   Acts::BoundVector m_values;
