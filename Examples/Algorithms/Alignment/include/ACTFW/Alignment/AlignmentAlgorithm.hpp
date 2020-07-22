@@ -29,7 +29,8 @@ class AlignmentAlgorithm final : public BareAlgorithm {
   /// Fit function that takes input measurements, initial trackstate and fitter
   /// options and returns some fit-specific result.
   using AlignmentFunction = std::function<AlignResult(
-      std::vector<std::vector<SimSourceLink>>&, const TrackParametersContainer&,
+      const std::vector<std::vector<SimSourceLink>>&,
+      const TrackParametersContainer&,
       const AlignmentOptions<
           Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>>&)>;
 
@@ -56,6 +57,14 @@ class AlignmentAlgorithm final : public BareAlgorithm {
     AlignedTransformUpdater alignedTransformUpdater;
     /// The surfaces (or detector elements?) to be aligned
     std::vector<Acts::DetectorElementBase*> alignedDetElements;
+    /// The alignment mask at each iteration
+    std::map<unsigned int, std::bitset<6>> iterationState;
+    /// Cutoff value for average chi2/ndf
+    double chi2ONdfCutOff = 0.10;
+    /// Cutoff value for delta of average chi2/ndf within a couple of iterations
+    std::pair<size_t, double> deltaChi2ONdfCutOff = {10, 0.00001};
+    /// Maximum number of iterations
+    size_t maxNumIterations = 100;
   };
 
   /// Constructor of the alignment algorithm

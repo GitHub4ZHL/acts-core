@@ -31,7 +31,7 @@ struct TelescopeTrackReader {
   double pitchY = 26.88_um;
 
   /// The pixel detector resolution
-  std::array<double, 2> resolution = {100_um, 100_um};
+  std::array<double, 2> resolution = {150_um, 150_um};
 
   /// The ordered detector surfaces
   std::vector<const Acts::Surface*> detectorSurfaces;

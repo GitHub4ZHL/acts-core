@@ -36,7 +36,7 @@ struct AlignmentFunctionImpl {
   AlignmentFunctionImpl(Alignment&& a) : align(std::move(a)) {}
 
   FW::AlignmentAlgorithm::AlignResult operator()(
-      std::vector<std::vector<FW::SimSourceLink>>& sourceLinks,
+      const std::vector<std::vector<FW::SimSourceLink>>& sourceLinks,
       const FW::TrackParametersContainer& initialParameters,
       const FW::AlignmentOptions<
           Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>>& options) const {

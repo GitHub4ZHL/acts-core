@@ -125,19 +125,20 @@ int main(int argc, char* argv[]) {
   alignment.alignedDetElements = std::move(dets);
   // The criteria to determine if the iteration has converged. @Todo: to use
   // delta chi2 instead
-  alignment.chi2ONdfCutOff = 0.1;
+  alignment.chi2ONdfCutOff = 0.007;
+  alignment.deltaChi2NdfCutOff = {10, 0.000005};
   // The maximum number of iterations
-  alignment.maxNumIterations = 160;
+  alignment.maxNumIterations = 800;
   // set up the alignment dnf for each iteration
   std::map<unsigned int, std::bitset<6>> iterationState;
   for (unsigned int iIter = 0; iIter < alignment.maxNumIterations; iIter++) {
     std::bitset<6> mask(std::string("010001"));
-    if (iIter % 2 == 0) {
-      // fix the x offset (i.e. offset along the beam) and rotation around y
-      mask = std::bitset<6>(std::string("010110"));
+    if (iIter % 3 == 0) {
+      mask = std::bitset<6>(std::string("000110"));
+    } else if (iIter % 3 == 1) {
+      mask = std::bitset<6>(std::string("010000"));
     } else {
-      // fix the x offset and rotation around x, z
-      mask = std::bitset<6>(std::string("111001"));
+      mask = std::bitset<6>(std::string("101001"));
     }
     iterationState.emplace(iIter, mask);
   }

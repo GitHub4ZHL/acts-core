@@ -32,9 +32,6 @@ FW::TelescopeAlignmentAlgorithm::TelescopeAlignmentAlgorithm(
 FW::ProcessCode FW::TelescopeAlignmentAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
-  using Measurement =
-      Acts::Measurement<FW::PixelSourceLink, Acts::ParDef::eLOC_0,
-                        Acts::ParDef::eLOC_1>;
 
   // Read input data
   std::vector<SourceLinkTrack> sourcelinkTracks =
@@ -94,7 +91,8 @@ FW::ProcessCode FW::TelescopeAlignmentAlgorithm::execute(
   AlignmentOptions<Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>>
       alignOptions(kfOptions, m_cfg.alignedTransformUpdater,
                    m_cfg.alignedDetElements, m_cfg.chi2ONdfCutOff,
-                   m_cfg.maxNumIterations, m_cfg.iterationState);
+                   m_cfg.deltaChi2ONdfCutOff, m_cfg.maxNumIterations,
+                   m_cfg.iterationState);
 
   ACTS_DEBUG("Invoke alignment");
   auto result = m_cfg.align(sourcelinkTracks, initialParameters, alignOptions);
