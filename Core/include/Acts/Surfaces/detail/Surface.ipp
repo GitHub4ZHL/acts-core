@@ -72,9 +72,10 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian(7, eBoundQOverP) = 1;
 }
 
-inline RotationMatrix3D Surface::initJacobianToLocal(
-    const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-    const Vector3D& position, const Vector3D& direction) const {
+inline void Surface::initJacobianToLocal(const GeometryContext& gctx,
+                                         FreeToBoundMatrix& jacobian,
+                                         const Vector3D& position,
+                                         const Vector3D& direction) const {
   // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)
@@ -85,11 +86,13 @@ inline RotationMatrix3D Surface::initJacobianToLocal(
   const double invSinTheta = 1. / sinTheta;
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
-  // The measurement frame of the surface
-  RotationMatrix3D rframeT =
-      referenceFrame(gctx, position, direction).transpose();
-  // given by the refernece frame
-  jacobian.block<2, 3>(0, 0) = rframeT.block<2, 3>(0, 0);
+  // The rotation to place the local cartesian frame
+  RotationMatrix3D rotation = transform(gctx).rotation();
+  // The derivative of local bound w.r.t. the cartesian coordinates
+  LocalCartesianToBoundLocalMatrix loc3DToLocBound =
+      localCartesianToBoundLocalDerivative(gctx, position);
+  // The free parameter to local bound
+  jacobian.block<2, 3>(0, 0) = loc3DToLocBound * rotation.transpose();
   // Time component
   jacobian(eBoundTime, 3) = 1;
   // Directional and momentum elements for reference frame surface
@@ -100,7 +103,6 @@ inline RotationMatrix3D Surface::initJacobianToLocal(
   jacobian(eBoundTheta, 6) = -sinTheta;
   jacobian(eBoundQOverP, 7) = 1;
   // return the frame where this happened
-  return rframeT;
 }
 
 inline FreeRowVector Surface::freeToPathDerivative(

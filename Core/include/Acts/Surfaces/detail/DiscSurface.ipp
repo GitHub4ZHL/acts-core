@@ -65,48 +65,6 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian(7, eBoundQOverP) = 1;
 }
 
-inline RotationMatrix3D DiscSurface::initJacobianToLocal(
-    const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-    const Vector3D& position, const Vector3D& direction) const {
-  using VectorHelpers::perp;
-  using VectorHelpers::phi;
-  // Optimized trigonometry on the propagation direction
-  const double x = direction(0);  // == cos(phi) * sin(theta)
-  const double y = direction(1);  // == sin(phi) * sin(theta)
-  const double z = direction(2);  // == cos(theta)
-  // can be turned into cosine/sine
-  const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
-  const double invSinTheta = 1. / sinTheta;
-  const double cosPhi = x * invSinTheta;
-  const double sinPhi = y * invSinTheta;
-  // The measurement frame of the surface
-  RotationMatrix3D rframeT =
-      referenceFrame(gctx, position, direction).transpose();
-  // calculate the transformation to local coorinates
-  const Vector3D pos_loc = transform(gctx).inverse() * position;
-  const double lr = perp(pos_loc);
-  const double lphi = phi(pos_loc);
-  const double lcphi = cos(lphi);
-  const double lsphi = sin(lphi);
-  // rotate into the polar coorindates
-  auto lx = rframeT.block<1, 3>(0, 0);
-  auto ly = rframeT.block<1, 3>(1, 0);
-  jacobian.block<1, 3>(0, 0) = lcphi * lx + lsphi * ly;
-  jacobian.block<1, 3>(1, 0) = (lcphi * ly - lsphi * lx) / lr;
-  // Time element
-  jacobian(eBoundTime, 3) = 1;
-  // Directional and momentum elements for reference frame surface
-  jacobian(eBoundPhi, 4) = -sinPhi * invSinTheta;
-  jacobian(eBoundPhi, 5) = cosPhi * invSinTheta;
-  jacobian(eBoundTheta, 4) = cosPhi * cosTheta;
-  jacobian(eBoundTheta, 5) = sinPhi * cosTheta;
-  jacobian(eBoundTheta, 6) = -sinTheta;
-  jacobian(eBoundQOverP, 7) = 1;
-  // return the transposed reference frame
-  return rframeT;
-}
-
 inline SurfaceIntersection DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
