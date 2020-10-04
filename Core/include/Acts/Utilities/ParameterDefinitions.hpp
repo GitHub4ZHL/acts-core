@@ -132,6 +132,7 @@ using BoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eBoundSize>;
 using BoundSymMatrix = ActsSymMatrix<BoundScalar, eBoundSize>;
 
 using LocalCartesianToBoundLocalMatrix = ActsMatrix<BoundScalar, 2, 3>;
+using BoundLocalToLocalCartesianMatrix = ActsMatrix<BoundScalar, 3, 2>;
 
 // Matrix and vector types related to free track parameters.
 

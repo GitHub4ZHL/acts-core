@@ -470,6 +470,17 @@ class Surface : public virtual GeometryObject,
   virtual LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const = 0;
 
+  /// Calculate the derivative of position in local 3D Cartesian coordinates
+  /// w.r.t. bound track parameters local position
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position of the paramters in global
+  ///
+  /// @return Derivative of position in local 3D cartesian coordinates w.r.t.
+  /// bound local position
+  virtual BoundLocalToLocalCartesianMatrix boundLocalToLocalCartesianDerivative(
+      const GeometryContext& gctx, const Vector3D& position) const = 0;
+
  protected:
   /// Transform3D definition that positions
   /// (translation, rotation) the surface in global space

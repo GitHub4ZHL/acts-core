@@ -251,3 +251,12 @@ LineSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
+
+inline BoundLocalToLocalCartesianMatrix
+LineSurface::boundLocalToLocalCartesianDerivative(
+    const GeometryContext& gctx, const Vector3D& position) const {
+  BoundLocalToLocalCartesianMatrix locBoundToLoc3D =
+      localCartesianToBoundLocalDerivative(gctx, position).transpose();
+
+  return locBoundToLoc3D;
+}

@@ -54,3 +54,11 @@ PlaneSurface::localCartesianToBoundLocalDerivative(
       LocalCartesianToBoundLocalMatrix::Identity();
   return loc3DToLocBound;
 }
+
+inline BoundLocalToLocalCartesianMatrix
+PlaneSurface::boundLocalToLocalCartesianDerivative(
+    const GeometryContext& /*unused*/, const Vector3D& /*unused*/) const {
+  const BoundLocalToLocalCartesianMatrix locBoundToLoc3D =
+      BoundLocalToLocalCartesianMatrix::Identity();
+  return locBoundToLoc3D;
+}

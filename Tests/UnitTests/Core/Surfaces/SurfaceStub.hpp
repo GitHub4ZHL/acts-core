@@ -106,11 +106,18 @@ class SurfaceStub : public Surface {
     return Polyhedron(vertices, faces, triangularMesh);
   }
 
-  // Cartesian 3D to local bound derivative
+  // Cartesian 3D to bound local derivative
   LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& /*unused*/,
       const Vector3D& /*unused*/) const final {
     return LocalCartesianToBoundLocalMatrix::Identity();
+  };
+
+  // Bound local to Cartesian 3D derivative
+  BoundLocalToLocalCartesianMatrix boundLocalToLocalCartesianDerivative(
+      const GeometryContext& /*unused*/,
+      const Vector3D& /*unused*/) const final {
+    return BoundLocalToLocalCartesianMatrix::Identity();
   };
 
  private:

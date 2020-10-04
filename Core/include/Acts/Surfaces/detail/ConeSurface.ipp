@@ -109,3 +109,26 @@ ConeSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
+
+inline BoundLocalToLocalCartesianMatrix
+ConeSurface::boundLocalToLocalCartesianDerivative(
+    const GeometryContext& gctx, const Vector3D& position) const {
+  using VectorHelpers::perp;
+  using VectorHelpers::phi;
+  // The local frame transform
+  const auto& sTransform = transform(gctx);
+  // calculate the transformation to local coorinates
+  const Vector3D localPos = sTransform.inverse() * position;
+  const double lphi = phi(localPos);
+  const double lcphi = std::cos(lphi);
+  const double lsphi = std::sin(lphi);
+  // The tanAlpha
+  const double tanAlpha = bounds().tanAlpha();
+  BoundLocalToLocalCartesianMatrix locBoundToLoc3D =
+      BoundLocalToLocalCartesianMatrix::Zero();
+  // @note: The calculation assumes the provided position is on surface
+  locBoundToLoc3D << -lsphi, tanAlpha * (lcphi + lphi * lsphi), lcphi,
+      tanAlpha * (lsphi - lphi * lcphi), 0, 1;
+
+  return locBoundToLoc3D;
+}
