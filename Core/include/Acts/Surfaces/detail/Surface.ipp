@@ -57,10 +57,13 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
   const double inv_sin_theta = 1. / sin_theta;
   const double cos_phi = x * inv_sin_theta;
   const double sin_phi = y * inv_sin_theta;
-  // retrieve the reference frame
-  const auto rframe = referenceFrame(gctx, position, direction);
-  // the local error components - given by reference frame
-  jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
+  // The rotation to place the local cartesian frame
+  RotationMatrix3D rotation = transform(gctx).rotation();
+  // The derivative of cartesian coordinates w.r.t bound local
+  BoundLocalToLocalCartesianMatrix locBoundToLoc3D =
+      boundLocalToLocalCartesianDerivative(gctx, position);
+  // The local bound to free parameter
+  jacobian.topLeftCorner<3, 2>() = rotation * locBoundToLoc3D;
   // the time component
   jacobian(3, eBoundTime) = 1;
   // the momentum components
@@ -88,7 +91,7 @@ inline void Surface::initJacobianToLocal(const GeometryContext& gctx,
   const double sinPhi = y * invSinTheta;
   // The rotation to place the local cartesian frame
   RotationMatrix3D rotation = transform(gctx).rotation();
-  // The derivative of local bound w.r.t. the cartesian coordinates
+  // The derivative of bound local w.r.t. the cartesian coordinates
   LocalCartesianToBoundLocalMatrix loc3DToLocBound =
       localCartesianToBoundLocalDerivative(gctx, position);
   // The free parameter to local bound

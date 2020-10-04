@@ -461,6 +461,9 @@ class Surface : public virtual GeometryObject,
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
+  /// @todo extend the method to calculate the local cartesian to full bound
+  /// parameter derivative in case that the local cartesian is dependent on the
+  /// momentum direction, such as for LineSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position of the paramters in global
@@ -472,6 +475,10 @@ class Surface : public virtual GeometryObject,
 
   /// Calculate the derivative of position in local 3D Cartesian coordinates
   /// w.r.t. bound track parameters local position
+  /// @todo extend the method to calculate the full bound parameter to lcal
+  /// cartesian derivative in case that the local cartesian is dependent on the
+  /// momentum direction, such as for LineSurface
+  ///
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position of the paramters in global
