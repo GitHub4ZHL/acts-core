@@ -105,7 +105,6 @@ inline void Surface::initJacobianToLocal(const GeometryContext& gctx,
   jacobian(eBoundTheta, 5) = sinPhi * cosTheta;
   jacobian(eBoundTheta, 6) = -sinTheta;
   jacobian(eBoundQOverP, 7) = 1;
-  // return the frame where this happened
 }
 
 inline FreeRowVector Surface::freeToPathDerivative(
