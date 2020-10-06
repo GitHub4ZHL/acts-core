@@ -121,15 +121,13 @@ CylinderSurface::localCartesianToBoundLocalDerivative(
   const auto& sTransform = transform(gctx);
   // calculate the transformation to local coorinates
   const Vector3D localPos = sTransform.inverse() * position;
-  const double lr = perp(localPos);
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
-  // Solve for radius R
-  double R = bounds().get(CylinderBounds::eR);
   LocalCartesianToBoundLocalMatrix loc3DToLocBound =
       LocalCartesianToBoundLocalMatrix::Zero();
-  loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr, 0, 0, 0, 1;
+  // @note: The calculation assumes the provided position is on surface
+  loc3DToLocBound << -lsphi, lcphi, 0, 0, 0, 1;
 
   return loc3DToLocBound;
 }
