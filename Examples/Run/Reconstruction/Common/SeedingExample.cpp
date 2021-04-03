@@ -95,6 +95,8 @@ int runSeedingExample(int argc, char* argv[],
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.ptMin = 1_GeV;
   particleSelectorCfg.nHitsMin = 9;
+  particleSelectorCfg.etaMax = 2.5;
+  particleSelectorCfg.etaMin = -2.5;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
 
@@ -134,7 +136,7 @@ int runSeedingExample(int argc, char* argv[],
   seedingCfg.outputSeeds = "seeds";
   seedingCfg.outputProtoTracks = "prototracks";
   seedingCfg.rMax = 200.;
-  seedingCfg.deltaRMax = 100.;
+  seedingCfg.deltaRMax = 60.;
   seedingCfg.collisionRegionMin = -250;
   seedingCfg.collisionRegionMax = 250.;
   seedingCfg.zMin = -2000.;

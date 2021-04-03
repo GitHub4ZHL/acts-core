@@ -118,7 +118,11 @@ int runRecCKFTracks(int argc, char* argv[],
       hitSmearingCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.ptMin = 1_GeV;
+  // particleSelectorCfg.ptMin = 500_MeV;
   particleSelectorCfg.nHitsMin = 9;
+  // It doen't matter if the particles are generated to be in this region
+  particleSelectorCfg.etaMax = 2.5;
+  particleSelectorCfg.etaMin = -2.5;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
 
@@ -183,7 +187,7 @@ int runRecCKFTracks(int argc, char* argv[],
       seedingCfg.outputSeeds = "seeds";
       seedingCfg.outputProtoTracks = "prototracks";
       seedingCfg.rMax = 200.;
-      seedingCfg.deltaRMax = 100.;
+      seedingCfg.deltaRMax = 60.;
       seedingCfg.collisionRegionMin = -250;
       seedingCfg.collisionRegionMax = 250.;
       seedingCfg.zMin = -2000.;
@@ -229,6 +233,7 @@ int runRecCKFTracks(int argc, char* argv[],
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
     paramsEstimationCfg.deltaRMax = 100._mm;
+    paramsEstimationCfg.deltaRMin = 10._mm;
     paramsEstimationCfg.sigmaLoc0 = 25._um;
     paramsEstimationCfg.sigmaLoc1 = 100._um;
     paramsEstimationCfg.sigmaPhi = 0.005_degree;
@@ -296,7 +301,7 @@ int runRecCKFTracks(int argc, char* argv[],
   perfWriterCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   // The bottom seed on a pixel detector 'eats' one or two measurements?
-  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 2;
+  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
   perfWriterCfg.outputDir = outputDir;
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
