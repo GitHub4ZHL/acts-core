@@ -218,7 +218,7 @@ class KalmanFitter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    std::map<GeometryIdentifier, source_link_t> inputMeasurements;
+    const std::map<GeometryIdentifier, source_link_t>* inputMeasurements;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -252,8 +252,8 @@ class KalmanFitter {
       // We will try to hit those surface by ignoring boundary checks.
       if constexpr (not isDirectNavigator) {
         if (result.processedStates == 0) {
-          for (auto measurementIt = inputMeasurements.begin();
-               measurementIt != inputMeasurements.end(); measurementIt++) {
+          for (auto measurementIt = inputMeasurements->begin();
+               measurementIt != (*inputMeasurements).end(); measurementIt++) {
             state.navigation.externalSurfaces.insert(
                 std::pair<uint64_t, GeometryIdentifier>(
                     measurementIt->first.layer(), measurementIt->first));
@@ -318,7 +318,7 @@ class KalmanFitter {
       // reset navigation&stepping before run reversed filtering or
       // proceed to run smoothing
       if (not result.smoothed and not result.reversed) {
-        if (result.measurementStates == inputMeasurements.size() or
+        if (result.measurementStates == inputMeasurements->size() or
             (result.measurementStates > 0 and
              state.navigation.navigationBreak)) {
           if (reversedFiltering) {
@@ -471,8 +471,8 @@ class KalmanFitter {
                         const stepper_t& stepper, result_type& result) const {
       const auto& logger = state.options.logger;
       // Try to find the surface in the measurement surfaces
-      auto sourcelink_it = inputMeasurements.find(surface->geometryId());
-      if (sourcelink_it != inputMeasurements.end()) {
+      auto sourcelink_it = inputMeasurements->find(surface->geometryId());
+      if (sourcelink_it != (*inputMeasurements).end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
@@ -648,8 +648,8 @@ class KalmanFitter {
                                 result_type& result) const {
       const auto& logger = state.options.logger;
       // Try to find the surface in the measurement surfaces
-      auto sourcelink_it = inputMeasurements.find(surface->geometryId());
-      if (sourcelink_it != inputMeasurements.end()) {
+      auto sourcelink_it = inputMeasurements->find(surface->geometryId());
+      if (sourcelink_it != (*inputMeasurements).end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface "
                      << surface->geometryId()
@@ -1042,7 +1042,8 @@ class KalmanFitter {
 
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
-    kalmanActor.inputMeasurements = std::move(inputMeasurements);
+    // kalmanActor.inputMeasurements = std::move(inputMeasurements);
+    kalmanActor.inputMeasurements = &inputMeasurements;
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
@@ -1136,7 +1137,8 @@ class KalmanFitter {
 
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
-    kalmanActor.inputMeasurements = std::move(inputMeasurements);
+    // kalmanActor.inputMeasurements = std::move(inputMeasurements);
+    kalmanActor.inputMeasurements = &inputMeasurements;
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
