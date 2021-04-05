@@ -117,8 +117,7 @@ int runRecCKFTracks(int argc, char* argv[],
   particleSelectorCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.ptMin = 1_GeV;
-  // particleSelectorCfg.ptMin = 500_MeV;
+  particleSelectorCfg.ptMin = 500_MeV;
   particleSelectorCfg.nHitsMin = 9;
   // It doen't matter if the particles are generated to be in this region
   particleSelectorCfg.etaMax = 2.5;
@@ -302,6 +301,7 @@ int runRecCKFTracks(int argc, char* argv[],
       hitSmearingCfg.outputMeasurementParticlesMap;
   // The bottom seed on a pixel detector 'eats' one or two measurements?
   perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
+  perfWriterCfg.ptMin = 1_GeV;
   perfWriterCfg.outputDir = outputDir;
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
