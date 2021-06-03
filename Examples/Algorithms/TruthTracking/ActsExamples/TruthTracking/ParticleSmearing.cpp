@@ -88,10 +88,10 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       // build the track covariance matrix using the smearing sigmas
       Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
       cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = sigmaD0 * sigmaD0;
-      cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = sigmaZ0 * sigmaZ0;
+      cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = sigmaZ0 * sigmaZ0 * 150;
       cov(Acts::eBoundTime, Acts::eBoundTime) = sigmaT0 * sigmaT0;
       cov(Acts::eBoundPhi, Acts::eBoundPhi) = sigmaPhi * sigmaPhi;
-      cov(Acts::eBoundTheta, Acts::eBoundTheta) = sigmaTheta * sigmaTheta;
+      cov(Acts::eBoundTheta, Acts::eBoundTheta) = sigmaTheta * sigmaTheta * 100;
       cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = sigmaQOverP * sigmaQOverP;
 
       parameters.emplace_back(perigee, params, q, cov);
