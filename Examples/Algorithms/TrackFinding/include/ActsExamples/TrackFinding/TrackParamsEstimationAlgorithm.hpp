@@ -16,6 +16,7 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
@@ -55,6 +56,16 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     std::string inputProtoTracks;
     /// Input source links collection.
     std::string inputSourceLinks;
+
+    /// Input particles collection.
+    std::string inputParticles;
+    /// Input collection of simulated hits.
+    std::string inputSimHits;
+    /// Input hit-particles map collection.
+    std::string inputMeasurementParticlesMap;
+    /// Input collection to map measured hits to simulated hits.
+    std::string inputMeasurementSimHitsMap;
+
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
     /// Output proto track collection.
@@ -74,13 +85,16 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     /// Constant term of the loc1 resolution.
     double sigmaLoc1 = 100 * Acts::UnitConstants::um;
     /// Phi angular resolution.
-    double sigmaPhi = 0.005 * Acts::UnitConstants::degree;
+    double sigmaPhi = 0.02 * Acts::UnitConstants::degree;
     /// Theta angular resolution.
-    double sigmaTheta = 0.001 * Acts::UnitConstants::degree;
+    double sigmaTheta = 0.02 * Acts::UnitConstants::degree;
     /// q/p resolution.
     double sigmaQOverP = 0.1 / Acts::UnitConstants::GeV;
     /// Time resolution.
     double sigmaT0 = 1400 * Acts::UnitConstants::s;
+    /// Random numbers service.
+    std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
+    bool useRealTruthSeed = false;
   };
 
   /// Construct the track parameters making algorithm.
