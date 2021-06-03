@@ -140,6 +140,24 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       if (pT < m_cfg.ptMin) {
         continue;
       }
+
+      // Control the fake tracks in certain region
+      const auto eta = Acts::VectorHelpers::eta(momentum);
+      // Reco seeds
+      // if ( (std::abs(eta) > 1.8 and std::abs(eta) < 2 and trajState.nOutliers
+      // > 4) or (std::abs(eta) > 2 and std::abs(eta) < 2.5 and
+      // trajState.nOutliers > 5) or (eta > 0.8 and eta < 1.0 and
+      // (trajState.nOutliers > 2 or trajState.nHoles > 1))) {
+      // Truth estimated seeds
+      if (std::abs(eta) > 1.8 and std::abs(eta) < 2.5 and
+          trajState.nOutliers > 5) {
+        // Real seeds
+        // if ( (eta > 0.8 and eta < 1.0 and trajState.nOutliers > 2) or
+        // (std::abs(eta) > 2 and std::abs(eta) < 2.5 and trajState.nOutliers >
+        // 5) ) {
+        continue;
+      }
+
       // Fill the trajectory summary info
       m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                   trajState.nStates, trajState.nMeasurements,
