@@ -35,7 +35,8 @@ class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double,
+                                BoundVector, BoundSymMatrix>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
@@ -575,7 +576,8 @@ class AtlasStepper {
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const {
+                                bool transportCov = true,
+                                bool nonlinearityCorrection = false) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -608,7 +610,8 @@ class AtlasStepper {
     }
 
     return BoundState(std::move(*parameters), state.jacobian,
-                      state.pathAccumulated);
+                      state.pathAccumulated, BoundVector::Zero(),
+                      BoundSymMatrix::Zero());
   }
 
   /// Create and return a curvilinear state at the current position

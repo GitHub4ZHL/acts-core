@@ -26,12 +26,13 @@ namespace Acts {
 enum struct TrackStatePropMask : uint8_t {
   None = 0,
   Predicted = 1 << 0,
-  Filtered = 1 << 1,
-  Smoothed = 1 << 2,
-  Jacobian = 1 << 3,
+  PredictedCorrected = 1 << 1,
+  Filtered = 1 << 2,
+  Smoothed = 1 << 3,
+  Jacobian = 1 << 4,
 
-  Uncalibrated = 1 << 4,
-  Calibrated = 1 << 5,
+  Uncalibrated = 1 << 5,
+  Calibrated = 1 << 6,
 
   All = std::numeric_limits<uint8_t>::max(),  // should be all ones
 };

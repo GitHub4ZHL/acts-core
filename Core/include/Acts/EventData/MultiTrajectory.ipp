@@ -31,6 +31,9 @@ TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
   if (hasPredicted()) {
     mask |= PM::Predicted;
   }
+  if (hasPredictedCorrected()) {
+    mask |= PM::PredictedCorrected;
+  }
   if (hasFiltered()) {
     mask |= PM::Filtered;
   }
@@ -87,6 +90,20 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCovariance() const
     -> Covariance {
   assert(data().ipredicted != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ipredicted).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCorrected() const
+    -> Parameters {
+  assert(data().ipredictedCorrected != IndexData::kInvalid);
+  return Parameters(m_traj->m_params.col(data().ipredictedCorrected).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCorrectedCovariance()
+    const -> Covariance {
+  assert(data().ipredictedCorrected != IndexData::kInvalid);
+  return Covariance(m_traj->m_cov.col(data().ipredictedCorrected).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -179,6 +196,12 @@ inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
     m_params.addCol();
     m_cov.addCol();
     p.ipredicted = m_params.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::PredictedCorrected)) {
+    m_params.addCol();
+    m_cov.addCol();
+    p.ipredictedCorrected = m_params.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {

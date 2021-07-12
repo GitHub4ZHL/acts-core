@@ -48,17 +48,20 @@ namespace detail {
 /// performed
 /// @param [in] accumulatedPath Propagated distance
 /// @param [in] surface Target surface on which the state is represented
+/// @param [in] nonlinearityCorrection Whether correct for non-lineary effect of the free to bound transform
 ///
 /// @return A bound state:
 ///   - the parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
-Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
-    const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
-    BoundMatrix& jacobian, FreeMatrix& transportJacobian,
-    FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
-    const FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface);
+Result<std::tuple<BoundTrackParameters, BoundMatrix, double, BoundVector,
+                  BoundMatrix>>
+boundState(const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
+           BoundMatrix& jacobian, FreeMatrix& transportJacobian,
+           FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
+           const FreeVector& parameters, bool covTransport,
+           double accumulatedPath, const Surface& surface,
+           bool nonlinearityCorrection = true);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -104,9 +107,10 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
 ///
 void transportCovarianceToBound(
     const GeometryContext& geoContext, BoundSymMatrix& boundCovariance,
-    BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
-    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeVector& freeParameters, const Surface& surface);
+    FreeSymMatrix& freeCovariance, BoundMatrix& fullTransportJacobian,
+    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
+    BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
+    const Surface& surface);
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear
 /// to a new curvilinear representation.

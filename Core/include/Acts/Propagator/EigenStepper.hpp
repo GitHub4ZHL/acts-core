@@ -47,7 +47,8 @@ class EigenStepper {
   /// Jacobian, Covariance and State defintions
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double,
+                                BoundVector, Covariance>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
@@ -301,13 +302,15 @@ class EigenStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] nonlinearityCorrection steering non-liearity effect correction
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const;
+                                bool transportCov = true,
+                                bool nonlinearityCorrection = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///

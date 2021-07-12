@@ -118,6 +118,7 @@ struct IndexData {
   IndexType irefsurface = kInvalid;
   IndexType iprevious = kInvalid;
   IndexType ipredicted = kInvalid;
+  IndexType ipredictedCorrected = kInvalid;
   IndexType ifiltered = kInvalid;
   IndexType ismoothed = kInvalid;
   IndexType ijacobian = kInvalid;
@@ -206,6 +207,11 @@ class TrackStateProxy {
       predictedCovariance() = other.predictedCovariance();
     }
 
+    if (ACTS_CHECK_BIT(src, PM::PredictedCorrected)) {
+      predictedCorrected() = other.predictedCorrected();
+      predictedCorrectedCovariance() = other.predictedCorrectedCovariance();
+    }
+
     if (ACTS_CHECK_BIT(src, PM::Filtered)) {
       filtered() = other.filtered();
       filteredCovariance() = other.filteredCovariance();
@@ -283,6 +289,20 @@ class TrackStateProxy {
   /// Check whether the predicted parameters+covariance is set
   /// @return Whether it is set or not
   bool hasPredicted() const { return data().ipredicted != IndexData::kInvalid; }
+
+  /// Predicted track parameters vector
+  /// @return The predicted parameters
+  Parameters predictedCorrected() const;
+
+  /// Predicted track parameters covariance matrix.
+  /// @return The predicted track parameter covariance
+  Covariance predictedCorrectedCovariance() const;
+
+  /// Check whether the predicted parameters+covariance is set
+  /// @return Whether it is set or not
+  bool hasPredictedCorrected() const {
+    return data().ipredictedCorrected != IndexData::kInvalid;
+  }
 
   /// Filtered track parameters vector
   /// @return The filtered parameters

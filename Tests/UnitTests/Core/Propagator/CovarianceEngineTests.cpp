@@ -67,7 +67,8 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Repeat transport to surface
   auto surface = Surface::makeShared<PlaneSurface>(position, direction);
-  detail::transportCovarianceToBound(tgContext, covariance, jacobian,
+  FreeSymMatrix freeCov = FreeSymMatrix::Zero();
+  detail::transportCovarianceToBound(tgContext, covariance, freeCov, jacobian,
                                      transportJacobian, derivatives,
                                      boundToFreeJacobian, parameters, *surface);
 
