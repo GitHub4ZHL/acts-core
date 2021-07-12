@@ -45,12 +45,17 @@ class GainMatrixUpdater {
     assert(trackState.hasCalibrated());
     // we should have predicted state set
     assert(trackState.hasPredicted());
+    // we should have corrected predicted state set
+    assert(trackState.hasPredictedCorrected());
     // filtering should not have happened yet, but is allocated, therefore set
     assert(trackState.hasFiltered());
 
     // read-only handles. Types are eigen maps to backing storage
     const auto predicted = trackState.predicted();
     const auto predictedCovariance = trackState.predictedCovariance();
+    const auto predictedCorrected = trackState.predictedCorrected();
+    const auto predictedCorrectedCovariance =
+        trackState.predictedCorrectedCovariance();
 
     ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
     ACTS_VERBOSE("Predicted covariance:\n" << predictedCovariance);
@@ -83,6 +88,10 @@ class GainMatrixUpdater {
 
           ACTS_VERBOSE("Measurement projector H:\n" << H);
 
+          //  const auto K = (predictedCovariance * H.transpose() * (H *
+          //  predictedCorrectedCovariance * H.transpose() +
+          //  calibratedCovariance).inverse()).eval();
+
           const auto K =
               (predictedCovariance * H.transpose() *
                (H * predictedCovariance * H.transpose() + calibratedCovariance)
@@ -100,6 +109,7 @@ class GainMatrixUpdater {
           }
 
           filtered = predicted + K * (calibrated - H * predicted);
+          // filtered = predicted + K * (calibrated - H * predictedCorrected);
           filteredCovariance =
               (BoundSymMatrix::Identity() - K * H) * predictedCovariance;
           ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());

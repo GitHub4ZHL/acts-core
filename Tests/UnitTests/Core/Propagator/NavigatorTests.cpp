@@ -146,7 +146,7 @@ struct PropagatorState {
     }
 
     Result<BoundState> boundState(State& state, const Surface& surface,
-                                  bool /*unused*/
+                                  bool /*unused*/, bool /*unused*/
     ) const {
       auto bound =
           BoundTrackParameters::create(surface.getSharedPtr(), tgContext,

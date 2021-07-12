@@ -150,7 +150,7 @@ const MeasurementResolutionMap resolutions = {
 const auto simPropagator = makeStraightPropagator(geometry);
 
 // reconstruction propagator and fitter
-const auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
+const auto kfLogger = getDefaultLogger("KalmanFilter", Logging::VERBOSE);
 const auto kfZeroPropagator = makeConstantFieldPropagator(geometry, 0_T);
 const auto kfZero = KalmanFitter(kfZeroPropagator);
 

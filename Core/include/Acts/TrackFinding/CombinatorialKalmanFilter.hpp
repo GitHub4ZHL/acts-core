@@ -255,7 +255,8 @@ class CombinatorialKalmanFilter {
   class Actor {
    public:
     using TipState = CombinatorialKalmanFilterTipState;
-    using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+    using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double,
+                                  BoundVector, BoundSymMatrix>;
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
     // The source link container type
@@ -816,7 +817,8 @@ class CombinatorialKalmanFilter {
       // Get the track state proxy
       auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
 
-      const auto& [boundParams, jacobian, pathLength] = boundState;
+      const auto& [boundParams, jacobian, pathLength, correctedBoundVector,
+                   correctedBoundCovariance] = boundState;
 
       // Fill the parametric part of the track state proxy
       if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::Predicted)) and
@@ -913,7 +915,8 @@ class CombinatorialKalmanFilter {
       // now get track state proxy back
       auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
 
-      const auto& [boundParams, jacobian, pathLength] = boundState;
+      const auto& [boundParams, jacobian, pathLength, correctedBoundVector,
+                   correctedBoundCovariance] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
       if (boundParams.covariance().has_value()) {

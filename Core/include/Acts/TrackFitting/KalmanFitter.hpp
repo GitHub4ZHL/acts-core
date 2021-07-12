@@ -512,7 +512,8 @@ class KalmanFitter {
         if (!res.ok()) {
           return res.error();
         }
-        auto& [boundParams, jacobian, pathLength] = *res;
+        auto& [boundParams, jacobian, pathLength, correctedBoundVector,
+               correctedBoundCovariance] = *res;
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
@@ -533,6 +534,14 @@ class KalmanFitter {
         if (boundParams.covariance().has_value()) {
           trackStateProxy.predictedCovariance() =
               std::move(*boundParams.covariance());
+        }
+        if (correctedBoundVector != BoundVector::Zero()) {
+          trackStateProxy.predictedCorrected() =
+              std::move(correctedBoundVector);
+        }
+        if (correctedBoundCovariance != BoundSymMatrix::Zero()) {
+          trackStateProxy.predictedCorrectedCovariance() =
+              std::move(correctedBoundCovariance);
         }
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
@@ -638,13 +647,22 @@ class KalmanFitter {
               ACTS_ERROR("Propagate to hole surface failed: " << res.error());
               return res.error();
             }
-            auto& [boundParams, jacobian, pathLength] = *res;
+            auto& [boundParams, jacobian, pathLength, correctedBoundVector,
+                   correctedBoundCovariance] = *res;
 
             // Fill the track state
             trackStateProxy.predicted() = std::move(boundParams.parameters());
             if (boundParams.covariance().has_value()) {
               trackStateProxy.predictedCovariance() =
                   std::move(*boundParams.covariance());
+            }
+            if (correctedBoundVector != BoundVector::Zero()) {
+              trackStateProxy.predictedCorrected() =
+                  std::move(correctedBoundVector);
+            }
+            if (correctedBoundCovariance != BoundSymMatrix::Zero()) {
+              trackStateProxy.predictedCorrectedCovariance() =
+                  std::move(correctedBoundCovariance);
             }
             trackStateProxy.jacobian() = std::move(jacobian);
             trackStateProxy.pathLength() = std::move(pathLength);
@@ -723,7 +741,8 @@ class KalmanFitter {
           return res.error();
         }
 
-        auto& [boundParams, jacobian, pathLength] = *res;
+        auto& [boundParams, jacobian, pathLength, correctedBoundVector,
+               correctedBoundCovariance] = *res;
 
         // Create a detached track state proxy
         auto tempTrackTip =
@@ -742,6 +761,14 @@ class KalmanFitter {
         if (boundParams.covariance().has_value()) {
           trackStateProxy.predictedCovariance() =
               std::move(*boundParams.covariance());
+        }
+        if (correctedBoundVector != BoundVector::Zero()) {
+          trackStateProxy.predictedCorrected() =
+              std::move(correctedBoundVector);
+        }
+        if (correctedBoundCovariance != BoundSymMatrix::Zero()) {
+          trackStateProxy.predictedCorrectedCovariance() =
+              std::move(correctedBoundCovariance);
         }
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
