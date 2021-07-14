@@ -97,6 +97,8 @@ class EigenStepper {
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
         jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
+        freeCov = jacToGlobal * cov * jacToGlobal.transpose();
+        std::cout << "freeCov = \n " << freeCov << std::endl;
       }
     }
 
@@ -110,6 +112,7 @@ class EigenStepper {
     /// associated with the initial error on track parameters
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
+    FreeSymMatrix freeCov = FreeSymMatrix::Zero();
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;

@@ -54,8 +54,8 @@ auto Acts::EigenStepper<E, A>::boundState(State& state, const Surface& surface,
                                           bool nonlinearityCorrection) const
     -> Result<BoundState> {
   return detail::boundState(
-      state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars,
+      state.geoContext, state.cov, state.freeCov, state.jacobian,
+      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
       state.covTransport && transportCov, state.pathAccumulated, surface,
       nonlinearityCorrection);
 }
@@ -99,9 +99,8 @@ void Acts::EigenStepper<E, A>::transportCovarianceToCurvilinear(
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::transportCovarianceToBound(
     State& state, const Surface& surface) const {
-  FreeSymMatrix freeCovariance = FreeSymMatrix::Zero();
   detail::transportCovarianceToBound(state.geoContext.get(), state.cov,
-                                     freeCovariance, state.jacobian,
+                                     state.freeCov, state.jacobian,
                                      state.jacTransport, state.derivative,
                                      state.jacToGlobal, state.pars, surface);
 }

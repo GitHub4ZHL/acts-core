@@ -57,10 +57,10 @@ namespace detail {
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double, BoundVector,
                   BoundMatrix>>
 boundState(const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
-           BoundMatrix& jacobian, FreeMatrix& transportJacobian,
-           FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
-           const FreeVector& parameters, bool covTransport,
-           double accumulatedPath, const Surface& surface,
+           FreeSymMatrix& freeCovariance, BoundMatrix& jacobian,
+           FreeMatrix& transportJacobian, FreeVector& derivatives,
+           BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
+           bool covTransport, double accumulatedPath, const Surface& surface,
            bool nonlinearityCorrection = true);
 
 /// Create and return a curvilinear state at the current position

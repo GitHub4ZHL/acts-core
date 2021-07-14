@@ -63,6 +63,7 @@ int runRecTruthTracks(int argc, char* argv[],
 
   // Read some standard options
   auto logLevel = Options::readLogLevel(vm);
+  std::cout << "logLevel is " << logLevel << std::endl;
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   auto rnd = std::make_shared<const ActsExamples::RandomNumbers>(
       Options::readRandomNumbersConfig(vm));
@@ -96,7 +97,7 @@ int runRecTruthTracks(int argc, char* argv[],
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.nHitsMin = 9;
+  particleSelectorCfg.nHitsMin = 3;
   particleSelectorCfg.ptMin = 500._MeV;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
@@ -146,6 +147,7 @@ int runRecTruthTracks(int argc, char* argv[],
   fitter.multipleScattering =
       vm["fit-multiple-scattering-correction"].as<bool>();
   fitter.energyLoss = vm["fit-energy-loss-correction"].as<bool>();
+  fitter.nonlinearityCorrection = vm["fit-nonlinearity-correction"].as<bool>();
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
   fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);

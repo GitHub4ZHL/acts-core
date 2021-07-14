@@ -35,6 +35,7 @@ class GainMatrixUpdater {
       detail_lt::TrackStateProxy<source_link_t, kMeasurementSizeMax, false>&
           trackState,
       const NavigationDirection& direction = forward,
+      bool nonlinearityCorrection = true,
       LoggerWrapper logger = getDummyLogger()) const {
     (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
@@ -59,6 +60,10 @@ class GainMatrixUpdater {
 
     ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
     ACTS_VERBOSE("Predicted covariance:\n" << predictedCovariance);
+    ACTS_VERBOSE(
+        "PredictedCorrected parameters: " << predictedCorrected.transpose());
+    ACTS_VERBOSE("PredictedCorrected covariance:\n"
+                 << predictedCorrectedCovariance);
 
     // read-write handles. Types are eigen maps into backing storage.
     // This writes directly into the trajectory storage
@@ -88,15 +93,23 @@ class GainMatrixUpdater {
 
           ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-          //  const auto K = (predictedCovariance * H.transpose() * (H *
-          //  predictedCorrectedCovariance * H.transpose() +
-          //  calibratedCovariance).inverse()).eval();
+          ActsMatrix<eBoundSize, kMeasurementSize> K =
+              ActsMatrix<eBoundSize, kMeasurementSize>::Zero();
 
-          const auto K =
-              (predictedCovariance * H.transpose() *
-               (H * predictedCovariance * H.transpose() + calibratedCovariance)
-                   .inverse())
-                  .eval();
+          if (nonlinearityCorrection) {
+            std::cout << "GainMatrix with nonlinearityCorrection " << std::endl;
+            K = (predictedCorrectedCovariance * H.transpose() *
+                 (H * predictedCorrectedCovariance * H.transpose() +
+                  calibratedCovariance)
+                     .inverse())
+                    .eval();
+          } else {
+            K = (predictedCovariance * H.transpose() *
+                 (H * predictedCovariance * H.transpose() +
+                  calibratedCovariance)
+                     .inverse())
+                    .eval();
+          }
 
           ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
@@ -108,8 +121,13 @@ class GainMatrixUpdater {
             return false;  // abort execution
           }
 
-          filtered = predicted + K * (calibrated - H * predicted);
-          // filtered = predicted + K * (calibrated - H * predictedCorrected);
+          if (nonlinearityCorrection) {
+            filtered =
+                predictedCorrected + K * (calibrated - H * predictedCorrected);
+          } else {
+            filtered = predicted + K * (calibrated - H * predicted);
+          }
+
           filteredCovariance =
               (BoundSymMatrix::Identity() - K * H) * predictedCovariance;
           ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());

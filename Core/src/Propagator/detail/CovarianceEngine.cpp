@@ -8,6 +8,7 @@
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
+#include "Acts/EventData/detail/CorrectedTransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
@@ -258,15 +259,17 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
 
 namespace detail {
 
-Result<BoundState> boundState(
-    const GeometryContext& geoContext, BoundSymMatrix& boundMatrix,
-    BoundMatrix& jacobian, FreeMatrix& transportJacobian,
-    FreeVector& derivatives, BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface, bool nonlinearityCorrection) {
+Result<BoundState> boundState(const GeometryContext& geoContext,
+                              BoundSymMatrix& boundMatrix,
+                              FreeSymMatrix& freeMatrix, BoundMatrix& jacobian,
+                              FreeMatrix& transportJacobian,
+                              FreeVector& derivatives,
+                              BoundToFreeMatrix& boundToFreeJacobian,
+                              const FreeVector& parameters, bool covTransport,
+                              double accumulatedPath, const Surface& surface,
+                              bool nonlinearityCorrection) {
   // Covariance transport
   std::optional<BoundSymMatrix> boundCov = std::nullopt;
-  FreeSymMatrix freeMatrix = FreeSymMatrix::Zero();
   if (covTransport) {
     // Initialize the jacobian from start local to final local
     jacobian = BoundMatrix::Identity();
@@ -276,7 +279,8 @@ Result<BoundState> boundState(
     transportCovarianceToBound(geoContext, boundMatrix, freeMatrix, jacobian,
                                transportJacobian, derivatives,
                                boundToFreeJacobian, parameters, surface);
-    std::cout << "boundState::freeMatrix = \n" << freeMatrix << std::endl;
+    //   std::cout << "boundState::boundMatrix = \n" << boundMatrix << std::endl;
+    //   std::cout << "boundState::freeMatrix = \n" << freeMatrix << std::endl;
   }
   if (boundMatrix != BoundSymMatrix::Zero()) {
     boundCov = boundMatrix;
@@ -289,25 +293,24 @@ Result<BoundState> boundState(
     return bv.error();
   }
 
-  std::cout << "non-correctedBp = \n"
-            << bv.value() << "non-correctedBv = \n"
+  std::cout << "Before correction, bound vec = \n"
+            << bv.value() << "\n bound cov = \n"
             << boundCov.value() << std::endl;
 
   BoundVector correctedBp = BoundVector::Zero();
   BoundSymMatrix correctedBv = BoundSymMatrix::Zero();
   // @TODO: add function to get updated bv and boundCov provided freeMatrix
 
-  std::cout << "correction done" << std::endl;
   auto transformer = detail::CorrectedFreeToBoundTransformer();
   auto correctedRes =
       transformer(parameters, freeMatrix, derivatives, surface, geoContext);
   if (correctedRes.has_value()) {
     auto correctedValue = correctedRes.value();
-    std::cout << "correctedBp = \n"
-              << correctedValue.first << "correctedBv = \n"
-              << correctedValue.second << std::endl;
     correctedBp = correctedValue.first;
     correctedBv = correctedValue.second;
+    std::cout << "After correction, bound vec = \n"
+              << correctedBp << "\n bound cov = \n"
+              << correctedBv << std::endl;
   }
 
   // Create the bound state
@@ -363,18 +366,51 @@ void transportCovarianceToBound(
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
   BoundToFreeMatrix startBoundToFinalFreeJacobian = BoundToFreeMatrix::Zero();
+  FreeMatrix startFreeToFinalFreeJacobian = FreeMatrix::Zero();
   boundToBoundJacobian(geoContext, freeParameters, boundToFreeJacobian,
                        freeTransportJacobian, freeDerivatives,
                        fullTransportJacobian, startBoundToFinalFreeJacobian,
                        surface);
+  // Transform from free to bound parameters
+  Result<BoundVector> boundParameters = detail::transformFreeToBoundParameters(
+      freeParameters, surface, geoContext);
+  if (!boundParameters.ok()) {
+    std::cout
+        << "transportCovarianceToBound transformFreeToBoundParameters failed"
+        << std::endl;
+  }
+
+  std::cout << "Before correction: freeCov = \n" << freeCovariance << std::endl;
+  std::cout << "Before correction: freeVec = \n" << freeParameters << std::endl;
+  FreeVector cFreeParams = FreeVector::Zero();
+  auto transformer = detail::CorrectedBoundToFreeTransformer();
+  auto correctedRes = transformer(boundParameters.value(), boundCovariance,
+                                  surface, geoContext);
+  if (correctedRes.has_value()) {
+    auto correctedValue = correctedRes.value();
+    cFreeParams = correctedValue.first;
+    freeCovariance = correctedValue.second;
+  }
+  std::cout << "After correction: freeCov = \n" << freeCovariance << std::endl;
+  std::cout << "After correction: freeVec = \n" << cFreeParams << std::endl;
+
+  const FreeToPathMatrix freeToPath =
+      surface.freeToPathDerivative(geoContext, freeParameters);
+  startFreeToFinalFreeJacobian =
+      (FreeMatrix::Identity() + freeDerivatives * freeToPath) *
+      freeTransportJacobian;
 
   // Apply the actual covariance transport to get covariance of the current
   // bound and free parameters
-  boundCovariance = fullTransportJacobian * boundCovariance *
-                    fullTransportJacobian.transpose();
-  freeCovariance = startBoundToFinalFreeJacobian * boundCovariance *
-                   startBoundToFinalFreeJacobian.transpose();
+  freeCovariance = startFreeToFinalFreeJacobian * freeCovariance *
+                   startFreeToFinalFreeJacobian.transpose();
+  std::cout << "After prop: freeCov = \n" << freeCovariance << std::endl;
 
+  FreeToBoundMatrix freeToBoundJacobian =
+      surface.freeToBoundJacobian(geoContext, freeParameters);
+
+  boundCovariance =
+      freeToBoundJacobian * freeCovariance * freeToBoundJacobian.transpose();
   std::cout << "transportCovarianceToBound::freeCovariance = \n "
             << freeCovariance << std::endl;
   // Reinitialize jacobian components:

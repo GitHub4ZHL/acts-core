@@ -71,7 +71,7 @@ struct KalmanFitterOptions {
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
-                      bool rFiltering = false)
+                      bool nlCorrection = false, bool rFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -81,6 +81,7 @@ struct KalmanFitterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
+        nonlinearityCorrection(nlCorrection),
         reversedFiltering(rFiltering),
         logger(logger_) {}
   /// Contexts are required and the options must not be default-constructible.
@@ -110,6 +111,9 @@ struct KalmanFitterOptions {
 
   /// Whether to consider energy loss
   bool energyLoss = true;
+
+  /// Whether do non-linearity correction
+  bool nonlinearityCorrection = true;
 
   /// Whether to run filtering in reversed direction
   bool reversedFiltering = false;
@@ -239,6 +243,9 @@ class KalmanFitter {
 
     /// Whether to consider energy loss.
     bool energyLoss = true;
+
+    /// Whether do non-linearity correction
+    bool nonlinearityCorrection = true;
 
     /// Whether run reversed filtering
     bool reversedFiltering = false;
@@ -380,7 +387,9 @@ class KalmanFitter {
             result.finished = true;
           }
         } else if (targetReached(state, stepper, *targetSurface)) {
-          ACTS_VERBOSE("Completing with fitted track parameter");
+          // ACTS_VERBOSE("Completing with fitted track parameter");
+          std::cout << "Completing with fitted track parameter" << std::endl;
+
           // Transport & bind the parameter to the final surface
           auto res = stepper.boundState(state.stepping, *targetSurface);
           if (!res.ok()) {
@@ -388,9 +397,17 @@ class KalmanFitter {
             result.result = res.error();
             return;
           }
-          auto& fittedState = *res;
+          auto& [boundParams, jacobian, pathLength, correctedBoundVector,
+                 correctedBoundCovariance] = *res;
+
           // Assign the fitted parameters
-          result.fittedParameters = std::get<BoundTrackParameters>(fittedState);
+          if (nonlinearityCorrection) {
+            result.fittedParameters = BoundTrackParameters(
+                targetSurface->getSharedPtr(), correctedBoundVector,
+                correctedBoundCovariance);
+          } else {
+            result.fittedParameters = boundParams;
+          }
 
           // Reset smoothed status of states missed in reversed filtering
           if (reversedFiltering) {
@@ -568,8 +585,9 @@ class KalmanFitter {
         // an outlier
         if (not m_outlierFinder(trackStateProxy)) {
           // Run Kalman update
-          auto updateRes = m_updater(state.geoContext, trackStateProxy,
-                                     state.stepping.navDir, logger);
+          auto updateRes =
+              m_updater(state.geoContext, trackStateProxy,
+                        state.stepping.navDir, nonlinearityCorrection, logger);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -783,8 +801,9 @@ class KalmanFitter {
                          trackStateProxy.predicted()));
 
         // If the update is successful, set covariance and
-        auto updateRes = m_updater(state.geoContext, trackStateProxy,
-                                   state.stepping.navDir, logger);
+        auto updateRes =
+            m_updater(state.geoContext, trackStateProxy, state.stepping.navDir,
+                      nonlinearityCorrection, logger);
         if (!updateRes.ok()) {
           ACTS_ERROR("Backward update step failed: " << updateRes.error());
           return updateRes.error();
@@ -992,10 +1011,14 @@ class KalmanFitter {
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
       if (closerToFirstCreatedMeasurement) {
+        std::cout << "firstParams = \n " << firstParams << " and cov = \n"
+                  << firstCreatedMeasurement.smoothedCovariance() << std::endl;
         stepper.update(state.stepping, firstParams,
                        firstCreatedMeasurement.smoothedCovariance());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
+        std::cout << "lastParams = \n " << lastParams << " and cov = \n"
+                  << lastCreatedMeasurement.smoothedCovariance() << std::endl;
         stepper.update(state.stepping, lastParams,
                        lastCreatedMeasurement.smoothedCovariance());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
@@ -1122,6 +1145,7 @@ class KalmanFitter {
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
+    kalmanActor.nonlinearityCorrection = kfOptions.nonlinearityCorrection;
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.m_calibrator = kfOptions.calibrator;
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
