@@ -36,7 +36,7 @@ class AtlasStepper {
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double,
-                                BoundVector, BoundSymMatrix>;
+                                BoundVector, BoundSymMatrix, Jacobian>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
@@ -328,7 +328,7 @@ class AtlasStepper {
     update(state,
            detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                   boundParams),
-           cov);
+           cov, surface);
     state.navDir = navDir;
     state.stepSize = ConstrainedStep(stepSize);
     state.pathAccumulated = 0.;
@@ -576,8 +576,7 @@ class AtlasStepper {
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true,
-                                bool nonlinearityCorrection = false) const {
+                                bool transportCov = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -611,7 +610,7 @@ class AtlasStepper {
 
     return BoundState(std::move(*parameters), state.jacobian,
                       state.pathAccumulated, BoundVector::Zero(),
-                      BoundSymMatrix::Zero());
+                      BoundSymMatrix::Zero(), BoundMatrix::Zero());
   }
 
   /// Create and return a curvilinear state at the current position
@@ -660,7 +659,7 @@ class AtlasStepper {
   /// @param [in] parameters The new track parameters at start
   /// @param [in] covariance The updated covariance matrix
   void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const {
+              const Covariance& covariance, const Surface& surface) const {
     Vector3 direction = parameters.template segment<3>(eFreeDir0).normalized();
     state.pVector[0] = parameters[eFreePos0];
     state.pVector[1] = parameters[eFreePos1];
@@ -706,6 +705,8 @@ class AtlasStepper {
     state.pVector[6] = udirection[2];
     state.pVector[7] = charge(state) / up;
   }
+
+  void updateFreeCov(State& state, const Surface& surface) const {};
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,

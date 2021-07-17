@@ -37,7 +37,7 @@ class StraightLineStepper {
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double,
-                                BoundVector, BoundSymMatrix>;
+                                BoundVector, BoundSymMatrix, Jacobian>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using BField = NullBField;
@@ -92,6 +92,9 @@ class StraightLineStepper {
 
     /// Pure transport jacobian part from runge kutta integration
     FreeMatrix jacTransport = FreeMatrix::Identity();
+
+    bool globalToLocalCorrection = true;
+    bool localToGlobalCorrection = true;
 
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
@@ -275,15 +278,13 @@ class StraightLineStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] nonlinearityCorrection steering non-liearity effect correction
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true,
-                                bool nonlinearityCorrection = false) const;
+                                bool transportCov = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -305,7 +306,9 @@ class StraightLineStepper {
   /// @param [in] parameters Parameters that will be written into @p state
   /// @param [in] covariance Covariance that willl be written into @p state
   void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const;
+              const Covariance& covariance, const Surface& surface) const;
+
+  void updateFreeCov(State& state, const Surface& surface) const;
 
   /// Method to update momentum, direction and p
   ///

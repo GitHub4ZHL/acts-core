@@ -256,7 +256,7 @@ class CombinatorialKalmanFilter {
    public:
     using TipState = CombinatorialKalmanFilterTipState;
     using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double,
-                                  BoundVector, BoundSymMatrix>;
+                                  BoundVector, BoundSymMatrix, BoundMatrix>;
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
     // The source link container type
@@ -671,7 +671,7 @@ class CombinatorialKalmanFilter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, ts),
-                         ts.filteredCovariance());
+                         ts.filteredCovariance(), *surface);
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << ts.filtered().transpose()
                        << " of track state with tip = "
@@ -818,7 +818,7 @@ class CombinatorialKalmanFilter {
       auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
 
       const auto& [boundParams, jacobian, pathLength, correctedBoundVector,
-                   correctedBoundCovariance] = boundState;
+                   correctedBoundCovariance, cross] = boundState;
 
       // Fill the parametric part of the track state proxy
       if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::Predicted)) and
@@ -916,7 +916,7 @@ class CombinatorialKalmanFilter {
       auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
 
       const auto& [boundParams, jacobian, pathLength, correctedBoundVector,
-                   correctedBoundCovariance] = boundState;
+                   correctedBoundCovariance, cross] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
       if (boundParams.covariance().has_value()) {
@@ -1034,7 +1034,7 @@ class CombinatorialKalmanFilter {
                        << "varianceQoverP = " << interaction.varianceQoverP);
 
           // Update the state and stepper with material effects
-          interaction.updateState(state, stepper);
+          interaction.updateState(state, stepper, *surface);
         }
       }
 
@@ -1133,11 +1133,13 @@ class CombinatorialKalmanFilter {
            std::abs(lastIntersection.intersection.pathLength));
       if (closerToFirstCreatedMeasurement) {
         stepper.update(state.stepping, firstParams,
-                       firstCreatedMeasurement.smoothedCovariance());
+                       firstCreatedMeasurement.smoothedCovariance(),
+                       firstCreatedMeasurement.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
         stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothedCovariance());
+                       lastCreatedMeasurement.smoothedCovariance(),
+                       lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerToFirstCreatedMeasurement

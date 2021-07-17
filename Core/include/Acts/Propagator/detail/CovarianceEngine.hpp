@@ -55,13 +55,13 @@ namespace detail {
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double, BoundVector,
-                  BoundMatrix>>
+                  BoundSymMatrix, BoundMatrix>>
 boundState(const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
            FreeSymMatrix& freeCovariance, BoundMatrix& jacobian,
            FreeMatrix& transportJacobian, FreeVector& derivatives,
            BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
            bool covTransport, double accumulatedPath, const Surface& surface,
-           bool nonlinearityCorrection = true);
+           bool localToGlobalCorrection = false, bool globalToLocalCorrection = false);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -110,7 +110,8 @@ void transportCovarianceToBound(
     FreeSymMatrix& freeCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
-    const Surface& surface);
+    const Surface& surface, bool localToGlobalCorrection = false,
+    bool globalToLocalCorrection = false);
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear
 /// to a new curvilinear representation.

@@ -9,8 +9,10 @@
 #pragma once
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 //#include <unsupported/Eigen/MatrixFunctions>
 
+#include <iostream>
 #include <type_traits>
 
 namespace Acts {
@@ -20,7 +22,22 @@ namespace detail {
 ///
 struct CorrectedBoundToFreeTransformer {
   /// The parameter to tune the weight
-  ActsScalar kappa = 4;
+  ActsScalar kappa = 2;
+
+  /// Get the non-linearity corrected bound parameters and its covariance
+  std::optional<std::pair<FreeVector, FreeSymMatrix>> operator()(
+      const FreeVector& freeParams, const BoundSymMatrix& boundCovariance,
+      const Surface& surface, const GeometryContext& geoContext) {
+    auto result =
+        detail::transformFreeToBoundParameters(freeParams, surface, geoContext);
+    if (not result.ok()) {
+      std::cout << "transformation failed!" << std::endl;
+      return std::nullopt;
+    }
+
+    auto boundParams = result.value();
+    return (*this)(boundParams, boundCovariance, surface, geoContext);
+  }
 
   /// Get the non-linearity corrected bound parameters and its covariance
   std::optional<std::pair<FreeVector, FreeSymMatrix>> operator()(
@@ -40,8 +57,8 @@ struct CorrectedBoundToFreeTransformer {
     // U*S*V^-1
     auto S = svd.singularValues();
     auto U = svd.matrixU();
-    auto V = svd.matrixV();
     /*
+    auto V = svd.matrixV();
         if (U != V) {
           std::cout << "U != V " << std::endl;
         }
@@ -50,27 +67,26 @@ struct CorrectedBoundToFreeTransformer {
         std::cout << "V = \n " << V << std::endl;
     */
     BoundMatrix D = BoundMatrix::Zero();
-    for (int i = 0; i < eBoundSize; ++i) {
+    for (unsigned int i = 0; i < eBoundSize; ++i) {
       D(i, i) = std::sqrt(S(i));
     }
 
     BoundMatrix UP = BoundMatrix::Zero();
-    for (int i = 0; i < eBoundSize; ++i) {
-      for (int j = 0; j < eBoundSize; ++j) {
+    for (unsigned int i = 0; i < eBoundSize; ++i) {
+      for (unsigned int j = 0; j < eBoundSize; ++j) {
         UP(i, j) = U(i, j);
       }
     }
     covSqrt = UP * D * UP.transpose();
 
-    auto test = covSqrt * covSqrt;
-
+    // auto test = covSqrt * covSqrt;
     //  std::cout << "covSqrt = \n" << covSqrt << std::endl;
 
     // Sample the free parameters
     // 1. the baseline parameter
     sampledBoundParams.push_back({boundParams, (kappa - eBoundSize) / kappa});
     // 2. the shifted parameters
-    for (size_t i = 0; i < eBoundSize; ++i) {
+    for (unsigned i = 0; i < eBoundSize; ++i) {
       ActsScalar kappaSqrt = std::sqrt(kappa);
       //     std::cout << "delta =  \n " << covSqrt.col(i) * kappaSqrt << std::endl;
       sampledBoundParams.push_back(
@@ -107,7 +123,7 @@ struct CorrectedBoundToFreeTransformer {
     }
 
     // Get the weighted bound covariance
-    for (size_t isample = 0; isample < sampleSize; ++isample) {
+    for (unsigned int isample = 0; isample < sampleSize; ++isample) {
       FreeVector sigma = transformedFreeParams[isample] - fpMean;
 
       //    std::cout<<"weight " << sampledBoundParams[isample].second << " for sigma = \n" << sigma<<std::endl;

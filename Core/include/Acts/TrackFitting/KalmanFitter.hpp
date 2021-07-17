@@ -398,7 +398,7 @@ class KalmanFitter {
             return;
           }
           auto& [boundParams, jacobian, pathLength, correctedBoundVector,
-                 correctedBoundCovariance] = *res;
+                 correctedBoundCovariance, cross] = *res;
 
           // Assign the fitted parameters
           if (nonlinearityCorrection) {
@@ -519,18 +519,19 @@ class KalmanFitter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface);
+        //      stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, preUpdate);
+        //       materialInteractor(surface, state, stepper, preUpdate);
 
         // Bind the transported state to the current surface
-        auto res = stepper.boundState(state.stepping, *surface, false);
+        // @note this ignores the preUpdate material
+        auto res = stepper.boundState(state.stepping, *surface, true);
         if (!res.ok()) {
           return res.error();
         }
         auto& [boundParams, jacobian, pathLength, correctedBoundVector,
-               correctedBoundCovariance] = *res;
+               correctedBoundCovariance, cross] = *res;
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
@@ -560,6 +561,10 @@ class KalmanFitter {
           trackStateProxy.predictedCorrectedCovariance() =
               std::move(correctedBoundCovariance);
         }
+        if (cross != BoundMatrix::Zero()) {
+          trackStateProxy.predictedCrossed() = std::move(cross);
+        }
+
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 
@@ -601,7 +606,7 @@ class KalmanFitter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),
-                         trackStateProxy.filteredCovariance());
+                         trackStateProxy.filteredCovariance(), *surface);
           // We count the state with measurement
           ++result.measurementStates;
         } else {
@@ -615,7 +620,7 @@ class KalmanFitter {
         }
 
         // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper, postUpdate);
+        //   materialInteractor(surface, state, stepper, postUpdate);
         // We count the processed state
         ++result.processedStates;
         // Update the number of holes count only when encoutering a
@@ -624,96 +629,99 @@ class KalmanFitter {
         // Since we encountered a measurment update the lastMeasurementIndex to
         // the lastTrackIndex.
         result.lastMeasurementIndex = result.lastTrackIndex;
-
-      } else if (surface->associatedDetectorElement() != nullptr ||
-                 surface->surfaceMaterial() != nullptr) {
-        // We only create track states here if there is already measurement
-        // detected
-        if (result.measurementStates > 0) {
-          // No source links on surface, add either hole or passive material
-          // TrackState entry multi trajectory. No storage allocation for
-          // uncalibrated/calibrated measurement and filtered parameter
-          result.lastTrackIndex = result.fittedStates.addTrackState(
-              ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
-              result.lastTrackIndex);
-
-          // now get track state proxy back
-          auto trackStateProxy =
-              result.fittedStates.getTrackState(result.lastTrackIndex);
-
-          // Set the surface
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-          // Set the track state flags
-          auto& typeFlags = trackStateProxy.typeFlags();
-          typeFlags.set(TrackStateFlag::ParameterFlag);
-          if (surface->surfaceMaterial() != nullptr) {
-            typeFlags.set(TrackStateFlag::MaterialFlag);
-          }
-          if (surface->associatedDetectorElement() != nullptr) {
-            ACTS_VERBOSE("Detected hole on " << surface->geometryId());
-            // If the surface is sensitive, set the hole type flag
-            typeFlags.set(TrackStateFlag::HoleFlag);
-
-            // Count the missed surface
-            result.missedActiveSurfaces.push_back(surface);
-
-            // Transport & bind the state to the current surface
-            auto res = stepper.boundState(state.stepping, *surface);
-            if (!res.ok()) {
-              ACTS_ERROR("Propagate to hole surface failed: " << res.error());
-              return res.error();
-            }
-            auto& [boundParams, jacobian, pathLength, correctedBoundVector,
-                   correctedBoundCovariance] = *res;
-
-            // Fill the track state
-            trackStateProxy.predicted() = std::move(boundParams.parameters());
-            if (boundParams.covariance().has_value()) {
-              trackStateProxy.predictedCovariance() =
-                  std::move(*boundParams.covariance());
-            }
-            if (correctedBoundVector != BoundVector::Zero()) {
-              trackStateProxy.predictedCorrected() =
-                  std::move(correctedBoundVector);
-            }
-            if (correctedBoundCovariance != BoundSymMatrix::Zero()) {
-              trackStateProxy.predictedCorrectedCovariance() =
-                  std::move(correctedBoundCovariance);
-            }
-            trackStateProxy.jacobian() = std::move(jacobian);
-            trackStateProxy.pathLength() = std::move(pathLength);
-          } else if (surface->surfaceMaterial() != nullptr) {
-            ACTS_VERBOSE("Detected in-sensitive surface "
-                         << surface->geometryId());
-
-            // Transport & get curvilinear state instead of bound state
-            auto [curvilinearParams, jacobian, pathLength] =
-                stepper.curvilinearState(state.stepping);
-
-            // Fill the track state
-            trackStateProxy.predicted() =
-                std::move(curvilinearParams.parameters());
-            if (curvilinearParams.covariance().has_value()) {
-              trackStateProxy.predictedCovariance() =
-                  std::move(*curvilinearParams.covariance());
-            }
-            trackStateProxy.jacobian() = std::move(jacobian);
-            trackStateProxy.pathLength() = std::move(pathLength);
-          }
-
-          // Set the filtered parameter index to be the same with predicted
-          // parameter
-          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
-          // We count the processed state
-          ++result.processedStates;
-        }
-        if (surface->surfaceMaterial() != nullptr) {
-          // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper, fullUpdate);
-        }
       }
+      /*
+        else if (surface->associatedDetectorElement() != nullptr ||
+                   surface->surfaceMaterial() != nullptr) {
+          // We only create track states here if there is already measurement
+          // detected
+          if (result.measurementStates > 0) {
+            // No source links on surface, add either hole or passive material
+            // TrackState entry multi trajectory. No storage allocation for
+            // uncalibrated/calibrated measurement and filtered parameter
+            result.lastTrackIndex = result.fittedStates.addTrackState(
+                ~(TrackStatePropMask::Uncalibrated |
+                  TrackStatePropMask::Calibrated |
+        TrackStatePropMask::Filtered), result.lastTrackIndex);
+
+            // now get track state proxy back
+            auto trackStateProxy =
+                result.fittedStates.getTrackState(result.lastTrackIndex);
+
+            // Set the surface
+            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+
+            // Set the track state flags
+            auto& typeFlags = trackStateProxy.typeFlags();
+            typeFlags.set(TrackStateFlag::ParameterFlag);
+            if (surface->surfaceMaterial() != nullptr) {
+              typeFlags.set(TrackStateFlag::MaterialFlag);
+            }
+            if (surface->associatedDetectorElement() != nullptr) {
+              ACTS_VERBOSE("Detected hole on " << surface->geometryId());
+              // If the surface is sensitive, set the hole type flag
+              typeFlags.set(TrackStateFlag::HoleFlag);
+
+              // Count the missed surface
+              result.missedActiveSurfaces.push_back(surface);
+
+              // Transport & bind the state to the current surface
+              auto res = stepper.boundState(state.stepping, *surface);
+              if (!res.ok()) {
+                ACTS_ERROR("Propagate to hole surface failed: " << res.error());
+                return res.error();
+              }
+              auto& [boundParams, jacobian, pathLength, correctedBoundVector,
+                     correctedBoundCovariance] = *res;
+
+              // Fill the track state
+              trackStateProxy.predicted() = std::move(boundParams.parameters());
+              if (boundParams.covariance().has_value()) {
+                trackStateProxy.predictedCovariance() =
+                    std::move(*boundParams.covariance());
+              }
+              if (correctedBoundVector != BoundVector::Zero()) {
+                trackStateProxy.predictedCorrected() =
+                    std::move(correctedBoundVector);
+              }
+              if (correctedBoundCovariance != BoundSymMatrix::Zero()) {
+                trackStateProxy.predictedCorrectedCovariance() =
+                    std::move(correctedBoundCovariance);
+              }
+              trackStateProxy.jacobian() = std::move(jacobian);
+              trackStateProxy.pathLength() = std::move(pathLength);
+            } else if (surface->surfaceMaterial() != nullptr) {
+              ACTS_VERBOSE("Detected in-sensitive surface "
+                           << surface->geometryId());
+
+              // Transport & get curvilinear state instead of bound state
+              auto [curvilinearParams, jacobian, pathLength] =
+                  stepper.curvilinearState(state.stepping);
+
+              // Fill the track state
+              trackStateProxy.predicted() =
+                  std::move(curvilinearParams.parameters());
+              if (curvilinearParams.covariance().has_value()) {
+                trackStateProxy.predictedCovariance() =
+                    std::move(*curvilinearParams.covariance());
+              }
+              trackStateProxy.jacobian() = std::move(jacobian);
+              trackStateProxy.pathLength() = std::move(pathLength);
+            }
+
+            // Set the filtered parameter index to be the same with predicted
+            // parameter
+            trackStateProxy.data().ifiltered =
+        trackStateProxy.data().ipredicted;
+            // We count the processed state
+            ++result.processedStates;
+          }
+          if (surface->surfaceMaterial() != nullptr) {
+            // Update state and stepper with material effects
+            materialInteractor(surface, state, stepper, fullUpdate);
+          }
+        }
+    */
       return Result<void>::success();
     }
 
@@ -760,7 +768,7 @@ class KalmanFitter {
         }
 
         auto& [boundParams, jacobian, pathLength, correctedBoundVector,
-               correctedBoundCovariance] = *res;
+               correctedBoundCovariance, cross] = *res;
 
         // Create a detached track state proxy
         auto tempTrackTip =
@@ -787,6 +795,9 @@ class KalmanFitter {
         if (correctedBoundCovariance != BoundSymMatrix::Zero()) {
           trackStateProxy.predictedCorrectedCovariance() =
               std::move(correctedBoundCovariance);
+        }
+        if (cross != BoundMatrix::Zero()) {
+          trackStateProxy.predictedCrossed() = std::move(cross);
         }
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
@@ -834,12 +845,13 @@ class KalmanFitter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),
-                         trackStateProxy.filteredCovariance());
+                         trackStateProxy.filteredCovariance(), *surface);
 
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
         }
-      } else if (surface->associatedDetectorElement() != nullptr ||
+      }
+      /*else if (surface->associatedDetectorElement() != nullptr ||
                  surface->surfaceMaterial() != nullptr) {
         // Transport covariance
         if (surface->associatedDetectorElement() != nullptr) {
@@ -863,7 +875,7 @@ class KalmanFitter {
           materialInteractor(surface, state, stepper);
         }
       }
-
+*/
       return Result<void>::success();
     }
 
@@ -910,7 +922,7 @@ class KalmanFitter {
                        << "varianceQoverP = " << interaction.varianceQoverP);
 
           // Update the state and stepper with material effects
-          interaction.updateState(state, stepper);
+          interaction.updateState(state, stepper, *surface);
         }
       }
 
@@ -1014,13 +1026,15 @@ class KalmanFitter {
         std::cout << "firstParams = \n " << firstParams << " and cov = \n"
                   << firstCreatedMeasurement.smoothedCovariance() << std::endl;
         stepper.update(state.stepping, firstParams,
-                       firstCreatedMeasurement.smoothedCovariance());
+                       firstCreatedMeasurement.smoothedCovariance(),
+                       firstCreatedMeasurement.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
         std::cout << "lastParams = \n " << lastParams << " and cov = \n"
                   << lastCreatedMeasurement.smoothedCovariance() << std::endl;
         stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothedCovariance());
+                       lastCreatedMeasurement.smoothedCovariance(),
+                       lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerToFirstCreatedMeasurement

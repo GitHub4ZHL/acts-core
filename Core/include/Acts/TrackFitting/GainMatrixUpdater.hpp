@@ -57,6 +57,7 @@ class GainMatrixUpdater {
     const auto predictedCorrected = trackState.predictedCorrected();
     const auto predictedCorrectedCovariance =
         trackState.predictedCorrectedCovariance();
+    const auto predictedCrossed = trackState.predictedCrossed();
 
     ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
     ACTS_VERBOSE("Predicted covariance:\n" << predictedCovariance);
@@ -96,19 +97,18 @@ class GainMatrixUpdater {
           ActsMatrix<eBoundSize, kMeasurementSize> K =
               ActsMatrix<eBoundSize, kMeasurementSize>::Zero();
 
+          CovarianceMatrix S = CovarianceMatrix::Zero();
+
           if (nonlinearityCorrection) {
             std::cout << "GainMatrix with nonlinearityCorrection " << std::endl;
-            K = (predictedCorrectedCovariance * H.transpose() *
-                 (H * predictedCorrectedCovariance * H.transpose() +
-                  calibratedCovariance)
-                     .inverse())
+            S = H * predictedCorrectedCovariance * H.transpose() +
+                calibratedCovariance;
+            // K = (predictedCrossed * H.transpose() * S.inverse())
+            K = (predictedCorrectedCovariance * H.transpose() * S.inverse())
                     .eval();
           } else {
-            K = (predictedCovariance * H.transpose() *
-                 (H * predictedCovariance * H.transpose() +
-                  calibratedCovariance)
-                     .inverse())
-                    .eval();
+            S = H * predictedCovariance * H.transpose() + calibratedCovariance;
+            K = (predictedCovariance * H.transpose() * S.inverse()).eval();
           }
 
           ACTS_VERBOSE("Gain Matrix K:\n" << K);
@@ -124,12 +124,14 @@ class GainMatrixUpdater {
           if (nonlinearityCorrection) {
             filtered =
                 predictedCorrected + K * (calibrated - H * predictedCorrected);
+            filteredCovariance =
+                predictedCorrectedCovariance - K * S * K.transpose();
           } else {
             filtered = predicted + K * (calibrated - H * predicted);
+            filteredCovariance =
+                (BoundSymMatrix::Identity() - K * H) * predictedCovariance;
           }
 
-          filteredCovariance =
-              (BoundSymMatrix::Identity() - K * H) * predictedCovariance;
           ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
           ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
 

@@ -13,6 +13,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationBoundToFree.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
@@ -48,7 +49,7 @@ class EigenStepper {
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double,
-                                BoundVector, Covariance>;
+                                BoundVector, Covariance, Jacobian>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
@@ -98,7 +99,24 @@ class EigenStepper {
         cov = BoundSymMatrix(*par.covariance());
         jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
         freeCov = jacToGlobal * cov * jacToGlobal.transpose();
-        std::cout << "freeCov = \n " << freeCov << std::endl;
+
+        if (localToGlobalCorrection) {
+          ////////////////////////////////////////////////////////////////////////////////
+          std::cout << "Before correction: freeVec = \n" << pars << std::endl;
+          std::cout << "Before correction: freeCov = \n"
+                    << freeCov << std::endl;
+          auto transformer = detail::CorrectedBoundToFreeTransformer();
+          auto correctedRes = transformer(par.parameters(), cov, surface, gctx);
+          if (correctedRes.has_value()) {
+            auto correctedValue = correctedRes.value();
+            pars = correctedValue.first;
+            freeCov = correctedValue.second;
+            std::cout << "After correction: freeVec = \n" << pars << std::endl;
+            std::cout << "After correction: freeCov = \n"
+                      << freeCov << std::endl;
+          }
+          ////////////////////////////////////////////////////////////////////////////////
+        }
       }
     }
 
@@ -107,6 +125,9 @@ class EigenStepper {
 
     /// The charge as the free vector can be 1/p or q/p
     double q = 1.;
+
+    bool localToGlobalCorrection = false;
+    bool globalToLocalCorrection = false;
 
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
@@ -305,15 +326,13 @@ class EigenStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] nonlinearityCorrection steering non-liearity effect correction
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true,
-                                bool nonlinearityCorrection = true) const;
+                                bool transportCov = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -336,7 +355,7 @@ class EigenStepper {
   /// @param [in] parameters Parameters that will be written into @p state
   /// @param [in] covariance The covariance that will be written into @p state
   void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const;
+              const Covariance& covariance, const Surface& surface) const;
 
   /// Method to update momentum, direction and p
   ///
@@ -347,6 +366,8 @@ class EigenStepper {
   /// @param [in] time the updated time value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
               double up, double time) const;
+
+  void updateFreeCov(State& state, const Surface& surface) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,

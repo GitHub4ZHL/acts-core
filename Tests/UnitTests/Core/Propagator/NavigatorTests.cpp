@@ -146,7 +146,7 @@ struct PropagatorState {
     }
 
     Result<BoundState> boundState(State& state, const Surface& surface,
-                                  bool /*unused*/, bool /*unused*/
+                                  bool /*unused*/
     ) const {
       auto bound =
           BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
@@ -170,7 +170,7 @@ struct PropagatorState {
     }
 
     void update(State& /*state*/, const FreeVector& /*pars*/,
-                const Covariance& /*cov*/) const {}
+                const Covariance& /*cov*/, const Surface&) const {}
 
     void update(State& /*state*/, const Vector3& /*uposition*/,
                 const Vector3& /*udirection*/, double /*up*/,

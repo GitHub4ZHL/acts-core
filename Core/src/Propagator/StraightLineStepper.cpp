@@ -14,15 +14,14 @@
 namespace Acts {
 
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double, BoundVector,
-                  BoundSymMatrix>>
+                  BoundSymMatrix, BoundMatrix>>
 StraightLineStepper::boundState(State& state, const Surface& surface,
-                                bool transportCov,
-                                bool nonlinearityCorrection) const {
+                                bool transportCov) const {
   return detail::boundState(
       state.geoContext, state.cov, state.freeCov, state.jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
       state.covTransport and transportCov, state.pathAccumulated, surface,
-      nonlinearityCorrection);
+      state.localToGlobalCorrection, state.globalToLocalCorrection);
 }
 
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
@@ -34,10 +33,14 @@ StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& parameters,
-                                 const Covariance& covariance) const {
+                                 const Covariance& covariance,
+                                 const Surface& surface) const {
   state.pars = parameters;
   state.cov = covariance;
 }
+
+void StraightLineStepper::updateFreeCov(State& state,
+                                        const Surface& surface) const {}
 
 void StraightLineStepper::update(State& state, const Vector3& uposition,
                                  const Vector3& udirection, double up,
@@ -72,7 +75,7 @@ void StraightLineStepper::resetState(State& state,
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                 boundParams),
-         cov);
+         cov, surface);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;

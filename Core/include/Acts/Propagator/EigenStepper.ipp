@@ -35,7 +35,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                 boundParams),
-         cov);
+         cov, surface);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
@@ -50,14 +50,13 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
 
 template <typename E, typename A>
 auto Acts::EigenStepper<E, A>::boundState(State& state, const Surface& surface,
-                                          bool transportCov,
-                                          bool nonlinearityCorrection) const
+                                          bool transportCov) const
     -> Result<BoundState> {
   return detail::boundState(
       state.geoContext, state.cov, state.freeCov, state.jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
       state.covTransport && transportCov, state.pathAccumulated, surface,
-      nonlinearityCorrection);
+      state.localToGlobalCorrection, state.globalToLocalCorrection);
 }
 
 template <typename E, typename A>
@@ -73,9 +72,29 @@ auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::update(State& state,
                                       const FreeVector& parameters,
-                                      const Covariance& covariance) const {
+                                      const Covariance& covariance,
+                                      const Surface& surface) const {
   state.pars = parameters;
   state.cov = covariance;
+
+  if (state.localToGlobalCorrection) {
+    // Get corrected free covariance (the free covariance before the correction
+    // might be nonsense)
+    ////////////////////////////////////////////////////////////////////////////////
+    std::cout << "Before correction: freeVec = \n" << state.pars << std::endl;
+    auto transformer = detail::CorrectedBoundToFreeTransformer();
+    auto correctedRes =
+        transformer(state.pars, state.cov, surface, state.geoContext);
+    if (correctedRes.has_value()) {
+      auto correctedValue = correctedRes.value();
+      state.pars = correctedValue.first;
+      state.freeCov = correctedValue.second;
+      std::cout << "After correction: freeVec = \n" << state.pars << std::endl;
+      std::cout << "After correction: freeCov = \n"
+                << state.freeCov << std::endl;
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+  }
 }
 
 template <typename E, typename A>
@@ -86,6 +105,29 @@ void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
   state.pars[eFreeQOverP] = (state.q != 0. ? state.q / up : 1. / up);
+}
+
+template <typename E, typename A>
+void Acts::EigenStepper<E, A>::updateFreeCov(State& state,
+                                             const Surface& surface) const {
+  if (state.localToGlobalCorrection) {
+    // Get corrected free covariance (the free covariance before the correction
+    // might be nonsense)
+    ////////////////////////////////////////////////////////////////////////////////
+    std::cout << "Before correction: freeVec = \n" << state.pars << std::endl;
+    auto transformer = detail::CorrectedBoundToFreeTransformer();
+    auto correctedRes =
+        transformer(state.pars, state.cov, surface, state.geoContext);
+    if (correctedRes.has_value()) {
+      auto correctedValue = correctedRes.value();
+      state.pars = correctedValue.first;
+      state.freeCov = correctedValue.second;
+      std::cout << "After correction: freeVec = \n" << state.pars << std::endl;
+      std::cout << "After correction: freeCov = \n"
+                << state.freeCov << std::endl;
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+  }
 }
 
 template <typename E, typename A>

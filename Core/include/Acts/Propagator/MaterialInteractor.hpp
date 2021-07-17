@@ -142,7 +142,7 @@ struct MaterialInteractor {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       }
       // Apply the material interactions
-      d.updateState(state, stepper);
+      d.updateState(state, stepper, *surface);
       // Record the result
       recordResult(d, result);
     } else if (recordInteractions && volume and volume->volumeMaterial()) {

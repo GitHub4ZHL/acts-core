@@ -34,6 +34,9 @@ TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
   if (hasPredictedCorrected()) {
     mask |= PM::PredictedCorrected;
   }
+  if (hasPredictedCrossed()) {
+    mask |= PM::PredictedCrossed;
+  }
   if (hasFiltered()) {
     mask |= PM::Filtered;
   }
@@ -104,6 +107,13 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCorrectedCovariance()
     const -> Covariance {
   assert(data().ipredictedCorrected != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ipredictedCorrected).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCrossed() const
+    -> Covariance {
+  assert(data().icrossed != IndexData::kInvalid);
+  return Covariance(m_traj->m_crossed.col(data().icrossed).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -202,6 +212,11 @@ inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
     m_params.addCol();
     m_cov.addCol();
     p.ipredictedCorrected = m_params.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::PredictedCrossed)) {
+    m_crossed.addCol();
+    p.icrossed = m_crossed.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {

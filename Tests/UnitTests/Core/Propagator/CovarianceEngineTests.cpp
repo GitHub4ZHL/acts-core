@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   auto boundResult =
       detail::boundState(tgContext, covariance, freeCovariance, jacobian,
                          transportJacobian, derivatives, boundToFreeJacobian,
-                         parameters, false, 1337., *surface)
+                         parameters, false, 1337., *surface, false, false)
           .value();
   BOOST_CHECK(std::get<0>(curvResult).covariance().has_value());
   BOOST_CHECK_EQUAL(*(std::get<0>(curvResult).covariance()), covarianceBefore);

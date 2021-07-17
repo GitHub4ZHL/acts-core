@@ -106,11 +106,11 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(time_exists, "time method not found");
         constexpr static bool overstep_exists = has_method<const S, double, overstep_t, const state&>;
         static_assert(overstep_exists, "overstepLimit method not found");
-        constexpr static bool bound_state_method_exists= has_method<const S, Result<typename S::BoundState>, bound_state_method_t, state&, const Surface&, bool, bool>;
+        constexpr static bool bound_state_method_exists= has_method<const S, Result<typename S::BoundState>, bound_state_method_t, state&, const Surface&, bool>;
         static_assert(bound_state_method_exists, "boundState method not found");
         constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
         static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
-        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&>,
+        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&, const Surface&>,
                                                              has_method<const S, void, update_t, state&, const Vector3&, const Vector3&, double, double>>;
         static_assert(update_method_exists, "update method not found");
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_curvilinear_t, state&>,
