@@ -34,8 +34,8 @@ TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
   if (hasPredictedCorrected()) {
     mask |= PM::PredictedCorrected;
   }
-  if (hasPredictedCrossed()) {
-    mask |= PM::PredictedCrossed;
+  if (hasCorrectedJacobian()) {
+    mask |= PM::CorrectedJacobian;
   }
   if (hasFiltered()) {
     mask |= PM::Filtered;
@@ -110,10 +110,11 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCorrectedCovariance()
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCrossed() const
+inline auto TrackStateProxy<SL, M, ReadOnly>::correctedJacobian() const
     -> Covariance {
-  assert(data().icrossed != IndexData::kInvalid);
-  return Covariance(m_traj->m_crossed.col(data().icrossed).data());
+  assert(data().icorrectedJacobian != IndexData::kInvalid);
+  return Covariance(
+      m_traj->m_correctedJacobian.col(data().icorrectedJacobian).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -214,9 +215,9 @@ inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
     p.ipredictedCorrected = m_params.size() - 1;
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::PredictedCrossed)) {
-    m_crossed.addCol();
-    p.icrossed = m_crossed.size() - 1;
+  if (ACTS_CHECK_BIT(mask, PropMask::CorrectedJacobian)) {
+    m_correctedJacobian.addCol();
+    p.icorrectedJacobian = m_correctedJacobian.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {

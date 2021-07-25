@@ -84,6 +84,7 @@ class StraightLineStepper {
         cov = BoundSymMatrix(*par.covariance());
         jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
         freeCov = jacToGlobal * cov * jacToGlobal.transpose();
+        localToGlobalCorrelation = cov * jacToGlobal.transpose();
       }
     }
 
@@ -98,6 +99,8 @@ class StraightLineStepper {
 
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
+    BoundToFreeMatrix startBoundToFinalFreeJacobian =
+        BoundToFreeMatrix::Identity();
 
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
@@ -112,6 +115,7 @@ class StraightLineStepper {
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
     FreeSymMatrix freeCov = FreeSymMatrix::Zero();
+    FreeToBoundMatrix localToGlobalCorrelation = FreeToBoundMatrix::Zero();
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;

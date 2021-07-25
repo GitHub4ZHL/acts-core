@@ -99,6 +99,7 @@ class EigenStepper {
         cov = BoundSymMatrix(*par.covariance());
         jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
         freeCov = jacToGlobal * cov * jacToGlobal.transpose();
+        localToGlobalCorrelation = cov * jacToGlobal.transpose();
 
         if (localToGlobalCorrection) {
           ////////////////////////////////////////////////////////////////////////////////
@@ -109,8 +110,9 @@ class EigenStepper {
           auto correctedRes = transformer(par.parameters(), cov, surface, gctx);
           if (correctedRes.has_value()) {
             auto correctedValue = correctedRes.value();
-            pars = correctedValue.first;
-            freeCov = correctedValue.second;
+            pars = std::get<0>(correctedValue);
+            freeCov = std::get<1>(correctedValue);
+            localToGlobalCorrelation = std::get<2>(correctedValue);
             std::cout << "After correction: freeVec = \n" << pars << std::endl;
             std::cout << "After correction: freeCov = \n"
                       << freeCov << std::endl;
@@ -126,20 +128,23 @@ class EigenStepper {
     /// The charge as the free vector can be 1/p or q/p
     double q = 1.;
 
-    bool localToGlobalCorrection = false;
-    bool globalToLocalCorrection = false;
+    bool localToGlobalCorrection = true;
+    bool globalToLocalCorrection = true;
 
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
     FreeSymMatrix freeCov = FreeSymMatrix::Zero();
+    FreeToBoundMatrix localToGlobalCorrelation = FreeToBoundMatrix::Zero();
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
+    BoundToFreeMatrix startBoundToFinalFreeJacobian =
+        BoundToFreeMatrix::Identity();
 
     /// Jacobian from local to the global frame
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();

@@ -262,7 +262,8 @@ namespace detail {
 
 Result<BoundState> boundState(
     const GeometryContext& geoContext, BoundSymMatrix& boundMatrix,
-    FreeSymMatrix& freeMatrix, BoundMatrix& jacobian,
+    FreeSymMatrix& freeMatrix, FreeToBoundMatrix& localToGlobalCorrelation,
+    BoundMatrix& jacobian, BoundToFreeMatrix& startBoundToFinalFreeJacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& parameters,
     bool covTransport, double accumulatedPath, const Surface& surface,
@@ -272,13 +273,15 @@ Result<BoundState> boundState(
   if (covTransport) {
     // Initialize the jacobian from start local to final local
     jacobian = BoundMatrix::Identity();
+    startBoundToFinalFreeJacobian = BoundToFreeMatrix::Identity();
     // Calculate the jacobian and transport the boundMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
     transportCovarianceToBound(
-        geoContext, boundMatrix, freeMatrix, jacobian, transportJacobian,
-        derivatives, boundToFreeJacobian, parameters, surface,
-        localToGlobalCorrection, globalToLocalCorrection);
+        geoContext, boundMatrix, freeMatrix, localToGlobalCorrelation, jacobian,
+        startBoundToFinalFreeJacobian, transportJacobian, derivatives,
+        boundToFreeJacobian, parameters, surface, localToGlobalCorrection,
+        globalToLocalCorrection);
   }
   if (boundMatrix != BoundSymMatrix::Zero()) {
     boundCov = boundMatrix;
@@ -295,12 +298,13 @@ Result<BoundState> boundState(
   /////////////////////////////////////////////////////////////////////////
   BoundVector correctedBp = BoundVector::Zero();
   BoundSymMatrix correctedBv = BoundSymMatrix::Zero();
-  BoundMatrix cross = BoundMatrix::Zero();
+  BoundMatrix correctedJacobian = BoundMatrix::Zero();
 
   if (globalToLocalCorrection) {
     std::cout << "Without correction, bound vec = \n"
               << bv.value() << "\n bound cov = \n"
-              << boundCov.value() << std::endl;
+              << boundCov.value() << "\n jacobian = \n"
+              << jacobian << std::endl;
 
     auto transformer = detail::CorrectedFreeToBoundTransformer();
     auto correctedRes =
@@ -311,24 +315,36 @@ Result<BoundState> boundState(
       correctedBv = std::get<1>(correctedValue);
       BoundToFreeMatrix fCross = std::get<2>(correctedValue);
 
-      // This is useless?
-      FreeToBoundMatrix freeToBoundJacobian =
-          surface.freeToBoundJacobian(geoContext, parameters);
+      //std::cout << "freeMatrix.inverse() = \n"
+      //          << freeMatrix.inverse() << std::endl;
+      correctedJacobian = fCross.transpose() *
+                          (freeMatrix.inverse()).transpose() *
+                          startBoundToFinalFreeJacobian;
 
-      // This should be close to boundCov
-      cross = freeToBoundJacobian * fCross;
       std::cout << "With correction, bound vec = \n"
                 << correctedBp << "\n bound cov = \n"
                 << correctedBv << " \n cross term = \n"
-                << cross << std::endl;
+                << correctedJacobian << std::endl;
     }
+  } else {
+    // No correction for final free->bound jacobian
+    FreeToBoundMatrix freeToBoundJacobian =
+        surface.freeToBoundJacobian(geoContext, parameters);
+
+    const FreeToPathMatrix freeToPath =
+        surface.freeToPathDerivative(geoContext, parameters);
+    FreeMatrix finalFreeCorrection =
+        (FreeMatrix::Identity() + derivatives * freeToPath);
+
+    correctedJacobian = freeToBoundJacobian * finalFreeCorrection *
+                        startBoundToFinalFreeJacobian;
   }
   /////////////////////////////////////////////////////////////////////////
 
   // Create the bound state
   return std::make_tuple(
       BoundTrackParameters(surface.getSharedPtr(), *bv, std::move(boundCov)),
-      jacobian, accumulatedPath, correctedBp, correctedBv, cross);
+      jacobian, accumulatedPath, correctedBp, correctedBv, correctedJacobian);
 }
 
 CurvilinearState curvilinearState(BoundSymMatrix& boundMatrix,
@@ -371,7 +387,9 @@ CurvilinearState curvilinearState(BoundSymMatrix& boundMatrix,
 
 void transportCovarianceToBound(
     const GeometryContext& geoContext, BoundSymMatrix& boundCovariance,
-    FreeSymMatrix& freeCovariance, BoundMatrix& fullTransportJacobian,
+    FreeSymMatrix& freeCovariance, FreeToBoundMatrix& localToGlobalCorrelation,
+    BoundMatrix& fullTransportJacobian,
+    BoundToFreeMatrix& startBoundToFinalFreeJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
     const Surface& surface, bool localToGlobalCorrection,
@@ -379,7 +397,6 @@ void transportCovarianceToBound(
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
   // @note this can be removed
-  BoundToFreeMatrix startBoundToFinalFreeJacobian = BoundToFreeMatrix::Zero();
   boundToBoundJacobian(geoContext, freeParameters, boundToFreeJacobian,
                        freeTransportJacobian, freeDerivatives,
                        fullTransportJacobian, startBoundToFinalFreeJacobian,
@@ -395,6 +412,12 @@ void transportCovarianceToBound(
 
     FreeToBoundMatrix freeToBoundJacobian =
         surface.freeToBoundJacobian(geoContext, freeParameters);
+
+    std::cout << "freeTransportJacobian = \n"
+              << freeTransportJacobian << std::endl;
+
+    startBoundToFinalFreeJacobian =
+        freeTransportJacobian * localToGlobalCorrelation.transpose();
 
     if (globalToLocalCorrection) {
       // The end free cov should not have path correction
@@ -431,6 +454,7 @@ void transportCovarianceToBound(
   // ->The boundToFreeJacobian is initialized to that at the current surface
   reinitializeJacobians(geoContext, freeTransportJacobian, freeDerivatives,
                         boundToFreeJacobian, freeParameters, surface);
+  localToGlobalCorrelation = boundCovariance * boundToFreeJacobian.transpose();
 }
 
 void transportCovarianceToCurvilinear(BoundSymMatrix& boundCovariance,

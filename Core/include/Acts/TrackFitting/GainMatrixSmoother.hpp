@@ -34,7 +34,7 @@ class GainMatrixSmoother {
   template <typename source_link_t>
   Result<void> operator()(const GeometryContext& gctx,
                           MultiTrajectory<source_link_t>& trajectory,
-                          size_t entryIndex,
+                          size_t entryIndex, bool nonlinearityCorrection = true,
                           LoggerWrapper logger = getDummyLogger()) const {
     (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
@@ -58,6 +58,7 @@ class GainMatrixSmoother {
     // default-constructed error represents success, i.e. an invalid error code
     std::error_code error;
     trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &error,
+                                                   &nonlinearityCorrection,
                                                    &logger](auto ts) {
       // should have filtered and predicted, this should also include the
       // covariances.
@@ -72,6 +73,13 @@ class GainMatrixSmoother {
       ACTS_VERBOSE("Calculate smoothing matrix:");
       ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
       ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
+      std::cout << "Jacobian:\n " << prev_ts.jacobian() << std::endl;
+      // std::cout
+      //    << "ts.filteredCovariance() * prev_ts.jacobian().transpose():\n "
+      //    << ts.filteredCovariance() * prev_ts.jacobian().transpose()
+      //    << std::endl;
+      //std::cout << "correctedJacobian:\n " << prev_ts.correctedJacobian()
+      //          << std::endl;
       ACTS_VERBOSE("Prev. predicted covariance\n"
                    << prev_ts.predictedCovariance() << "\n, inverse: \n"
                    << prev_ts.predictedCovariance().inverse());
@@ -79,8 +87,14 @@ class GainMatrixSmoother {
       // Gain smoothing matrix
       // NB: The jacobian stored in a state is the jacobian from previous
       // state to this state in forward propagation
-      BoundMatrix G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
-                      prev_ts.predictedCovariance().inverse();
+      BoundMatrix G = BoundMatrix::Zero();
+      if (nonlinearityCorrection) {
+        G = prev_ts.correctedJacobian().transpose() *
+            prev_ts.predictedCorrectedCovariance().inverse();
+      } else {
+        G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
+            prev_ts.predictedCovariance().inverse();
+      }
 
       if (G.hasNaN()) {
         error = KalmanFitterError::SmoothFailed;  // set to error
@@ -97,8 +111,13 @@ class GainMatrixSmoother {
           "Prev. predicted parameters: " << prev_ts.predicted().transpose());
 
       // Calculate the smoothed parameters
-      ts.smoothed() =
-          ts.filtered() + G * (prev_ts.smoothed() - prev_ts.predicted());
+      if (nonlinearityCorrection) {
+        ts.smoothed() = ts.filtered() +
+                        G * (prev_ts.smoothed() - prev_ts.predictedCorrected());
+      } else {
+        ts.smoothed() =
+            ts.filtered() + G * (prev_ts.smoothed() - prev_ts.predicted());
+      }
 
       ACTS_VERBOSE("Smoothed parameters are: " << ts.smoothed().transpose());
       ACTS_VERBOSE("Calculate smoothed covariance:");
@@ -106,10 +125,18 @@ class GainMatrixSmoother {
                    << prev_ts.smoothedCovariance());
 
       // And the smoothed covariance
-      ts.smoothedCovariance() =
-          ts.filteredCovariance() -
-          G * (prev_ts.predictedCovariance() - prev_ts.smoothedCovariance()) *
-              G.transpose();
+      if (nonlinearityCorrection) {
+        ts.smoothedCovariance() = ts.filteredCovariance() -
+                                  G *
+                                      (prev_ts.predictedCorrectedCovariance() -
+                                       prev_ts.smoothedCovariance()) *
+                                      G.transpose();
+      } else {
+        ts.smoothedCovariance() =
+            ts.filteredCovariance() -
+            G * (prev_ts.predictedCovariance() - prev_ts.smoothedCovariance()) *
+                G.transpose();
+      }
 
       // Check if the covariance matrix is semi-positive definite.
       // If not, make one (could do more) attempt to replace it with the

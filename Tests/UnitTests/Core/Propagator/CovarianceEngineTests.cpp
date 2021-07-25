@@ -39,8 +39,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   // Build covariance matrix, jacobians and related components
   Covariance covariance = Covariance::Identity();
   FreeSymMatrix freeCovariance = FreeSymMatrix::Identity();
+  FreeToBoundMatrix correlation = FreeToBoundMatrix::Zero();
   Jacobian jacobian = 2. * Jacobian::Identity();
   FreeMatrix transportJacobian = 3. * FreeMatrix::Identity();
+  BoundToFreeMatrix startBoundToFinalFreeJacobian =
+      BoundToFreeMatrix::Identity();
   FreeVector derivatives;
   derivatives << 9., 10., 11., 12., 13., 14., 15., 16.;
   BoundToFreeMatrix boundToFreeJacobian = 4. * BoundToFreeMatrix::Identity();
@@ -69,9 +72,10 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   // Repeat transport to surface
   auto surface = Surface::makeShared<PlaneSurface>(position, direction);
   FreeSymMatrix freeCov = FreeSymMatrix::Zero();
-  detail::transportCovarianceToBound(tgContext, covariance, freeCov, jacobian,
-                                     transportJacobian, derivatives,
-                                     boundToFreeJacobian, parameters, *surface);
+  detail::transportCovarianceToBound(
+      tgContext, covariance, freeCov, correlation, jacobian,
+      startBoundToFinalFreeJacobian, transportJacobian, derivatives,
+      boundToFreeJacobian, parameters, *surface);
 
   BOOST_CHECK_NE(covariance, Covariance::Identity());
   BOOST_CHECK_NE(jacobian, 2. * Jacobian::Identity());
@@ -109,7 +113,8 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   // Produce a bound state without covariance matrix
   covarianceBefore = covariance;
   auto boundResult =
-      detail::boundState(tgContext, covariance, freeCovariance, jacobian,
+      detail::boundState(tgContext, covariance, freeCovariance, correlation,
+                         jacobian, startBoundToFinalFreeJacobian,
                          transportJacobian, derivatives, boundToFreeJacobian,
                          parameters, false, 1337., *surface, false, false)
           .value();
@@ -126,7 +131,8 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Produce a bound state with covariance matrix
   boundResult =
-      detail::boundState(tgContext, covariance, freeCovariance, jacobian,
+      detail::boundState(tgContext, covariance, freeCovariance, correlation,
+                         jacobian, startBoundToFinalFreeJacobian,
                          transportJacobian, derivatives, boundToFreeJacobian,
                          parameters, true, 1337., *surface)
           .value();

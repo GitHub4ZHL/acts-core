@@ -139,8 +139,8 @@ struct CorrectedFreeToBoundTransformer {
 
     // Get the weighted bound covariance
     for (unsigned int isample = 0; isample < sampleSize; ++isample) {
-      BoundVector bSigma = transformedBoundParams[isample] - bpMean;
       FreeVector fSigma = sampledFreeParams[isample].first - freeParams;
+      BoundVector bSigma = transformedBoundParams[isample] - bpMean;
 
       std::cout << "weight " << sampledFreeParams[isample].second
                 << " for sigma = \n"

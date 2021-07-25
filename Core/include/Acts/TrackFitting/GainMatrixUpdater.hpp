@@ -57,7 +57,7 @@ class GainMatrixUpdater {
     const auto predictedCorrected = trackState.predictedCorrected();
     const auto predictedCorrectedCovariance =
         trackState.predictedCorrectedCovariance();
-    const auto predictedCrossed = trackState.predictedCrossed();
+    const auto correctedJacobian = trackState.correctedJacobian();
 
     ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
     ACTS_VERBOSE("Predicted covariance:\n" << predictedCovariance);
@@ -103,7 +103,7 @@ class GainMatrixUpdater {
             std::cout << "GainMatrix with nonlinearityCorrection " << std::endl;
             S = H * predictedCorrectedCovariance * H.transpose() +
                 calibratedCovariance;
-            // K = (predictedCrossed * H.transpose() * S.inverse())
+            // K = (correctedJacobian * H.transpose() * S.inverse())
             K = (predictedCorrectedCovariance * H.transpose() * S.inverse())
                     .eval();
           } else {

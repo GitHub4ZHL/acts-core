@@ -27,7 +27,7 @@ enum struct TrackStatePropMask : uint8_t {
   None = 0,
   Predicted = 1 << 0,
   PredictedCorrected = 1 << 1,
-  PredictedCrossed = 1 << 2,
+  CorrectedJacobian = 1 << 2,
   Filtered = 1 << 3,
   Smoothed = 1 << 4,
   Jacobian = 1 << 5,

@@ -398,7 +398,7 @@ class KalmanFitter {
             return;
           }
           auto& [boundParams, jacobian, pathLength, correctedBoundVector,
-                 correctedBoundCovariance, cross] = *res;
+                 correctedBoundCovariance, correctedJacobian] = *res;
 
           // Assign the fitted parameters
           if (nonlinearityCorrection) {
@@ -531,7 +531,7 @@ class KalmanFitter {
           return res.error();
         }
         auto& [boundParams, jacobian, pathLength, correctedBoundVector,
-               correctedBoundCovariance, cross] = *res;
+               correctedBoundCovariance, correctedJacobian] = *res;
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
@@ -561,8 +561,8 @@ class KalmanFitter {
           trackStateProxy.predictedCorrectedCovariance() =
               std::move(correctedBoundCovariance);
         }
-        if (cross != BoundMatrix::Zero()) {
-          trackStateProxy.predictedCrossed() = std::move(cross);
+        if (correctedJacobian != BoundMatrix::Zero()) {
+          trackStateProxy.correctedJacobian() = std::move(correctedJacobian);
         }
 
         trackStateProxy.jacobian() = std::move(jacobian);
@@ -768,7 +768,7 @@ class KalmanFitter {
         }
 
         auto& [boundParams, jacobian, pathLength, correctedBoundVector,
-               correctedBoundCovariance, cross] = *res;
+               correctedBoundCovariance, correctedJacobian] = *res;
 
         // Create a detached track state proxy
         auto tempTrackTip =
@@ -796,8 +796,8 @@ class KalmanFitter {
           trackStateProxy.predictedCorrectedCovariance() =
               std::move(correctedBoundCovariance);
         }
-        if (cross != BoundMatrix::Zero()) {
-          trackStateProxy.predictedCrossed() = std::move(cross);
+        if (correctedJacobian != BoundMatrix::Zero()) {
+          trackStateProxy.correctedJacobian() = std::move(correctedJacobian);
         }
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
@@ -976,7 +976,9 @@ class KalmanFitter {
 
       // Smooth the track states
       auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
-                                  result.lastMeasurementIndex, logger);
+                                  result.lastMeasurementIndex,
+                                  // nonlinearityCorrection, logger);
+                                  false, logger);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();

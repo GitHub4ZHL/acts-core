@@ -119,7 +119,7 @@ struct IndexData {
   IndexType iprevious = kInvalid;
   IndexType ipredicted = kInvalid;
   IndexType ipredictedCorrected = kInvalid;
-  IndexType icrossed = kInvalid;
+  IndexType icorrectedJacobian = kInvalid;
   IndexType ifiltered = kInvalid;
   IndexType ismoothed = kInvalid;
   IndexType ijacobian = kInvalid;
@@ -305,10 +305,10 @@ class TrackStateProxy {
     return data().ipredictedCorrected != IndexData::kInvalid;
   }
 
-  Covariance predictedCrossed() const;
+  Covariance correctedJacobian() const;
 
-  bool hasPredictedCrossed() const {
-    return data().icrossed != IndexData::kInvalid;
+  bool hasCorrectedJacobian() const {
+    return data().icorrectedJacobian != IndexData::kInvalid;
   }
 
   /// Filtered track parameters vector
@@ -685,7 +685,7 @@ class MultiTrajectory {
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
   typename detail_lt::Types<eBoundSize>::StorageCovariance m_jac;
-  typename detail_lt::Types<eBoundSize>::StorageCovariance m_crossed;
+  typename detail_lt::Types<eBoundSize>::StorageCovariance m_correctedJacobian;
   std::vector<SourceLink> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 

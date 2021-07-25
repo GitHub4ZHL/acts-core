@@ -25,9 +25,10 @@ struct CorrectedBoundToFreeTransformer {
   ActsScalar kappa = 2;
 
   /// Get the non-linearity corrected bound parameters and its covariance
-  std::optional<std::pair<FreeVector, FreeSymMatrix>> operator()(
-      const FreeVector& freeParams, const BoundSymMatrix& boundCovariance,
-      const Surface& surface, const GeometryContext& geoContext) {
+  std::optional<std::tuple<FreeVector, FreeSymMatrix, FreeToBoundMatrix>>
+  operator()(const FreeVector& freeParams,
+             const BoundSymMatrix& boundCovariance, const Surface& surface,
+             const GeometryContext& geoContext) {
     auto result =
         detail::transformFreeToBoundParameters(freeParams, surface, geoContext);
     if (not result.ok()) {
@@ -40,9 +41,10 @@ struct CorrectedBoundToFreeTransformer {
   }
 
   /// Get the non-linearity corrected bound parameters and its covariance
-  std::optional<std::pair<FreeVector, FreeSymMatrix>> operator()(
-      const BoundVector& boundParams, const BoundSymMatrix& boundCovariance,
-      const Surface& surface, const GeometryContext& geoContext) {
+  std::optional<std::tuple<FreeVector, FreeSymMatrix, FreeToBoundMatrix>>
+  operator()(const BoundVector& boundParams,
+             const BoundSymMatrix& boundCovariance, const Surface& surface,
+             const GeometryContext& geoContext) {
     std::cout << "++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     size_t sampleSize = 2 * eBoundSize + 1;
     std::vector<std::pair<BoundVector, ActsScalar>> sampledBoundParams;
@@ -101,6 +103,8 @@ struct CorrectedBoundToFreeTransformer {
     FreeVector fpMean = FreeVector::Zero();
     // Initialize the bound covariance
     FreeSymMatrix fv = FreeSymMatrix::Zero();
+    // Initialize the correlation matrix
+    FreeToBoundMatrix cross = FreeToBoundMatrix::Zero();
 
     // The transformed bound parameters
     std::vector<FreeVector> transformedFreeParams;
@@ -124,13 +128,16 @@ struct CorrectedBoundToFreeTransformer {
 
     // Get the weighted bound covariance
     for (unsigned int isample = 0; isample < sampleSize; ++isample) {
-      FreeVector sigma = transformedFreeParams[isample] - fpMean;
+      BoundVector bSigma = sampledBoundParams[isample].first - boundParams;
+      FreeVector fSigma = transformedFreeParams[isample] - fpMean;
 
       //    std::cout<<"weight " << sampledBoundParams[isample].second << " for sigma = \n" << sigma<<std::endl;
-      fv += sampledBoundParams[isample].second * sigma * sigma.transpose();
+      fv += sampledBoundParams[isample].second * fSigma * fSigma.transpose();
+      cross = cross +
+              sampledBoundParams[isample].second * bSigma * fSigma.transpose();
     }
 
-    return std::pair<FreeVector, FreeSymMatrix>(fpMean, fv);
+    return std::make_tuple(fpMean, fv, cross);
   }
 };
 
