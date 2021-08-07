@@ -78,8 +78,11 @@ class EigenStepper {
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
-                   double stolerance = s_onSurfaceTolerance)
+                   double stolerance = s_onSurfaceTolerance,
+                   bool ltgCorrection = false, bool gtlCorrection = false)
         : q(par.charge()),
+          localToGlobalCorrection(ltgCorrection),
+          globalToLocalCorrection(gtlCorrection),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
@@ -201,7 +204,9 @@ class EigenStepper {
                   const SingleBoundTrackParameters<charge_t>& par,
                   NavigationDirection ndir = forward,
                   double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const;
+                  double stolerance = s_onSurfaceTolerance,
+                  bool localToGlobalCorrection = false,
+                  bool globalToLocalCorrection = false) const;
 
   /// @brief Resets the state
   ///

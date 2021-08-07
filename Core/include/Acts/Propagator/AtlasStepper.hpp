@@ -308,7 +308,9 @@ class AtlasStepper {
                   const SingleBoundTrackParameters<charge_t>& par,
                   NavigationDirection ndir = forward,
                   double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const {
+                  double stolerance = s_onSurfaceTolerance,
+                  bool /*localToGlobalCorrection*/ = false,
+                  bool /*globalToLocalCorrection*/ = false) const {
     return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
   }
 

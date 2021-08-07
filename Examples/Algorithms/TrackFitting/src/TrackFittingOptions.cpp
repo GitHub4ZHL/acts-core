@@ -22,9 +22,18 @@ void ActsExamples::Options::addFittingOptions(
   opt.add_options()("fit-energy-loss-correction",
                     value<bool>()->default_value(true),
                     "Correct for energyloss effects.");
-  opt.add_options()("fit-nonlinearity-correction",
-                    value<bool>()->default_value(true),
-                    "Correct for non-linearity effects.");
+  opt.add_options()(
+      "fit-filtering-correction", value<bool>()->default_value(true),
+      "Correct for non-linearity effects during Kalman filtering.");
+  opt.add_options()(
+      "fit-smoothing-correction", value<bool>()->default_value(false),
+      "Correct for non-linearity effects during Kalman smoothing.");
+  opt.add_options()(
+      "fit-ltog-correction", value<bool>()->default_value(true),
+      "Correct for non-liearity effects during localToGlobal transform.");
+  opt.add_options()(
+      "fit-gtol-correction", value<bool>()->default_value(true),
+      "Correct for non-liearity effects during globalToLocal transform.");
   opt.add_options()("fit-pick-track", value<int>()->default_value(-1),
                     "Pick a single track by track number (-1 for all tracks)");
   opt.add_options()(

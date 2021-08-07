@@ -35,6 +35,7 @@ class GainMatrixSmoother {
   Result<void> operator()(const GeometryContext& gctx,
                           MultiTrajectory<source_link_t>& trajectory,
                           size_t entryIndex, bool nonlinearityCorrection = true,
+                          bool localToGlobalCorrection = false,
                           LoggerWrapper logger = getDummyLogger()) const {
     (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
@@ -59,6 +60,7 @@ class GainMatrixSmoother {
     std::error_code error;
     trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &error,
                                                    &nonlinearityCorrection,
+                                                   &localToGlobalCorrection,
                                                    &logger](auto ts) {
       // should have filtered and predicted, this should also include the
       // covariances.
@@ -74,12 +76,6 @@ class GainMatrixSmoother {
       ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
       ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
       std::cout << "Jacobian:\n " << prev_ts.jacobian() << std::endl;
-      // std::cout
-      //    << "ts.filteredCovariance() * prev_ts.jacobian().transpose():\n "
-      //    << ts.filteredCovariance() * prev_ts.jacobian().transpose()
-      //    << std::endl;
-      //std::cout << "correctedJacobian:\n " << prev_ts.correctedJacobian()
-      //          << std::endl;
       ACTS_VERBOSE("Prev. predicted covariance\n"
                    << prev_ts.predictedCovariance() << "\n, inverse: \n"
                    << prev_ts.predictedCovariance().inverse());
@@ -89,8 +85,23 @@ class GainMatrixSmoother {
       // state to this state in forward propagation
       BoundMatrix G = BoundMatrix::Zero();
       if (nonlinearityCorrection) {
-        G = prev_ts.correctedJacobian().transpose() *
-            prev_ts.predictedCorrectedCovariance().inverse();
+        if (localToGlobalCorrection) {
+          // The prev_ts.correctedJacobian already contains the covariance of ts
+          G = prev_ts.correctedJacobian().transpose() *
+              prev_ts.predictedCorrectedCovariance().inverse();
+          std::cout << "correctedJacobianPrime:\n "
+                    << prev_ts.correctedJacobian()
+                    << " non correctedJacobianPrime:\n "
+                    << ts.filteredCovariance() * prev_ts.jacobian().transpose()
+                    << std::endl;
+        } else {
+          std::cout << "correctedJacobian:\n " << prev_ts.correctedJacobian()
+                    << "non correctedJacobian: \n"
+                    << prev_ts.jacobian() << std::endl;
+          G = ts.filteredCovariance() *
+              prev_ts.correctedJacobian().transpose() *
+              prev_ts.predictedCorrectedCovariance().inverse();
+        }
       } else {
         G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
             prev_ts.predictedCovariance().inverse();

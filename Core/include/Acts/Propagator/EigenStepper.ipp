@@ -20,8 +20,11 @@ auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
     const SingleBoundTrackParameters<charge_t>& par, NavigationDirection ndir,
-    double ssize, double stolerance) const -> State {
-  return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
+    double ssize, double stolerance, bool correctToGlobal,
+    bool correctToLocal) const -> State {
+  return State{
+      gctx,       m_bField->makeCache(mctx), par,           ndir, ssize,
+      stolerance, correctToGlobal,           correctToLocal};
 }
 
 template <typename E, typename A>
@@ -79,17 +82,18 @@ void Acts::EigenStepper<E, A>::update(State& state,
   std::cout << "EigenStepper::update " << std::endl;
   state.pars = parameters;
   state.cov = covariance;
-  state.localToGlobalCorrelation = state.cov * state.jacToGlobal.transpose();
 
-  // Reset jacToGlobal
+  // Reset
   Result<BoundVector> boundParameters = detail::transformFreeToBoundParameters(
       parameters, surface, state.geoContext);
   if (!boundParameters.ok()) {
     std::cout << "Acts::EigenStepper<E, A>::update error" << std::endl;
   }
-  // Reset the jacobian from local to global
+  // 1. Reset the jacobian from local to global
   state.jacToGlobal =
       surface.boundToFreeJacobian(state.geoContext, *boundParameters);
+  // 2. Reset the correlation matrix (is this necessary?)
+  state.localToGlobalCorrelation = state.cov * state.jacToGlobal.transpose();
 
   if (state.localToGlobalCorrection) {
     // Get corrected free covariance (the free covariance before the correction
@@ -145,15 +149,17 @@ void Acts::EigenStepper<E, A>::updateFreeCov(State& state,
     ////////////////////////////////////////////////////////////////////////////////
   }
 
-  // Reset jacToGlobal
+  // Reset
   Result<BoundVector> boundParameters = detail::transformFreeToBoundParameters(
       state.pars, surface, state.geoContext);
   if (!boundParameters.ok()) {
     std::cout << "Acts::EigenStepper<E, A>::update error" << std::endl;
   }
-  // Reset the jacobian from local to global
+  // 1. Reset the jacobian from local to global
   state.jacToGlobal =
       surface.boundToFreeJacobian(state.geoContext, *boundParameters);
+  // 2. Reset the correlation matrix (is this necessary?)
+  state.localToGlobalCorrelation = state.cov * state.jacToGlobal.transpose();
 }
 
 template <typename E, typename A>
@@ -316,6 +322,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       h / 6. * (sd.k1 + 2. * (sd.k2 + sd.k3) + sd.k4);
   (state.stepping.pars.template segment<3>(eFreeDir0)).normalize();
 
+  // @todo check this
+  state.stepping.derivative = FreeVector::Zero();
   if (state.stepping.covTransport) {
     state.stepping.derivative.template head<3>() =
         state.stepping.pars.template segment<3>(eFreeDir0);

@@ -66,7 +66,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  // std::cout<<"logLevel in TrackFittingAlgorithm: " << lg << std::endl;
   // Set the KalmanFitter options
   Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>
       kfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
@@ -76,7 +75,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   kfOptions.multipleScattering = m_cfg.multipleScattering;
   kfOptions.energyLoss = m_cfg.energyLoss;
-  kfOptions.nonlinearityCorrection = m_cfg.nonlinearityCorrection;
+  kfOptions.filteringCorrection = m_cfg.filteringCorrection;
+  kfOptions.smoothingCorrection = m_cfg.smoothingCorrection;
+  kfOptions.localToGlobalCorrection = m_cfg.localToGlobalCorrection;
+  kfOptions.globalToLocalCorrection = m_cfg.globalToLocalCorrection;
 
   // Perform the fit for each input track
   std::vector<IndexSourceLink> trackSourceLinks;

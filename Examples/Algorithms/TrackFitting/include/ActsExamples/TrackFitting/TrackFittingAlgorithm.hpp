@@ -78,7 +78,10 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     bool multipleScattering = true;
     /// Some more detailed steering - correct for e-loss
     bool energyLoss = true;
-    bool nonlinearityCorrection = true;
+    bool filteringCorrection = true;
+    bool smoothingCorrection = true;
+    bool localToGlobalCorrection = false;
+    bool globalToLocalCorrection = false;
     /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
   };

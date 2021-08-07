@@ -96,6 +96,12 @@ struct PropagatorPlainOptions {
 
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
+
+  /// localToGlobal non-linearity correction
+  bool localToGlobalCorrection = false;
+
+  /// globalToLocal non-linearity correction
+  bool globalToLocalCorrection = false;
 };
 
 /// @brief Options for propagate() call
@@ -149,6 +155,8 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     // Stepper options
     eoptions.tolerance = tolerance;
     eoptions.stepSizeCutOff = stepSizeCutOff;
+    eoptions.localToGlobalCorrection = localToGlobalCorrection;
+    eoptions.globalToLocalCorrection = globalToLocalCorrection;
     // Action / abort list
     eoptions.actionList = std::move(actionList);
     eoptions.abortList = std::move(aborters);
@@ -173,6 +181,8 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     loopFraction = pOptions.loopFraction;
     tolerance = pOptions.tolerance;
     stepSizeCutOff = pOptions.stepSizeCutOff;
+    localToGlobalCorrection = pOptions.localToGlobalCorrection;
+    globalToLocalCorrection = pOptions.globalToLocalCorrection;
   }
 
   /// List of actions

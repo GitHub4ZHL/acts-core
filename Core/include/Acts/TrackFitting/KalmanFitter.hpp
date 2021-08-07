@@ -71,7 +71,9 @@ struct KalmanFitterOptions {
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
-                      bool nlCorrection = false, bool rFiltering = false)
+                      bool fCorrection = false, bool sCorrection = false,
+                      bool ltgCorrection = false, bool gtlCorrection = false,
+                      bool rFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -81,7 +83,10 @@ struct KalmanFitterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        nonlinearityCorrection(nlCorrection),
+        filteringCorrection(fCorrection),
+        smoothingCorrection(sCorrection),
+        localToGlobalCorrection(ltgCorrection),
+        globalToLocalCorrection(gtlCorrection),
         reversedFiltering(rFiltering),
         logger(logger_) {}
   /// Contexts are required and the options must not be default-constructible.
@@ -112,8 +117,17 @@ struct KalmanFitterOptions {
   /// Whether to consider energy loss
   bool energyLoss = true;
 
-  /// Whether do non-linearity correction
-  bool nonlinearityCorrection = true;
+  /// Whether do non-linearity correction during filtering
+  bool filteringCorrection = true;
+
+  /// Whether do non-linearity correction during smoothing
+  bool smoothingCorrection = false;
+
+  /// Whether do localToGlobal correction
+  bool localToGlobalCorrection = false;
+
+  /// Whether do globalToLocal correction
+  bool globalToLocalCorrection = true;
 
   /// Whether to run filtering in reversed direction
   bool reversedFiltering = false;
@@ -244,8 +258,17 @@ class KalmanFitter {
     /// Whether to consider energy loss.
     bool energyLoss = true;
 
-    /// Whether do non-linearity correction
-    bool nonlinearityCorrection = true;
+    /// Whether do non-linearity correction during filtering
+    bool filteringCorrection = true;
+
+    /// Whether do non-linearity correction during smoothing
+    bool smoothingCorrection = false;
+
+    /// Whether do localToGlobal correction
+    bool localToGlobalCorrection = false;
+
+    /// Whether do globalToLocal correction
+    bool globalToLocalCorrection = true;
 
     /// Whether run reversed filtering
     bool reversedFiltering = false;
@@ -401,7 +424,8 @@ class KalmanFitter {
                  correctedBoundCovariance, correctedJacobian] = *res;
 
           // Assign the fitted parameters
-          if (nonlinearityCorrection) {
+          // Does this matter
+          if (globalToLocalCorrection) {
             result.fittedParameters = BoundTrackParameters(
                 targetSurface->getSharedPtr(), correctedBoundVector,
                 correctedBoundCovariance);
@@ -590,9 +614,9 @@ class KalmanFitter {
         // an outlier
         if (not m_outlierFinder(trackStateProxy)) {
           // Run Kalman update
-          auto updateRes =
-              m_updater(state.geoContext, trackStateProxy,
-                        state.stepping.navDir, nonlinearityCorrection, logger);
+          auto updateRes = m_updater(
+              state.geoContext, trackStateProxy, state.stepping.navDir,
+              globalToLocalCorrection && filteringCorrection, logger);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -814,7 +838,7 @@ class KalmanFitter {
         // If the update is successful, set covariance and
         auto updateRes =
             m_updater(state.geoContext, trackStateProxy, state.stepping.navDir,
-                      nonlinearityCorrection, logger);
+                      filteringCorrection, logger);
         if (!updateRes.ok()) {
           ACTS_ERROR("Backward update step failed: " << updateRes.error());
           return updateRes.error();
@@ -975,10 +999,10 @@ class KalmanFitter {
       }
 
       // Smooth the track states
-      auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
-                                  result.lastMeasurementIndex,
-                                  // nonlinearityCorrection, logger);
-                                  false, logger);
+      auto smoothRes = m_smoother(
+          state.geoContext, result.fittedStates, result.lastMeasurementIndex,
+          globalToLocalCorrection && smoothingCorrection,
+          localToGlobalCorrection, logger);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -1155,16 +1179,27 @@ class KalmanFitter {
     // Set the trivial propagator options
     kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
+    // Set the correction options for the stepper
+    kalmanOptions.localToGlobalCorrection = kfOptions.localToGlobalCorrection;
+    kalmanOptions.globalToLocalCorrection = kfOptions.globalToLocalCorrection;
+
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
-    kalmanActor.nonlinearityCorrection = kfOptions.nonlinearityCorrection;
+    kalmanActor.filteringCorrection = kfOptions.filteringCorrection;
+    kalmanActor.smoothingCorrection = kfOptions.smoothingCorrection;
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.m_calibrator = kfOptions.calibrator;
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
+
+    if (kalmanActor.smoothingCorrection) {
+      std::cout << "Run corrected smoothing" << std::endl;
+    }
+    kalmanActor.globalToLocalCorrection = kfOptions.globalToLocalCorrection;
+    kalmanActor.localToGlobalCorrection = kfOptions.localToGlobalCorrection;
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);

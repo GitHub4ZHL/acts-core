@@ -121,6 +121,10 @@ void boundToBoundJacobian(const GeometryContext& geoContext,
       freeToBoundJacobian *
       (FreeMatrix::Identity() + freeDerivatives * freeToPath) *
       startBoundToFinalFreeJacobian;
+  //  std::cout<<"bound to bound " << std::endl;
+  //  std::cout<<"startBoundToFinalFreeJacobian =\n" << startBoundToFinalFreeJacobian << std::endl;
+  //  std::cout<<"finalFreeCorrection =\n" << FreeMatrix::Identity() + freeDerivatives * freeToPath << std::endl;
+  //  std::cout<<"freeToBoundJacobian =\n" << freeToBoundJacobian << std::endl;
 }
 
 /// @brief This function calculates the full jacobian from local parameters at
@@ -189,7 +193,7 @@ Result<void> reinitializeJacobians(const GeometryContext& geoContext,
 
   // Reset the jacobians
   freeTransportJacobian = FreeMatrix::Identity();
-  freeToPathDerivatives = FreeVector::Zero();
+  //  freeToPathDerivatives = FreeVector::Zero();
 
   // Get the local position
   const Vector3 position = freeParameters.segment<3>(eFreePos0);
@@ -282,6 +286,7 @@ Result<BoundState> boundState(
         startBoundToFinalFreeJacobian, transportJacobian, derivatives,
         boundToFreeJacobian, parameters, surface, localToGlobalCorrection,
         globalToLocalCorrection);
+    // The boundToFreeJacobian and derivatives are reinitialized
   }
   if (boundMatrix != BoundSymMatrix::Zero()) {
     boundCov = boundMatrix;
@@ -294,17 +299,26 @@ Result<BoundState> boundState(
     return bv.error();
   }
 
-  // Calculate corrected bound vec and bound cov
+  // Calculate corrected bound vec, bound cov and jacobian (they are meaning
+  // only when globalToLocalCorrection is required) The impact of
+  // localToGlobalCorrection is already contained in the bp, bv and jacobian
   /////////////////////////////////////////////////////////////////////////
   BoundVector correctedBp = BoundVector::Zero();
   BoundSymMatrix correctedBv = BoundSymMatrix::Zero();
   BoundMatrix correctedJacobian = BoundMatrix::Zero();
 
+  // The correctedJacobian has different meaning for globalToLocalCorrection is
+  // true or false
+  // - if localToGlobal is true, the correctedJacobian includes the bound
+  // covariance at the final surface
+  // - if localToGlobal is false, the correctedJacobian is a real jacobian
   if (globalToLocalCorrection) {
     std::cout << "Without correction, bound vec = \n"
               << bv.value() << "\n bound cov = \n"
               << boundCov.value() << "\n jacobian = \n"
               << jacobian << std::endl;
+    // Note the derivative must not be reinitialized
+    std::cout << "derivatives are \n" << derivatives << std::endl;
 
     auto transformer = detail::CorrectedFreeToBoundTransformer();
     auto correctedRes =
@@ -321,6 +335,11 @@ Result<BoundState> boundState(
                           (freeMatrix.inverse()).transpose() *
                           startBoundToFinalFreeJacobian;
 
+      // This term below should be similar to freeToBoundJacobian *
+      // finalFreeCorrection in the else, but actually they are quite different
+      // So this option does not work well
+      //std::cout<<"fCross.transpose() * (freeMatrix.inverse()).transpose() = \n" << fCross.transpose() * (freeMatrix.inverse()).transpose() << std::endl;
+
       std::cout << "With correction, bound vec = \n"
                 << correctedBp << "\n bound cov = \n"
                 << correctedBv << " \n cross term = \n"
@@ -333,13 +352,26 @@ Result<BoundState> boundState(
 
     const FreeToPathMatrix freeToPath =
         surface.freeToPathDerivative(geoContext, parameters);
+    // The derivatives are already initialized to zero
     FreeMatrix finalFreeCorrection =
         (FreeMatrix::Identity() + derivatives * freeToPath);
 
+    std::cout << "freeToBoundJacobian * finalFreeCorrection =\n"
+              << freeToBoundJacobian * finalFreeCorrection << std::endl;
+    //std::cout<<"startBoundToFinalFreeJacobian =\n" << startBoundToFinalFreeJacobian << std::endl;
+    //std::cout<<"finalFreeCorrection =\n" << finalFreeCorrection << std::endl;
+    //std::cout<<"freeToBoundJacobian =\n" << freeToBoundJacobian << std::endl;
     correctedJacobian = freeToBoundJacobian * finalFreeCorrection *
                         startBoundToFinalFreeJacobian;
   }
+
   /////////////////////////////////////////////////////////////////////////
+
+  // THe correctedJacobian should be equal to jacobian in case no gtol and ltog
+  // correction
+  std::cout << "The jacobian without correction is \n" << jacobian << std::endl;
+  std::cout << "The jacobian with correction is \n"
+            << correctedJacobian << std::endl;
 
   // Create the bound state
   return std::make_tuple(
@@ -407,15 +439,17 @@ void transportCovarianceToBound(
       surface.freeToPathDerivative(geoContext, freeParameters);
   finalFreeCorrection = (FreeMatrix::Identity() + freeDerivatives * freeToPath);
 
+  // localToGlobalCorrection determines if the starting freeCov is trustible or
+  // not if localToGlobalCorrection is true, then use the starting freeCov
+  // (which is more accurate); otherwise, use the starting boundCov
+  // globalToLocalCorrection determins if the final free covariance considers
+  // the path correction or not if globalToLocalCorrection is true, then don't
+  // consider the path correction at this point
   if (localToGlobalCorrection) {
-    // The starting freeCov is trustible or not
-
     FreeToBoundMatrix freeToBoundJacobian =
         surface.freeToBoundJacobian(geoContext, freeParameters);
 
-    std::cout << "freeTransportJacobian = \n"
-              << freeTransportJacobian << std::endl;
-
+    // Reset
     startBoundToFinalFreeJacobian =
         freeTransportJacobian * localToGlobalCorrelation.transpose();
 
@@ -435,6 +469,9 @@ void transportCovarianceToBound(
                         freeToBoundJacobian.transpose();
     }
   } else {
+    // startBoundToFinalFreeJacobian is already transfortJacobian *
+    // J^start(B->F)
+
     if (globalToLocalCorrection) {
       freeCovariance = startBoundToFinalFreeJacobian * boundCovariance *
                        startBoundToFinalFreeJacobian.transpose();
@@ -454,6 +491,7 @@ void transportCovarianceToBound(
   // ->The boundToFreeJacobian is initialized to that at the current surface
   reinitializeJacobians(geoContext, freeTransportJacobian, freeDerivatives,
                         boundToFreeJacobian, freeParameters, surface);
+  // update the localToGlobalCorrection to that for the final surface
   localToGlobalCorrelation = boundCovariance * boundToFreeJacobian.transpose();
 }
 
