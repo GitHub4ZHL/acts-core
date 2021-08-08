@@ -19,7 +19,7 @@ StraightLineStepper::boundState(State& state, const Surface& surface,
                                 bool transportCov) const {
   return detail::boundState(
       state.geoContext, state.cov, state.freeCov,
-      state.localToGlobalCorrelation, state.jacobian,
+      state.localToGlobalCorrelation, state.jacobian, state.correctedJacobian,
       state.startBoundToFinalFreeJacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, state.pars, state.covTransport and transportCov,
       state.pathAccumulated, surface, state.localToGlobalCorrection,
@@ -63,7 +63,7 @@ void StraightLineStepper::transportCovarianceToBound(
     State& state, const Surface& surface) const {
   detail::transportCovarianceToBound(
       state.geoContext, state.cov, state.freeCov,
-      state.localToGlobalCorrelation, state.jacobian,
+      state.localToGlobalCorrelation, state.jacobian, state.correctedJacobian,
       state.startBoundToFinalFreeJacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, state.pars, surface);
 }

@@ -146,6 +146,8 @@ class EigenStepper {
 
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
+    Jacobian correctedJacobian = Jacobian::Identity();
+    // Could be removed
     BoundToFreeMatrix startBoundToFinalFreeJacobian =
         BoundToFreeMatrix::Identity();
 

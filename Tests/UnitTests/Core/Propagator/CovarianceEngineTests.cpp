@@ -41,6 +41,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   FreeSymMatrix freeCovariance = FreeSymMatrix::Identity();
   FreeToBoundMatrix correlation = FreeToBoundMatrix::Zero();
   Jacobian jacobian = 2. * Jacobian::Identity();
+  Jacobian correctedJacobian = Jacobian::Identity();
   FreeMatrix transportJacobian = 3. * FreeMatrix::Identity();
   BoundToFreeMatrix startBoundToFinalFreeJacobian =
       BoundToFreeMatrix::Identity();
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   auto surface = Surface::makeShared<PlaneSurface>(position, direction);
   FreeSymMatrix freeCov = FreeSymMatrix::Zero();
   detail::transportCovarianceToBound(
-      tgContext, covariance, freeCov, correlation, jacobian,
+      tgContext, covariance, freeCov, correlation, jacobian, correctedJacobian,
       startBoundToFinalFreeJacobian, transportJacobian, derivatives,
       boundToFreeJacobian, parameters, *surface);
 
@@ -114,9 +115,10 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   covarianceBefore = covariance;
   auto boundResult =
       detail::boundState(tgContext, covariance, freeCovariance, correlation,
-                         jacobian, startBoundToFinalFreeJacobian,
-                         transportJacobian, derivatives, boundToFreeJacobian,
-                         parameters, false, 1337., *surface, false, false)
+                         jacobian, correctedJacobian,
+                         startBoundToFinalFreeJacobian, transportJacobian,
+                         derivatives, boundToFreeJacobian, parameters, false,
+                         1337., *surface, false, false)
           .value();
   BOOST_CHECK(std::get<0>(curvResult).covariance().has_value());
   BOOST_CHECK_EQUAL(*(std::get<0>(curvResult).covariance()), covarianceBefore);
@@ -131,10 +133,10 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Produce a bound state with covariance matrix
   boundResult =
-      detail::boundState(tgContext, covariance, freeCovariance, correlation,
-                         jacobian, startBoundToFinalFreeJacobian,
-                         transportJacobian, derivatives, boundToFreeJacobian,
-                         parameters, true, 1337., *surface)
+      detail::boundState(
+          tgContext, covariance, freeCovariance, correlation, jacobian,
+          correctedJacobian, startBoundToFinalFreeJacobian, transportJacobian,
+          derivatives, boundToFreeJacobian, parameters, true, 1337., *surface)
           .value();
   BOOST_CHECK(std::get<0>(boundResult).covariance().has_value());
   BOOST_CHECK_NE(*(std::get<0>(boundResult).covariance()),

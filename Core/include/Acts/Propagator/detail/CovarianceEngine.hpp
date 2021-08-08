@@ -59,9 +59,10 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double, BoundVector,
 boundState(const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
            FreeSymMatrix& freeCovariance,
            FreeToBoundMatrix& localToGlobalCorrelation, BoundMatrix& jacobian,
+           BoundMatrix& correctedJacobian,
            BoundToFreeMatrix& startBoundToFinalFreeJacobian,
            FreeMatrix& transportJacobian, FreeVector& derivatives,
-           BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
+           BoundToFreeMatrix& jacToGlobal, FreeVector& parameters,
            bool covTransport, double accumulatedPath, const Surface& surface,
            bool localToGlobalCorrection = false,
            bool globalToLocalCorrection = false);
@@ -111,10 +112,10 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
 void transportCovarianceToBound(
     const GeometryContext& geoContext, BoundSymMatrix& boundCovariance,
     FreeSymMatrix& freeCovariance, FreeToBoundMatrix& localToGlobalCorrelation,
-    BoundMatrix& fullTransportJacobian,
+    BoundMatrix& fullTransportJacobian, BoundMatrix& correctedJacobian,
     BoundToFreeMatrix& startBoundToFinalFreeJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
+    BoundToFreeMatrix& boundToFreeJacobian, FreeVector& freeParameters,
     const Surface& surface, bool localToGlobalCorrection = false,
     bool globalToLocalCorrection = false);
 

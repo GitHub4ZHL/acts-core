@@ -99,6 +99,7 @@ class StraightLineStepper {
 
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
+    Jacobian correctedJacobian = Jacobian::Identity();
     BoundToFreeMatrix startBoundToFinalFreeJacobian =
         BoundToFreeMatrix::Identity();
 
