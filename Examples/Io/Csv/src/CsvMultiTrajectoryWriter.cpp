@@ -51,6 +51,19 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
   using RecoTrackInfo = std::pair<trackInfo, size_t>;
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
 
+  // write csv header
+  //mos << "track_id,particleId,"
+  //    << "nStates,nMajorityHits,nMeasurements,nOutliers,nHoles,nSharedHits,"
+  //    << "chi2,ndf,chi2/ndf,"
+  //    << "pT,eta,phi,"
+  //    << "truthMatchProbability,"
+  //    << "good/duplicate/fake";
+  mos << "track_id,measurement_id";
+
+
+  mos << '\n';
+  mos << std::setprecision(m_cfg.outputPrecision);
+
   size_t trackId = 0;
   for (const auto& traj : trajectories) {
     // The trajectory entry indices and the multiTrajectory
@@ -129,6 +142,25 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
         toAdd.trackType = "fake";
       }
 
+      // Get the measurement index id
+      std::vector<size_t> indices; 
+      mj.visitBackwards(trackTip, [&](const auto& state) {
+        auto typeFlags = state.typeFlags();
+        if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+          indices.push_back(state.uncalibrated().index()); 
+        } 
+      }); 
+      //std::cout<<"hits number" << indices.size() << std::endl; 
+
+      //mos 
+      for(const auto& index : indices){
+        mos << trackId<<","<<index << std::endl;
+        //if(index==indices.back()){
+        //  mos << std::endl;
+	//}	
+      }      
+
+
       infoMap[toAdd.trackId] = toAdd;
 
       trackId++;
@@ -152,17 +184,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     listGoodTracks.insert(matchedTracks.front().first.trackId);
   }
 
-  // write csv header
-  mos << "track_id,particleId,"
-      << "nStates,nMajorityHits,nMeasurements,nOutliers,nHoles,nSharedHits,"
-      << "chi2,ndf,chi2/ndf,"
-      << "pT,eta,phi,"
-      << "truthMatchProbability,"
-      << "good/duplicate/fake";
-
-  mos << '\n';
-  mos << std::setprecision(m_cfg.outputPrecision);
-
+  /*
   // good/duplicate/fake = 0/1/2
   for (auto& [id, trajState] : infoMap) {
     if (listGoodTracks.find(id) != listGoodTracks.end()) {
@@ -193,6 +215,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     mos << trajState.trackType;
     mos << '\n';
   }
+*/
 
   return ProcessCode::SUCCESS;
 }

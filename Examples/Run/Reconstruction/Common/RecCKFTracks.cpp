@@ -112,8 +112,22 @@ int runRecCKFTracks(int argc, char* argv[],
   auto particleReader = setupParticleReading(vm, sequencer);
 
   // Run the sim hits smearing
-  auto digiCfg = setupDigitization(vm, sequencer, rnd, trackingGeometry,
-                                   simHitReaderCfg.outputSimHits);
+  //auto digiCfg = setupDigitization(vm, sequencer, rnd, trackingGeometry,
+  //                                 simHitReaderCfg.outputSimHits);
+  
+  // Read measurements from CSV files
+  auto measReaderCfg = Options::readCsvMeasurementReaderConfig(vm);
+  measReaderCfg.inputDir = inputDir;
+  measReaderCfg.outputMeasurements = "measurements";
+  measReaderCfg.outputSourceLinks = "sourcelinks";
+  measReaderCfg.outputClusters = "clusters";
+  measReaderCfg.outputMeasurementSimHitsMap =
+      "measurement_simhits_map";
+  measReaderCfg.outputMeasurementParticlesMap =
+      "measurement_particles_map";
+  sequencer.addReader(
+      std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
+
 
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
@@ -122,9 +136,10 @@ int runRecCKFTracks(int argc, char* argv[],
   TruthSeedSelector::Config particleSelectorCfg;
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
   particleSelectorCfg.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
+      measReaderCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.ptMin = 500_MeV;
+  //particleSelectorCfg.ptMin = 500_MeV;
+  particleSelectorCfg.ptMin = 1._GeV;
   particleSelectorCfg.nHitsMin = 9;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
@@ -143,8 +158,8 @@ int runRecCKFTracks(int argc, char* argv[],
   } else {
     // Create space points
     SpacePointMaker::Config spCfg = Options::readSpacePointMakerConfig(vm);
-    spCfg.inputSourceLinks = digiCfg.outputSourceLinks;
-    spCfg.inputMeasurements = digiCfg.outputMeasurements;
+    spCfg.inputSourceLinks = measReaderCfg.outputSourceLinks;
+    spCfg.inputMeasurements = measReaderCfg.outputMeasurements;
     spCfg.outputSpacePoints = "spacepoints";
     spCfg.trackingGeometry = trackingGeometry;
     sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
@@ -158,7 +173,7 @@ int runRecCKFTracks(int argc, char* argv[],
       TruthTrackFinder::Config trackFinderCfg;
       trackFinderCfg.inputParticles = inputParticles;
       trackFinderCfg.inputMeasurementParticlesMap =
-          digiCfg.outputMeasurementParticlesMap;
+          measReaderCfg.outputMeasurementParticlesMap;
       trackFinderCfg.outputProtoTracks = "prototracks";
       sequencer.addAlgorithm(
           std::make_shared<TruthTrackFinder>(trackFinderCfg, logLevel));
@@ -194,13 +209,15 @@ int runRecCKFTracks(int argc, char* argv[],
       seedingCfg.seedFinderConfig.maxSeedsPerSpM =
           seedingCfg.seedFilterConfig.maxSeedsPerSpM;
 
-      seedingCfg.gridConfig.cotThetaMax = 7.40627;  // 2.7 eta
+      //seedingCfg.gridConfig.cotThetaMax = 7.40627;  // 2.7 eta
+      seedingCfg.gridConfig.cotThetaMax = 16.542627;  // 3.5 eta
       seedingCfg.seedFinderConfig.cotThetaMax =
           seedingCfg.gridConfig.cotThetaMax;
 
       seedingCfg.seedFinderConfig.sigmaScattering = 50;
       seedingCfg.seedFinderConfig.radLengthPerSeed = 0.1;
 
+      //seedingCfg.gridConfig.minPt = 500._MeV;
       seedingCfg.gridConfig.minPt = 500._MeV;
       seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
 
@@ -223,7 +240,7 @@ int runRecCKFTracks(int argc, char* argv[],
     // using selected particles
     tfPerfCfg.inputParticles = inputParticles;
     tfPerfCfg.inputMeasurementParticlesMap =
-        digiCfg.outputMeasurementParticlesMap;
+        measReaderCfg.outputMeasurementParticlesMap;
     tfPerfCfg.filePath = outputDir + "/performance_seeding_trees.root";
     sequencer.addWriter(
         std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
@@ -235,7 +252,7 @@ int runRecCKFTracks(int argc, char* argv[],
     paramsEstimationCfg.inputSpacePoints = {
         spCfg.outputSpacePoints,
     };
-    paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+    paramsEstimationCfg.inputSourceLinks = measReaderCfg.outputSourceLinks;
     paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
     paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
     paramsEstimationCfg.trackingGeometry = trackingGeometry;
@@ -262,8 +279,8 @@ int runRecCKFTracks(int argc, char* argv[],
   // It takes all the source links created from truth hit smearing, seeds from
   // truth particle smearing and source link selection config
   auto trackFindingCfg = Options::readTrackFindingConfig(vm);
-  trackFindingCfg.inputMeasurements = digiCfg.outputMeasurements;
-  trackFindingCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  trackFindingCfg.inputMeasurements = measReaderCfg.outputMeasurements;
+  trackFindingCfg.inputSourceLinks = measReaderCfg.outputSourceLinks;
   trackFindingCfg.inputInitialTrackParameters = outputTrackParameters;
   trackFindingCfg.outputTrajectories = "trajectories";
   trackFindingCfg.computeSharedHits = true;
@@ -282,9 +299,9 @@ int runRecCKFTracks(int argc, char* argv[],
   trackStatesWriter.inputParticles = particleReader.outputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
+      measReaderCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =
-      digiCfg.outputMeasurementSimHitsMap;
+      measReaderCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.filePath = outputDir + "/trackstates_ckf.root";
   trackStatesWriter.treeName = "trackstates";
   sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
@@ -299,7 +316,7 @@ int runRecCKFTracks(int argc, char* argv[],
   // selection algorithm is used.
   trackSummaryWriter.inputParticles = particleReader.outputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
+      measReaderCfg.outputMeasurementParticlesMap;
   trackSummaryWriter.filePath = outputDir + "/tracksummary_ckf.root";
   trackSummaryWriter.treeName = "tracksummary";
   sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
@@ -310,10 +327,10 @@ int runRecCKFTracks(int argc, char* argv[],
   perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
+      measReaderCfg.outputMeasurementParticlesMap;
   // The bottom seed could be the first, second or third hits on the truth track
-  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
-  perfWriterCfg.ptMin = 0.4_GeV;
+  perfWriterCfg.nMeasurementsMin = 0;
+  perfWriterCfg.ptMin = 1.0_GeV;
   perfWriterCfg.filePath = outputDir + "/performance_ckf.root";
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
@@ -339,8 +356,10 @@ int runRecCKFTracks(int argc, char* argv[],
     CsvMultiTrajectoryWriter::Config trackWriterCsvConfig;
     trackWriterCsvConfig.inputTrajectories = trackFindingCfg.outputTrajectories;
     trackWriterCsvConfig.outputDir = outputDir;
+    trackWriterCsvConfig.ptMin = 1.0_GeV;
+    trackWriterCsvConfig.nMeasurementsMin = 0; 
     trackWriterCsvConfig.inputMeasurementParticlesMap =
-        digiCfg.outputMeasurementParticlesMap;
+        measReaderCfg.outputMeasurementParticlesMap;
     sequencer.addWriter(std::make_shared<CsvMultiTrajectoryWriter>(
         trackWriterCsvConfig, logLevel));
   }

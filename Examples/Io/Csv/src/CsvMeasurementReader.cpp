@@ -21,6 +21,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -36,6 +37,13 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
       m_logger(Acts::getDefaultLogger("CsvMeasurementReader", level)) {
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");
+  }
+  if (m_cfg.inputSimHits.empty()) {
+    throw std::invalid_argument("Missing simulated hits input collection");
+  }
+  if (m_cfg.outputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-particles map output collection");
   }
 }
 
@@ -123,6 +131,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   // Note: the cell data is optional
   auto measurementData =
       readMeasurementsByGeometryId(m_cfg.inputDir, ctx.eventNumber);
+  
+  // Retrieve input
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  ACTS_DEBUG("Loaded " << simHits.size() << " sim hits");
+
 
   std::vector<ActsExamples::CellData> cellData = {};
   if (not m_cfg.outputClusters.empty()) {
@@ -132,10 +145,13 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   // Prepare containers for the hit data using the framework event data types
   GeometryIdMultimap<Measurement> orderedMeasurements;
   ClusterContainer clusters;
+  IndexMultimap<ActsFatras::Barcode> measurementParticlesMap; 
   IndexMultimap<Index> measurementSimHitsMap;
+ 
   IndexSourceLinkContainer sourceLinks;
   orderedMeasurements.reserve(measurementData.size());
   // Safe long as we have single particle to sim hit association
+  measurementParticlesMap.reserve(simHits.size());
   measurementSimHitsMap.reserve(measurementData.size());
   sourceLinks.reserve(measurementData.size());
 
@@ -143,6 +159,9 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       readEverything<ActsExamples::MeasurementSimHitLink>(
           m_cfg.inputDir, "measurement-simhit-map.csv", {}, ctx.eventNumber);
   for (auto mshLink : measurementSimHitLinkData) {
+              measurementParticlesMap.emplace_hint(
+                  measurementParticlesMap.end(), mshLink.measurement_id,
+                  simHits.nth(mshLink.hit_id)->particleId());
     measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                        mshLink.measurement_id, mshLink.hit_id);
   }
@@ -212,6 +231,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
                      std::move(measurementSimHitsMap));
+  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
+                     std::move(measurementParticlesMap));
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
   if (not clusters.empty()) {
     ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));

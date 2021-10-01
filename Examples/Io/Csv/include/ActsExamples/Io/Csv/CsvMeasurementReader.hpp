@@ -43,10 +43,14 @@ class CsvMeasurementReader final : public IReader {
   struct Config {
     /// Where to read input files from.
     std::string inputDir;
+    /// Input collection of simulated hits.
+    std::string inputSimHits = "hits";
     /// Output measurement collection.
     std::string outputMeasurements;
     /// Output measurement to sim hit collection.
     std::string outputMeasurementSimHitsMap;
+    /// Output collection to map measured hits to contributing particles.
+    std::string outputMeasurementParticlesMap;
     /// Output source links collection.
     std::string outputSourceLinks;
     /// Output cluster collection (optional).
