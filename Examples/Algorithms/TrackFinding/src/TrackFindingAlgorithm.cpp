@@ -49,8 +49,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   trajectories.reserve(initialParameters.size());
 
   // Construct a perigee surface as the target surface
-  auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{0., 0., 0.});
+  Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Identity();
+  rotation.col(0) = Acts::Vector3(0, 0, -1);
+  rotation.col(1) = Acts::Vector3(0, 1, 0);
+  rotation.col(2) = Acts::Vector3(1, 0, 0);
+  Acts::Translation3 trans(0., 0., 0.);
+  Acts::Transform3 trafo(rotation * trans);
+  auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(trafo);
+  //auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
+  //    Acts::Vector3{0., 0., 0.});
 
   Acts::PropagatorPlainOptions pOptions;
   pOptions.maxSteps = 10000;
