@@ -120,7 +120,7 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
   particleSmearingCfg.sigmaZ0PtB = 0.3 / 1_GeV;
   particleSmearingCfg.sigmaPhi = 1_degree;
   particleSmearingCfg.sigmaTheta = 1_degree;
-  particleSmearingCfg.sigmaPRel = 0.01;
+  particleSmearingCfg.sigmaPRel = 0.1;
   particleSmearingCfg.sigmaT0 = 1_ns;
   particleSmearingCfg.initialVarInflation =
       vars["fit-initial-variance-inflation"].template as<Options::Reals<6>>();
