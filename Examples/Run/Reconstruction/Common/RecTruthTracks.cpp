@@ -146,6 +146,7 @@ int runRecTruthTracks(int argc, char* argv[],
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
+  /*
   // write track states from fitting
   RootTrajectoryStatesWriter::Config trackStatesWriter;
   trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
@@ -190,6 +191,6 @@ int runRecTruthTracks(int argc, char* argv[],
   perfFitter.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<TrackFitterPerformanceWriter>(perfFitter, logLevel));
-
+*/
   return sequencer.run();
 }
