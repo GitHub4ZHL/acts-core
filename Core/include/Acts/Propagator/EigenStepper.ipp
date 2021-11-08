@@ -79,7 +79,7 @@ void Acts::EigenStepper<E, A>::update(State& state,
                                       const FreeVector& parameters,
                                       const Covariance& covariance,
                                       const Surface& surface) const {
-  std::cout << "EigenStepper::update " << std::endl;
+  //std::cout << "EigenStepper::update " << std::endl;
   state.pars = parameters;
   state.cov = covariance;
 
@@ -92,14 +92,13 @@ void Acts::EigenStepper<E, A>::update(State& state,
   // 1. Reset the jacobian from local to global
   state.jacToGlobal =
       surface.boundToFreeJacobian(state.geoContext, *boundParameters);
-  // 2. Reset the correlation matrix (is this necessary?)
-  state.localToGlobalCorrelation = state.cov * state.jacToGlobal.transpose();
 
   if (state.localToGlobalCorrection) {
+    //std::cout << "update localToGlobalCorrection correction " << std::endl;
     // Get corrected free covariance (the free covariance before the correction
     // might be nonsense)
     ////////////////////////////////////////////////////////////////////////////////
-    std::cout << "Before correction: freeVec = \n" << state.pars << std::endl;
+    //std::cout << "Before correction: freeVec = \n" << state.pars << std::endl;
     auto transformer = detail::CorrectedBoundToFreeTransformer();
     auto correctedRes =
         transformer(state.pars, state.cov, surface, state.geoContext);
@@ -108,11 +107,15 @@ void Acts::EigenStepper<E, A>::update(State& state,
       state.pars = std::get<0>(correctedValue);
       state.freeCov = std::get<1>(correctedValue);
       state.localToGlobalCorrelation = std::get<2>(correctedValue);
-      std::cout << "After correction: freeVec = \n" << state.pars << std::endl;
-      std::cout << "After correction: freeCov = \n"
-                << state.freeCov << std::endl;
+      //std::cout << "After correction: freeVec = \n" << state.pars << std::endl;
+      //std::cout << "After correction: freeCov = \n"
+      //          << state.freeCov << std::endl;
     }
+    //    else {
     ////////////////////////////////////////////////////////////////////////////////
+    // 2. Reset the correlation matrix (is this necessary?)
+    // state.localToGlobalCorrelation = state.cov *
+    // state.jacToGlobal.transpose();
   }
 }
 
@@ -129,21 +132,24 @@ void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::updateFreeCov(State& state,
                                              const Surface& surface) const {
+  //std::cout << "EigenStepper::updateFreeCov " << std::endl;
   // Reset
   Result<BoundVector> boundParameters = detail::transformFreeToBoundParameters(
       state.pars, surface, state.geoContext);
   if (!boundParameters.ok()) {
     std::cout << "Acts::EigenStepper::updateFreeCov error" << std::endl;
   }
-  // 1. Reset the jacobian from local to global
+  // 1. Reset the jacobian from local to global (not sure if this is necessary)
   state.jacToGlobal =
       surface.boundToFreeJacobian(state.geoContext, *boundParameters);
 
   if (state.localToGlobalCorrection) {
+    //std::cout << "updateFreeCov localToGlobalCorrection correction "
+    //          << std::endl;
     // Get corrected free covariance (the free covariance before the correction
     // might be nonsense)
     ////////////////////////////////////////////////////////////////////////////////
-    std::cout << "Before correction: freeVec = \n" << state.pars << std::endl;
+    //std::cout << "Before correction: freeVec = \n" << state.pars << std::endl;
     auto transformer = detail::CorrectedBoundToFreeTransformer();
     auto correctedRes =
         transformer(state.pars, state.cov, surface, state.geoContext);
@@ -152,14 +158,14 @@ void Acts::EigenStepper<E, A>::updateFreeCov(State& state,
       state.pars = std::get<0>(correctedValue);
       state.freeCov = std::get<1>(correctedValue);
       state.localToGlobalCorrelation = std::get<2>(correctedValue);
-      std::cout << "After correction: freeVec = \n" << state.pars << std::endl;
-      std::cout << "After correction: freeCov = \n"
-                << state.freeCov << std::endl;
+     // std::cout << "After correction: freeVec = \n" << state.pars << std::endl;
+     // std::cout << "After correction: freeCov = \n"
+     //           << state.freeCov << std::endl;
     }
     ////////////////////////////////////////////////////////////////////////////////
-  } else {
     // 2. Reset the correlation matrix (is this necessary?)
-    state.localToGlobalCorrelation = state.cov * state.jacToGlobal.transpose();
+    // state.localToGlobalCorrelation = state.cov *
+    // state.jacToGlobal.transpose();
   }
 }
 
@@ -178,7 +184,8 @@ void Acts::EigenStepper<E, A>::transportCovarianceToBound(
       state.geoContext.get(), state.cov, state.freeCov,
       state.localToGlobalCorrelation, state.jacobian, state.correctedJacobian,
       state.startBoundToFinalFreeJacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, surface);
+      state.jacToGlobal, state.pars, surface, state.localToGlobalCorrection,
+      state.globalToLocalCorrection);
 }
 
 template <typename E, typename A>

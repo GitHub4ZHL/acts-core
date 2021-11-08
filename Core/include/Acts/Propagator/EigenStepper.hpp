@@ -106,9 +106,9 @@ class EigenStepper {
 
         if (localToGlobalCorrection) {
           ////////////////////////////////////////////////////////////////////////////////
-          std::cout << "Before correction: freeVec = \n" << pars << std::endl;
-          std::cout << "Before correction: freeCov = \n"
-                    << freeCov << std::endl;
+          //std::cout << "Before correction: freeVec = \n" << pars << std::endl;
+          //std::cout << "Before correction: freeCov = \n"
+          //          << freeCov << std::endl;
           auto transformer = detail::CorrectedBoundToFreeTransformer();
           auto correctedRes = transformer(par.parameters(), cov, surface, gctx);
           if (correctedRes.has_value()) {
@@ -116,9 +116,9 @@ class EigenStepper {
             pars = std::get<0>(correctedValue);
             freeCov = std::get<1>(correctedValue);
             localToGlobalCorrelation = std::get<2>(correctedValue);
-            std::cout << "After correction: freeVec = \n" << pars << std::endl;
-            std::cout << "After correction: freeCov = \n"
-                      << freeCov << std::endl;
+            //std::cout << "After correction: freeVec = \n" << pars << std::endl;
+            //std::cout << "After correction: freeCov = \n"
+            //         << freeCov << std::endl;
           }
           ////////////////////////////////////////////////////////////////////////////////
         }

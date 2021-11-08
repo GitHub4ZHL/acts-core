@@ -97,7 +97,7 @@ int runRecTruthTracks(int argc, char* argv[],
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.nHitsMin = 3;
+  particleSelectorCfg.nHitsMin = 9;
   particleSelectorCfg.ptMin = 500._MeV;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
@@ -179,8 +179,7 @@ int runRecTruthTracks(int argc, char* argv[],
   trackSummaryWriter.inputParticles = inputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  trackSummaryWriter.outputDir = outputDir;
-  trackSummaryWriter.outputFilename = "tracksummary_fitter.root";
+  trackSummaryWriter.filePath = outputDir + "/tracksummary_fitter.root";
   sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
       trackSummaryWriter, logLevel));
 

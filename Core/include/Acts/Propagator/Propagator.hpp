@@ -69,7 +69,8 @@ struct PropagatorPlainOptions {
   int absPdgCode = 211;
 
   /// The mass for the particle for (eventual) material integration
-  double mass = 139.57018 * UnitConstants::MeV;
+  //double mass = 139.57018 * UnitConstants::MeV;
+  double mass = 105.6583755 * UnitConstants::MeV;
 
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;

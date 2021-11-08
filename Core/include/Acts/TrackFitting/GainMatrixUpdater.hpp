@@ -99,7 +99,7 @@ class GainMatrixUpdater {
           CovarianceMatrix S = CovarianceMatrix::Zero();
 
           if (nonlinearityCorrection) {
-            std::cout << "GainMatrix with nonlinearityCorrection " << std::endl;
+            //std::cout << "GainMatrix with nonlinearityCorrection " << std::endl;
             S = H * predictedCorrectedCovariance * H.transpose() +
                 calibratedCovariance;
             K = (predictedCorrectedCovariance * H.transpose() * S.inverse())

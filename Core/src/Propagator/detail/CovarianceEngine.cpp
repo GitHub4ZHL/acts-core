@@ -292,7 +292,7 @@ Result<BoundState> boundState(
   if (boundMatrix != BoundSymMatrix::Zero()) {
     boundCov = boundMatrix;
   } else {
-    std::cout<<"WARNING: boundMatrix will be zero" << std::endl;
+    std::cout << "WARNING: boundMatrix will be zero" << std::endl;
   }
 
   // Create the bound parameters
@@ -437,6 +437,7 @@ void transportCovarianceToBound(
     BoundToFreeMatrix& boundToFreeJacobian, FreeVector& freeParameters,
     const Surface& surface, bool localToGlobalCorrection,
     bool globalToLocalCorrection) {
+
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
   FreeMatrix finalFreeCorrection = FreeMatrix::Zero();
@@ -495,7 +496,7 @@ void transportCovarianceToBound(
                             (freeCovariance.inverse()).transpose() *
                             startBoundToFinalFreeJacobian;
       } else {
-        std::cout << "WARNING: globalToLocal correction failed" << std::endl;
+        //std::cout << "WARNING: globalToLocal correction failed" << std::endl;
         // Correction failed. No correction
         boundCovariance = freeToBoundJacobian * finalFreeCorrection *
                           freeCovariance * finalFreeCorrection.transpose() *
@@ -503,6 +504,7 @@ void transportCovarianceToBound(
         correctedJacobian = fullTransportJacobian;
       }
     } else {
+      //std::cout << "No globalToLocalCorrection " << std::endl;
       freeCovariance = finalFreeCorrection * freeTransportJacobian *
                        freeCovariance * freeTransportJacobian.transpose() *
                        finalFreeCorrection.transpose();
@@ -514,10 +516,12 @@ void transportCovarianceToBound(
                           startBoundToFinalFreeJacobian;
     }
   } else {
+    //std::cout << "No localToGlobalCorrection " << std::endl;
     // startBoundToFinalFreeJacobian is already transfortJacobian *
     // J^start(B->F)
 
     if (globalToLocalCorrection) {
+      //std::cout << "globalToLocalCorrection " << std::endl;
       // The free cov does not include the path correction now
       freeCovariance = startBoundToFinalFreeJacobian * boundCovariance *
                        startBoundToFinalFreeJacobian.transpose();
@@ -541,12 +545,13 @@ void transportCovarianceToBound(
                             (freeCovariance.inverse()).transpose() *
                             startBoundToFinalFreeJacobian;
       } else {
-        std::cout << "WARNING: globalToLocal correction failed" << std::endl;
+        //std::cout << "WARNING: globalToLocal correction failed" << std::endl;
         correctedJacobian = fullTransportJacobian;
         boundCovariance = fullTransportJacobian * boundCovariance *
                           fullTransportJacobian.transpose();
       }
     } else {
+      //std::cout << "No globalToLocalCorrection " << std::endl;
       // No need to update the freeCovariance since it's not used?
       freeCovariance = finalFreeCorrection * startBoundToFinalFreeJacobian *
                        boundCovariance *

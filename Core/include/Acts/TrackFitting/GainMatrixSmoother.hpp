@@ -75,7 +75,6 @@ class GainMatrixSmoother {
       ACTS_VERBOSE("Calculate smoothing matrix:");
       ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
       ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
-      std::cout << "Jacobian:\n " << prev_ts.jacobian() << std::endl;
       ACTS_VERBOSE("Prev. predicted covariance\n"
                    << prev_ts.predictedCovariance() << "\n, inverse: \n"
                    << prev_ts.predictedCovariance().inverse());
@@ -89,15 +88,16 @@ class GainMatrixSmoother {
           // The prev_ts.correctedJacobian already contains the covariance of ts
           G = prev_ts.correctedJacobian().transpose() *
               prev_ts.predictedCorrectedCovariance().inverse();
-          std::cout << "correctedJacobianPrime:\n "
-                    << prev_ts.correctedJacobian()
-                    << " non correctedJacobianPrime:\n "
-                    << ts.filteredCovariance() * prev_ts.jacobian().transpose()
-                    << std::endl;
+          //std::cout << "correctedJacobianPrime:\n "
+          //          << prev_ts.correctedJacobian()
+          //          << " non correctedJacobianPrime:\n "
+          //          << ts.filteredCovariance() *
+          //          prev_ts.jacobian().transpose()
+          //          << std::endl;
         } else {
-          std::cout << "correctedJacobian:\n " << prev_ts.correctedJacobian()
-                    << "non correctedJacobian: \n"
-                    << prev_ts.jacobian() << std::endl;
+          //std::cout << "correctedJacobian:\n " << prev_ts.correctedJacobian()
+          //          << "non correctedJacobian: \n"
+          //          << prev_ts.jacobian() << std::endl;
           G = ts.filteredCovariance() *
               prev_ts.correctedJacobian().transpose() *
               prev_ts.predictedCorrectedCovariance().inverse();

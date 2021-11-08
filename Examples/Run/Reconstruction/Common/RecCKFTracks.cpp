@@ -277,9 +277,7 @@ int runRecCKFTracks(int argc, char* argv[],
   trackSummaryWriter.inputParticles = particleReader.outputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  trackSummaryWriter.outputDir = outputDir;
-  trackSummaryWriter.outputFilename = "tracksummary_ckf.root";
-  trackSummaryWriter.outputTreename = "tracksummary";
+  trackSummaryWriter.filePath = outputDir + "/tracksummary_ckf.root";
   sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
       trackSummaryWriter, logLevel));
 

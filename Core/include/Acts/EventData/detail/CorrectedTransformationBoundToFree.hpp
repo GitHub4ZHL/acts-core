@@ -45,7 +45,8 @@ struct CorrectedBoundToFreeTransformer {
   operator()(const BoundVector& boundParams,
              const BoundSymMatrix& boundCovariance, const Surface& surface,
              const GeometryContext& geoContext) {
-    std::cout << "++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+   // std::cout << "Invoking CorrectedBoundToFreeTransformer operator()"
+   //           << std::endl;
     size_t sampleSize = 2 * eBoundSize + 1;
     std::vector<std::pair<BoundVector, ActsScalar>> sampledBoundParams;
     sampledBoundParams.reserve(sampleSize);
