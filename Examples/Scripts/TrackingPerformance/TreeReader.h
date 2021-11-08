@@ -310,6 +310,17 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("majorityParticleId", &majorityParticleId);
 
     tree->SetBranchAddress("hasFittedParams", &hasFittedParams);
+
+    tree->SetBranchAddress("t_theta", &t_theta);
+    tree->SetBranchAddress("t_phi", &t_phi);
+    tree->SetBranchAddress("t_eta", &t_eta);
+    tree->SetBranchAddress("t_p", &t_p);
+    tree->SetBranchAddress("t_pT", &t_pT);
+    tree->SetBranchAddress("t_d0", &t_d0);
+    tree->SetBranchAddress("t_z0", &t_z0);
+    tree->SetBranchAddress("t_charge",&t_charge);
+    tree->SetBranchAddress("t_time",&t_time);
+
     tree->SetBranchAddress("eLOC0_fit", &eLOC0_fit);
     tree->SetBranchAddress("eLOC1_fit", &eLOC1_fit);
     tree->SetBranchAddress("ePHI_fit", &ePHI_fit);
@@ -322,6 +333,19 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("err_eTHETA_fit", &err_eTHETA_fit);
     tree->SetBranchAddress("err_eQOP_fit", &err_eQOP_fit);
     tree->SetBranchAddress("err_eT_fit", &err_eT_fit);
+    tree->SetBranchAddress("res_eLOC0_fit", &res_eLOC0_fit);
+    tree->SetBranchAddress("res_eLOC1_fit", &res_eLOC1_fit);
+    tree->SetBranchAddress("res_ePHI_fit", &res_ePHI_fit);
+    tree->SetBranchAddress("res_eTHETA_fit", &res_eTHETA_fit);
+    tree->SetBranchAddress("res_eQOP_fit", &res_eQOP_fit);
+    tree->SetBranchAddress("res_eT_fit", &res_eT_fit);
+    tree->SetBranchAddress("pull_eLOC0_fit", &pull_eLOC0_fit);
+    tree->SetBranchAddress("pull_eLOC1_fit", &pull_eLOC1_fit);
+    tree->SetBranchAddress("pull_ePHI_fit", &pull_ePHI_fit);
+    tree->SetBranchAddress("pull_eTHETA_fit", &pull_eTHETA_fit);
+    tree->SetBranchAddress("pull_eQOP_fit", &pull_eQOP_fit);
+    tree->SetBranchAddress("pull_eT_fit", &pull_eT_fit);
+
 
     // It's not necessary if you just need to read one file, but please do it to
     // synchronize events if multiple root files are read
@@ -358,18 +382,48 @@ struct TrackSummaryReader : public TreeReader {
   std::vector<uint64_t>* majorityParticleId = new std::vector<uint64_t>;
 
   std::vector<bool>* hasFittedParams = new std::vector<bool>;
+
+  // True parameters
+  std::vector<float>* t_d0 = new std::vector<float>;
+  std::vector<float>* t_z0 = new std::vector<float>;
+  std::vector<float>* t_phi = new std::vector<float>;
+  std::vector<float>* t_theta = new std::vector<float>;
+  std::vector<float>* t_eta = new std::vector<float>;
+  std::vector<float>* t_p = new std::vector<float>;
+  std::vector<float>* t_pT = new std::vector<float>;
+  std::vector<float>* t_time = new std::vector<float>;
+  std::vector<int>* t_charge = new std::vector<int>;
+
+  // Estimated parameters
   std::vector<float>* eLOC0_fit = new std::vector<float>;
   std::vector<float>* eLOC1_fit = new std::vector<float>;
   std::vector<float>* ePHI_fit = new std::vector<float>;
   std::vector<float>* eTHETA_fit = new std::vector<float>;
   std::vector<float>* eQOP_fit = new std::vector<float>;
   std::vector<float>* eT_fit = new std::vector<float>;
+
   std::vector<float>* err_eLOC0_fit = new std::vector<float>;
   std::vector<float>* err_eLOC1_fit = new std::vector<float>;
   std::vector<float>* err_ePHI_fit = new std::vector<float>;
   std::vector<float>* err_eTHETA_fit = new std::vector<float>;
   std::vector<float>* err_eQOP_fit = new std::vector<float>;
   std::vector<float>* err_eT_fit = new std::vector<float>;
+  
+  // The residual of fitted parameters
+  std::vector<float>* res_eLOC0_fit = new std::vector<float>;
+  std::vector<float>* res_eLOC1_fit = new std::vector<float>;
+  std::vector<float>* res_ePHI_fit = new std::vector<float>;
+  std::vector<float>* res_eTHETA_fit = new std::vector<float>;
+  std::vector<float>* res_eQOP_fit = new std::vector<float>;
+  std::vector<float>* res_eT_fit = new std::vector<float>;
+  
+  std::vector<float>* pull_eLOC0_fit = new std::vector<float>;
+  std::vector<float>* pull_eLOC1_fit = new std::vector<float>;
+  std::vector<float>* pull_ePHI_fit = new std::vector<float>;
+  std::vector<float>* pull_eTHETA_fit = new std::vector<float>;
+  std::vector<float>* pull_eQOP_fit = new std::vector<float>;
+  std::vector<float>* pull_eT_fit = new std::vector<float>;
+
 };
 
 /// Struct used for reading particles written out by the
