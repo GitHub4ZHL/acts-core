@@ -44,6 +44,9 @@ void ActsExamples::Options::addParticleGunOptions(Description& desc) {
       "Flip the charge and change the PDG number accordingly.");
   opt("gen-nparticles", value<size_t>()->default_value(1u),
       "Number of generated particles");
+  opt("gen-sampling-variable", value<std::string>()->default_value("theta"),
+      "Variable from which the particle generation is uniform. Can be theta, cosTheta or eta");
+  
 }
 
 ActsExamples::EventGenerator::Config
@@ -73,6 +76,7 @@ ActsExamples::Options::readParticleGunOptions(const Variables& vars) {
   getRange("gen-eta", 1.0, etaMin, etaMax);
   pgCfg.thetaMin = 2 * std::atan(std::exp(-etaMin));
   pgCfg.thetaMax = 2 * std::atan(std::exp(-etaMax));
+  pgCfg.samplingVariable = vars["gen-sampling-variable"].template as<std::string>();
   getRange("gen-mom-gev", 1_GeV, pgCfg.pMin, pgCfg.pMax);
   pgCfg.pTransverse = vars["gen-mom-transverse"].template as<bool>();
   pgCfg.pdg =

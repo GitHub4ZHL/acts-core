@@ -36,6 +36,8 @@ class ParametricParticleGenerator {
     /// full direction space with finite values.
     double thetaMin = 0.0;
     double thetaMax = M_PI;
+    // The uniform sampling variable, "cosTheta", "theta" or "eta"
+    std::string samplingVariable = "cosTheta"; 
     /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;
     double pMax = 10 * Acts::UnitConstants::GeV;
@@ -59,8 +61,8 @@ class ParametricParticleGenerator {
   // will be automatically set from PDG data tables
   double m_charge;
   double m_mass;
-  double m_cosThetaMin;
-  double m_cosThetaMax;
+  double m_polarAngleVariableMin;
+  double m_polarAngleVariableMax;
 };
 
 }  // namespace ActsExamples

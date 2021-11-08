@@ -49,6 +49,8 @@ class ParticleSmearing final : public BareAlgorithm {
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative momentum resolution.
     double sigmaPRel = 0.001;
+    /// 1./pt resolution in GeV^-1.
+    double sigmaOneOverPt = 0.0005;
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.

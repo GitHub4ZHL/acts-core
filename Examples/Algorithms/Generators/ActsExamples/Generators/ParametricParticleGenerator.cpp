@@ -17,15 +17,24 @@ ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
     const Config& cfg)
     : m_cfg(cfg),
       m_charge(ActsFatras::findCharge(m_cfg.pdg)),
-      m_mass(ActsFatras::findMass(m_cfg.pdg)),
+      m_mass(ActsFatras::findMass(m_cfg.pdg)){
+      if(m_cfg.samplingVariable == "cosTheta"){
       // since we want to draw the direction uniform on the unit sphere, we must
       // draw from cos(theta) instead of theta. see e.g.
       // https://mathworld.wolfram.com/SpherePointPicking.html
-      m_cosThetaMin(std::cos(m_cfg.thetaMin)),
+         m_polarAngleVariableMin = std::cos(m_cfg.thetaMin);
       // ensure upper bound is included. see e.g.
       // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
-      m_cosThetaMax(std::nextafter(std::cos(m_cfg.thetaMax),
-                                   std::numeric_limits<double>::max())) {}
+         m_polarAngleVariableMax = std::nextafter(std::cos(m_cfg.thetaMax),
+                                   std::numeric_limits<double>::max());
+      } else if (m_cfg.samplingVariable == "eta" ) {
+         m_polarAngleVariableMin = -1.0*std::log(std::tan(m_cfg.thetaMin/2));
+         m_polarAngleVariableMax = std::nextafter(-1.0*std::log(std::tan(m_cfg.thetaMax/2)), std::numeric_limits<double>::max());
+      } else if (m_cfg.samplingVariable == "theta"){
+         m_polarAngleVariableMin = m_cfg.thetaMin;
+         m_polarAngleVariableMax = std::nextafter(m_cfg.thetaMax, std::numeric_limits<double>::max());
+      } 
+      }
 
 ActsExamples::SimParticleContainer
 ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) const {
@@ -45,7 +54,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) const {
       -m_charge,
   };
   UniformReal phiDist(m_cfg.phiMin, m_cfg.phiMax);
-  UniformReal cosThetaDist(m_cosThetaMin, m_cosThetaMax);
+  UniformReal polarAngleVariableDist(m_polarAngleVariableMin, m_polarAngleVariableMax);
   UniformReal pDist(m_cfg.pMin, m_cfg.pMax);
 
   SimParticleContainer particles;
@@ -61,7 +70,14 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) const {
     const Acts::PdgParticle pdg = pdgChoices[type];
     const double q = qChoices[type];
     const double phi = phiDist(rng);
-    const double cosTheta = cosThetaDist(rng);
+    const double polarAngleVariable = polarAngleVariableDist(rng);
+    double cosTheta = polarAngleVariable; 
+    if (m_cfg.samplingVariable == "theta"){
+       cosTheta = std::cos(polarAngleVariable);   
+    } else if (m_cfg.samplingVariable == "eta"){
+       const double theta = 2*std::atan(std::exp(-polarAngleVariable)); 
+       cosTheta = std::cos(theta);   
+    } 
     const double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
     double p = pDist(rng);
 
