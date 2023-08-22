@@ -111,13 +111,17 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
   particleSmearingCfg.outputTrackParameters = "smearedparameters";
   particleSmearingCfg.randomNumbers = rnd;
   //particleSmearingCfg.initialVarInflation = {100,100, 100, 100, 100, 100};
-  particleSmearingCfg.sigmaD0 = 0.1 * Acts::UnitConstants::mm; 
-  particleSmearingCfg.sigmaD0PtA = 0.35 * Acts::UnitConstants::mm;
-  particleSmearingCfg.sigmaD0PtB = 0.3 / Acts::UnitConstants::GeV;
+  particleSmearingCfg.sigmaD0 = 0.2 * Acts::UnitConstants::mm; 
+  particleSmearingCfg.sigmaD0PtA = 0.8 * Acts::UnitConstants::mm;
+  particleSmearingCfg.sigmaD0PtB = 3 / Acts::UnitConstants::GeV;
   
-  particleSmearingCfg.sigmaZ0 = 0.35 * Acts::UnitConstants::mm; 
-  particleSmearingCfg.sigmaZ0PtA = 0.45 * Acts::UnitConstants::mm;
-  particleSmearingCfg.sigmaZ0PtB = 0.3 / Acts::UnitConstants::GeV;
+  //particleSmearingCfg.sigmaZ0 = 0.2 * Acts::UnitConstants::mm; 
+  particleSmearingCfg.sigmaZ0 = 10 * Acts::UnitConstants::mm; 
+  particleSmearingCfg.sigmaZ0PtA = 0.8 * Acts::UnitConstants::mm;
+  particleSmearingCfg.sigmaZ0PtB = 3 / Acts::UnitConstants::GeV;
+
+  //particleSmearingCfg.sigmaZ0PtA = 0.35 * Acts::UnitConstants::mm;
+  //particleSmearingCfg.sigmaZ0PtB = 0.3 / Acts::UnitConstants::GeV;
  
   particleSmearingCfg.sigmaPhi = 1 * Acts::UnitConstants::degree; 
   particleSmearingCfg.sigmaTheta = 1 * Acts::UnitConstants::degree; 

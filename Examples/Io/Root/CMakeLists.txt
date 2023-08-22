@@ -16,6 +16,7 @@ add_library(
   src/RootTrajectorySummaryWriter.cpp
   src/RootVertexPerformanceWriter.cpp
   src/RootSTCFMeasurementReader.cpp 
+  src/RootBESMeasurementReader.cpp 
   src/RootBFieldWriter.cpp
 )
 target_include_directories(

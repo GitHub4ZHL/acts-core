@@ -97,6 +97,8 @@ class RootTrajectorySummaryWriter final
   std::vector<std::vector<double>>
       m_measurementIndex;  ///< The index of source link for all measurement states
   std::vector<std::vector<double>>
+      m_twinsMeasurementIndex;  ///< The twins index of source link for all measurement states
+  std::vector<std::vector<double>>
       m_outlierChi2;  ///< The chi2 on all outlier states
   std::vector<std::vector<double>>
       m_measurementVolume;  ///< The volume id of the measurements

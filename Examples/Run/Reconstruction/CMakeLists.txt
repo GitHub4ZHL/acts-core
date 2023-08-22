@@ -45,6 +45,22 @@ target_link_libraries(
     )
 
 
+# Truth reco for BES detector 
+#add_executable(
+#	ActsExampleTruthTracksBES
+#	BESRecTruthTracks.cpp)
+#target_link_libraries(
+#	ActsExampleTruthTracksBES
+#  PRIVATE
+#    ActsExamplesDetectorTGeo
+#    ActsExamplesFramework
+#    ActsExamplesCommon
+#    ActsExamplesMagneticField
+#    ActsExamplesIoPerformance
+#    )
+
+
+
 # CKF reco for Generic detector 
 add_executable(
   ActsExampleCKFTracksGeneric
@@ -68,6 +84,25 @@ target_link_libraries(
     ActsExamplesMagneticField
     ActsExamplesIoPerformance 
     )
+
+
+
+# CKF reco for BES detector
+add_executable(
+        ActsExampleCKFTracksBES
+        BESRecCKFTracks.cpp)
+target_link_libraries(
+        ActsExampleCKFTracksBES
+  PRIVATE
+    ActsExamplesDetectorTGeo
+    ActsExamplesFramework
+    ActsExamplesCommon
+    ActsExamplesMagneticField
+    ActsExamplesIoPerformance
+    )
+
+
+
 
 # CKF reco for TGeo detector 
 add_executable(

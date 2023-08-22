@@ -29,8 +29,8 @@ namespace ActsExamples {
 class IndexSourceLink final : public Acts::SourceLink {
  public:
   /// Construct from geometry identifier and index.
-  constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx)
-      : SourceLink(gid), m_index(idx) {}
+  constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx, Index tidx)
+      : SourceLink(gid), m_index(idx), m_twinsIndex(tidx) {}
 
   // Construct an invalid source link. Must be default constructible to
   /// satisfy SourceLinkConcept.
@@ -43,8 +43,12 @@ class IndexSourceLink final : public Acts::SourceLink {
   /// Access the index.
   constexpr Index index() const { return m_index; }
 
+  /// Access the index.
+  constexpr Index twinsIndex() const { return m_twinsIndex; }
+
  private:
   Index m_index;
+  Index m_twinsIndex;
 
   friend constexpr bool operator==(const IndexSourceLink& lhs,
                                    const IndexSourceLink& rhs) {

@@ -190,7 +190,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     // The measurement container is unordered and the index under which
     // the measurement will be stored is known before adding it.
     Index hitIdx = orderedMeasurements.size();
-    IndexSourceLink& sourceLink = sourceLinkStorage.emplace_back(geoId, hitIdx);
+    IndexSourceLink& sourceLink = sourceLinkStorage.emplace_back(geoId, hitIdx, hitIdx);
     auto measurement = createMeasurement(dParameters, sourceLink);
 
     // Due to the previous sorting of the raw hit data by geometry id, new

@@ -96,6 +96,25 @@ int runFatras(int argc, char* argv[],
   for (auto cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
+
+  auto logLevel = Options::readLogLevel(vars); 
+   ActsExamples::WhiteBoard contextBoard(
+      Acts::getDefaultLogger("contextBoard", logLevel));
+  // The geometry context
+  ActsExamples::AlgorithmContext context(0, 0, contextBoard);
+  trackingGeometry->visitSurfaces([&](const Acts::Surface* surface) {
+           std::cout<<"surface " <<  surface->geometryId() << std::endl;
+           if(surface->geometryId().volume() == 8){
+             //auto ss = dynamic_cast<const Acts::StrawSurface*>(surface);
+             auto center = surface->center(context.geoContext);
+             auto rotation = surface->transform(context.geoContext).rotation();
+             std::cout<<"center: (" << center.x() <<",  "<< center.y()  << ", " << center.z() << "), phi " << std::atan2(center.y(), center.x()) << ", local Z axis vector " << rotation.col(2).transpose() << std::endl;
+           }
+     }
+  );
+ 
+
+
   // Setup input, algorithm chain, output
   Simulation::setupInput(vars, sequencer, randomNumbers);
   setupFatrasSimulation(vars, sequencer, randomNumbers, trackingGeometry);

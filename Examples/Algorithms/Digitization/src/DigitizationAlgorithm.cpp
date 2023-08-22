@@ -224,7 +224,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             // The measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index measurementIdx = measurements.size();
-            sourceLinkStorage.emplace_back(moduleGeoId, measurementIdx);
+            sourceLinkStorage.emplace_back(moduleGeoId, measurementIdx, measurementIdx);
             IndexSourceLink& sourceLink = sourceLinkStorage.back();
 
             // Add to output containers:

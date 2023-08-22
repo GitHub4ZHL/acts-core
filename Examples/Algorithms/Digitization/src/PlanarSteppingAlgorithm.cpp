@@ -202,7 +202,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       // the measurement container is unordered and the index under which
       // the measurement will be stored is known before adding it.
       Index hitIdx = measurements.size();
-      sourceLinkStorage.emplace_back(moduleGeoId, hitIdx);
+      sourceLinkStorage.emplace_back(moduleGeoId, hitIdx, hitIdx);
       IndexSourceLink& sourceLink = sourceLinkStorage.back();
 
       sourceLinks.insert(sourceLinks.end(), sourceLink);

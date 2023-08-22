@@ -77,6 +77,7 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("NDF", &m_NDF);
     m_outputTree->Branch("measurementChi2", &m_measurementChi2);
     m_outputTree->Branch("measurementIndex", &m_measurementIndex);
+    m_outputTree->Branch("twinsMeasurementIndex", &m_twinsMeasurementIndex);
     m_outputTree->Branch("outlierChi2", &m_outlierChi2);
     m_outputTree->Branch("measurementVolume", &m_measurementVolume);
     m_outputTree->Branch("measurementLayer", &m_measurementLayer);
@@ -208,16 +209,19 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
       // collect the index of the measurement
       std::vector<double> sls; 
+      std::vector<double> twins_sls; 
       mj.visitBackwards(trackTip, [&](const auto& state) {
         auto typeFlags = state.typeFlags();
         if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
             auto sl = dynamic_cast<const IndexSourceLink*>(&state.uncalibrated()); 
 	    //std::cout<<"sl index " << sl->index() << std::endl; 
 	    sls.push_back(sl->index());
+	    twins_sls.push_back(sl->twinsIndex());
         }
         return true;
       });
       m_measurementIndex.push_back(sls);
+      m_twinsMeasurementIndex.push_back(twins_sls);
 
       // They are stored as double (as the vector of vector of int is not known
       // to ROOT)
@@ -316,6 +320,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Push the corresponding truth particle info for the track.
       // Always push back even if majority particle not found
       m_majorityParticleId.push_back(majorityParticleId);
+      m_majorityParticlePdg.push_back(majorityParticlePdg);
       m_nMajorityHits.push_back(nMajorityHits);
       m_t_charge.push_back(t_charge);
       m_t_time.push_back(t_time);
@@ -415,6 +420,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_NDF.clear();
   m_measurementChi2.clear();
   m_measurementIndex.clear();
+  m_twinsMeasurementIndex.clear();
   m_outlierChi2.clear();
   m_measurementVolume.clear();
   m_measurementLayer.clear();
@@ -423,6 +429,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
   m_nMajorityHits.clear();
   m_majorityParticleId.clear();
+  m_majorityParticlePdg.clear();
   m_t_charge.clear();
   m_t_time.clear();
   m_t_vx.clear();

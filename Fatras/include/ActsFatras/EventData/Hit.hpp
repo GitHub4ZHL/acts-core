@@ -46,13 +46,14 @@ class Hit {
   /// position on the given surface.
   Hit(Acts::GeometryIdentifier geometryId, Barcode particleId,
       const Vector4& pos4, const Vector4& before4, const Vector4& after4,
-      int32_t index_ = -1)
+      int32_t index_ = -1, Scalar driftDist_ = 0, Scalar driftDistError_ = 0)
       : m_geometryId(geometryId),
         m_particleId(particleId),
         m_index(index_),
         m_pos4(pos4),
         m_before4(before4),
-        m_after4(after4) {}
+        m_after4(after4),
+        m_driftDistance(driftDist_), m_driftDistanceError(driftDistError_){}
   Hit(const Hit&) = default;
   Hit(Hit&&) = default;
   Hit& operator=(const Hit&) = default;
@@ -73,6 +74,11 @@ class Hit {
   auto position() const { return m_pos4.segment<3>(Acts::ePos0); }
   /// Time coordinate.
   Scalar time() const { return m_pos4[Acts::eTime]; }
+
+  Scalar driftDistance() const { return m_driftDistance;}
+
+  Scalar driftDistanceError() const { return m_driftDistanceError;}
+
 
   /// Particle four-momentum before the hit.
   const Vector4& momentum4Before() const { return m_before4; }
@@ -100,6 +106,8 @@ class Hit {
     return m_before4[Acts::eEnergy] - m_after4[Acts::eEnergy];
   }
 
+
+
  private:
   /// Identifier of the surface.
   Acts::GeometryIdentifier m_geometryId;
@@ -113,6 +121,9 @@ class Hit {
   Vector4 m_before4 = Vector4::Zero();
   /// Global particle energy-momentum four-vector after the hit.
   Vector4 m_after4 = Vector4::Zero();
+  
+  Scalar m_driftDistance = 0;
+  Scalar m_driftDistanceError = 0;
 };
 
 }  // namespace ActsFatras
