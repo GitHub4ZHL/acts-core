@@ -56,11 +56,15 @@ class RootBESMeasurementReader : public IReader {
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
 
+    bool readRecMdcHit = false;
+    bool runBesUpgrade = false;
+
     std::string mcParticleTreeName =
         "McParticleCol";  ///< name of the input tree for truth particles
     std::string mcPixHitTreeName =
         "PixMcHitCol";  ///< name of the input tree for truth pixel hits
-                        ///< (already smeared)
+    std::string mcMdcHitTreeName =
+        "MdcMcHitCol";  ///< name of the input tree for truth mdc hits
     std::string recMdcHitTreeName =
         "MdcRecHitCol";    ///< name of the input tree for truth pixel hits
     std::string filePath;  ///< The name of the input file
@@ -118,30 +122,19 @@ class RootBESMeasurementReader : public IReader {
   std::array<int, 43> m_MDCnCells = {
       40,  44,  48,  56,  64,  72,  80,  80,  76,  76,  88,  88,  100, 100, 112,
       112, 128, 128, 140, 140, 160, 160, 160, 160, 176, 176, 176, 176, 208, 208,
-      208, 208, 240, 240, 240, 240, 256, 256, 256, 256, 288, 288, 288
-
-  };
-
-  //  std::array<int, 48> m_MDCsCells = { 0,128,256,384,512,640,
-  //  768,928,1088,1248,1408,1568,
-  //  1728,1920,2112,2304,2496,2688,
-  //  2880,3104,3328,3552,3776,4000,
-  //  4224,4480,4736,4992,5248,5504,
-  //  5760,6048,6336,6624,6912,7200,
-  //  7488,7808,8128,8448,8768,9088,
-  //  9408,9760,10112,10464,10816,11168};
+      208, 208, 240, 240, 240, 240, 256, 256, 256, 256, 288, 288, 288};
 
   std::array<int, 2> m_volumeIDs = {6, 8};
   std::array<Acts::ActsScalar, 1> m_PIXRadius = {35};
-  // phi pitch is 0.003 rad? z pitch is 20 um ?
-  std::array<double, 2> m_pixSmear = {0.003 / std::sqrt(12),
-                                      0.02 / std::sqrt(12)};
+  std::array<double, 2> m_pixSmear = {0.00866,
+                                      0.05774};
 
   size_t m_evtCounter = 0;
 
   /// The input tree name
   TTreeReader* m_mcParticleTreeReader = nullptr;
   TTreeReader* m_mcPixHitTreeReader = nullptr;
+  TTreeReader* m_mcMdcHitTreeReader = nullptr;
   TTreeReader* m_recMdcHitTreeReader = nullptr;
 
   TTreeReaderArray<int>* particlePDG = nullptr;
@@ -153,6 +146,7 @@ class RootBESMeasurementReader : public IReader {
   TTreeReaderArray<double>* particleMomentumY = nullptr;
   TTreeReaderArray<double>* particleMomentumZ = nullptr;
 
+  // Pix MC
   TTreeReaderArray<uint>* PIXparticleIndex = nullptr;
   TTreeReaderArray<int>* PIXparticlePDG = nullptr;
   TTreeReaderArray<Acts::ActsScalar>* PIXpositionX = nullptr;
@@ -162,20 +156,30 @@ class RootBESMeasurementReader : public IReader {
   TTreeReaderArray<Acts::ActsScalar>* PIXmomentumY = nullptr;
   TTreeReaderArray<Acts::ActsScalar>* PIXmomentumZ = nullptr;
 
-  TTreeReaderArray<double>* MDCcellID = nullptr;
-  TTreeReaderArray<double>* MDClayerID = nullptr;
-  TTreeReaderArray<int>* MDCparticleIndex = nullptr;
-  TTreeReaderArray<int>* MDCparticlePDG = nullptr;
- // TTreeReaderArray<Acts::ActsScalar>* MDCpositionX = nullptr;
- // TTreeReaderArray<Acts::ActsScalar>* MDCpositionY = nullptr;
- // TTreeReaderArray<Acts::ActsScalar>* MDCpositionZ = nullptr;
- // TTreeReaderArray<Acts::ActsScalar>* MDCmomentumX = nullptr;
- // TTreeReaderArray<Acts::ActsScalar>* MDCmomentumY = nullptr;
- // TTreeReaderArray<Acts::ActsScalar>* MDCmomentumZ = nullptr;
-  TTreeReaderArray<Acts::ActsScalar>* MDCwireR = nullptr;
-  TTreeReaderArray<Acts::ActsScalar>* MDCwirePhi = nullptr;
-  TTreeReaderArray<Acts::ActsScalar>* MDCdriftDistance = nullptr;
-  TTreeReaderArray<Acts::ActsScalar>* MDCdriftDistanceError = nullptr;
+  // Mdc MC
+  TTreeReaderArray<uint>* mcMDCcellID = nullptr;
+  TTreeReaderArray<uint>* mcMDClayerID = nullptr;
+  TTreeReaderArray<uint>* mcMDCparticleIndex = nullptr;
+  TTreeReaderArray<int>* mcMDCparticlePDG = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* mcMDCpositionX = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* mcMDCpositionY = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* mcMDCpositionZ = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* mcMDCmomentumX = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* mcMDCmomentumY = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* mcMDCmomentumZ = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* mcMDCdriftDistance = nullptr;
+  TTreeReaderArray<int>* mcMDCdriftSign = nullptr;
+  TTreeReaderArray<int>* mcMDCinCellStatus = nullptr;
+
+  // Mdc REC
+  TTreeReaderArray<double>* recMDCcellID = nullptr;
+  TTreeReaderArray<double>* recMDClayerID = nullptr;
+  TTreeReaderArray<int>* recMDCparticleIndex = nullptr;
+  TTreeReaderArray<int>* recMDCparticlePDG = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* recMDCwireR = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* recMDCwirePhi = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* recMDCdriftDistance = nullptr;
+  TTreeReaderArray<Acts::ActsScalar>* recMDCdriftDistanceError = nullptr;
 };
 
 }  // namespace ActsExamples

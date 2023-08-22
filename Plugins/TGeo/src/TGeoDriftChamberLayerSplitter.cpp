@@ -42,6 +42,11 @@ Acts::TGeoDriftChamberLayerSplitter::split(
   int nSenseWires = 0;
   // The cells on this layer
   auto daugthers = tgNode.GetVolume()->GetNodes();
+  // The relative position of layer w.r.t. chamber 
+  const TGeoMatrix* lmatrix = tgNode.GetMatrix();
+  //std::cout<<"layer matrix print " << std::endl;
+  //lmatrix->Print();
+
   TIter iObj(daugthers);
   while (TObject* obj = iObj()) {
     TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
@@ -69,9 +74,14 @@ Acts::TGeoDriftChamberLayerSplitter::split(
                    << minR << ", maxR = " << maxR << " and deltaPhi "
                    << deltaPhi << " (deg) and thickness " << thickness);
         //std::cout<<"distanceToOuterCorner = " << distanceToOuterCorner <<", distanceToInnerConer = " << distanceToInnerCorner <<", thickness/2 = " << thickness/2 << std::endl; 
+        //std::cout<<"cast good: drift cell has minR = "
+        //           << minR << ", maxR = " << maxR << " and deltaPhi "
+        //           << deltaPhi << " (deg) and thickness " << thickness << std::endl; 
 
         // The relative position of cell w.r.t. layer
         const TGeoMatrix* cmatrix = node->GetMatrix();
+        //std::cout<<"cell matrix print " << std::endl;
+	//cmatrix->Print();
 
         auto grandDaugthers = node->GetVolume()->GetNodes();
         TIter jObj(grandDaugthers);
@@ -79,7 +89,8 @@ Acts::TGeoDriftChamberLayerSplitter::split(
           TGeoNode* dNode = dynamic_cast<TGeoNode*>(dobj);
           if (dNode != nullptr) {
             std::string dNodeName = dNode->GetName();
-            if (dNodeName.find("sense_wire") != std::string::npos) {
+	    //std::cout<<"Loop over the daughter with name  "<< dNodeName << " in the cell " << std::endl; 
+	    if (dNodeName.find("SignalWire") != std::string::npos) {
               ACTS_DEBUG("Found sense wire" << dNodeName
                                             << " in the drift cell");
               // create a Line surface
@@ -90,20 +101,24 @@ Acts::TGeoDriftChamberLayerSplitter::split(
                 ACTS_WARNING("Failed to cast to TGeoTube");
               } else {
                 ActsScalar halfZ = wire->GetDz() * m_cfg.unitScalar;
-                ACTS_DEBUG("half length of the cell: " << halfZ);
+                ACTS_DEBUG("half length of the sense wire: " << halfZ);
+		//std::cout<<"half length of the sense wire: " << halfZ << std::endl;;
 
                 const TGeoMatrix* wmatrix = dNode->GetMatrix();
+		//std::cout<<"wire matrix print " << std::endl;
+		//wmatrix->Print();
                 // Is this correct?
                 TGeoHMatrix transform =
-                    TGeoCombiTrans(*cmatrix) * TGeoCombiTrans(*wmatrix);
+                    TGeoCombiTrans(*lmatrix) * TGeoCombiTrans(*cmatrix) * TGeoCombiTrans(*wmatrix);
 
                 // Get the placement and orientation in respect to its mother
                 const Double_t* rotation = transform.GetRotationMatrix();
                 const Double_t* translation = transform.GetTranslation();
-                // Create a eigen transform
+		// Create a eigen transform
                 Vector3 t(translation[0] * m_cfg.unitScalar,
                           translation[1] * m_cfg.unitScalar,
                           translation[2] * m_cfg.unitScalar);
+	        //std::cout<<"supposed translation " << t << std::endl;	
                 Vector3 cx(rotation[0], rotation[3], rotation[6]);
                 Vector3 cy(rotation[1], rotation[4], rotation[7]);
                 Vector3 cz(rotation[2], rotation[5], rotation[8]);

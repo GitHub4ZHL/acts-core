@@ -111,8 +111,11 @@ class MeasurementSelector {
     // Loop over all measurements to select the compatible measurements
     for (auto& trackState : candidates) {
       // Take the parameter covariance
-      // const auto predicted = tackState.predicted();
-      // const auto predictedCovariance = trackState.predictedCovariance();
+      const auto predicted = trackState.predicted();
+      const auto predictedCovariance = trackState.predictedCovariance();
+
+      //std::cout<<"predicted " << predicted  << std::endl;
+      //std::cout<<"calibrate " << trackState.calibrated()  << std::endl;
 
       double chi2 = calculateChi2(
           trackState.calibrated(), trackState.calibratedCovariance(),

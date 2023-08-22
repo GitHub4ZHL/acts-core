@@ -85,7 +85,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
       double halfPhi = M_PI;
       double avgPhi = 0.;
       // Check if it's a segment
-      std::cout << "tube name " << tube->GetName() << std::endl;
+      //std::cout << "tube name " << tube->GetName() << std::endl;
       // auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       // if (tubeSeg != nullptr) {
       //   double phi1 = toRadian(tubeSeg->GetPhi1());

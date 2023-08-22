@@ -44,7 +44,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     : Acts::IdentifiedDetectorElement(),
       m_detElement(&tGeoNode),
       m_identifier(identifier) {
-  std::cout << "Create TGeoDetectorElement " << std::endl;
+  //std::cout << "Create TGeoDetectorElement " << std::endl;
   // Create temporary local non const surface (to allow setting the
   // material)
   const Double_t* translation = tGeoMatrix.GetTranslation();
@@ -93,7 +93,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   if (m_surface != nullptr) {
     m_surface->assignSurfaceMaterial(std::move(material));
   }
-  std::cout << "End TGeoDetectorElement " << std::endl;
+  //std::cout << "End TGeoDetectorElement " << std::endl;
 }
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(

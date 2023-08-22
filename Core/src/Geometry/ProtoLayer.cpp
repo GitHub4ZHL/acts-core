@@ -52,7 +52,7 @@ double ProtoLayer::max(BinningValue bval, bool addenv) const {
 double ProtoLayer::medium(BinningValue bval, bool addenv) const {
   if(not m_surfaces.empty()){ 
     if (bval == binR and m_surfaces[0]->type() == Surface::Straw) {
-      std::cout<<"ProtoLayer::medium" << std::endl;      
+      //std::cout<<"ProtoLayer::medium" << std::endl;      
       return (m_rMin + m_rMax) / 2;
     }
   }

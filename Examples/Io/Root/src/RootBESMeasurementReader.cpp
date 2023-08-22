@@ -32,6 +32,7 @@ ActsExamples::RootBESMeasurementReader::RootBESMeasurementReader(
       m_events(0),
       m_mcParticleTreeReader(nullptr),
       m_mcPixHitTreeReader(nullptr),
+      m_mcMdcHitTreeReader(nullptr),
       m_recMdcHitTreeReader(nullptr) {
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing input filename");
@@ -65,7 +66,10 @@ ActsExamples::RootBESMeasurementReader::RootBESMeasurementReader(
 
   m_mcParticleTreeReader =
       new TTreeReader(m_cfg.mcParticleTreeName.c_str(), file);
-  m_mcPixHitTreeReader = new TTreeReader(m_cfg.mcPixHitTreeName.c_str(), file);
+  if(m_cfg.runBesUpgrade){ 
+    m_mcPixHitTreeReader = new TTreeReader(m_cfg.mcPixHitTreeName.c_str(), file);
+  } 
+  m_mcMdcHitTreeReader = new TTreeReader(m_cfg.mcMdcHitTreeName.c_str(), file);
   m_recMdcHitTreeReader =
       new TTreeReader(m_cfg.recMdcHitTreeName.c_str(), file);
 
@@ -87,51 +91,65 @@ ActsExamples::RootBESMeasurementReader::RootBESMeasurementReader(
       new TTreeReaderArray<double>(*m_mcParticleTreeReader, "yInitialMomentum");
   particleMomentumZ =
       new TTreeReaderArray<double>(*m_mcParticleTreeReader, "zInitialMomentum");
-//  particleTrackID =
-//      new TTreeReaderArray<int>(*m_mcParticleTreeReader, "particleIndex");
 
-  PIXparticleIndex =
-      new TTreeReaderArray<uint>(*m_mcPixHitTreeReader, "particleIndex");
-  PIXparticlePDG =
-      new TTreeReaderArray<int>(*m_mcPixHitTreeReader, "particleId");
-  PIXpositionX = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
-                                                        "xPosition");
-  PIXpositionY = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
-                                                        "yPosition");
-  PIXpositionZ = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
-                                                        "zPosition");
-  PIXmomentumX = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
-                                                        "xMomentum");
-  PIXmomentumY = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
-                                                        "yMomentum");
-  PIXmomentumZ = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
-                                                        "zMomentum");
+ if(m_cfg.runBesUpgrade){
+   PIXparticleIndex =
+       new TTreeReaderArray<uint>(*m_mcPixHitTreeReader, "particleIndex");
+   PIXparticlePDG =
+       new TTreeReaderArray<int>(*m_mcPixHitTreeReader, "particleId");
+   PIXpositionX = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
+                                                         "xPosition");
+   PIXpositionY = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
+                                                         "yPosition");
+   PIXpositionZ = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
+                                                         "zPosition");
+   PIXmomentumX = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
+                                                         "xMomentum");
+   PIXmomentumY = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
+                                                         "yMomentum");
+   PIXmomentumZ = new TTreeReaderArray<Acts::ActsScalar>(*m_mcPixHitTreeReader,
+                                                         "zMomentum");
+  }
 
-  MDCcellID = new TTreeReaderArray<double>(*m_recMdcHitTreeReader, "wire");
-  MDClayerID = new TTreeReaderArray<double>(*m_recMdcHitTreeReader, "layer");
-  MDCparticleIndex =
+  mcMDCcellID = new TTreeReaderArray<uint>(*m_mcMdcHitTreeReader, "wire");
+  mcMDClayerID = new TTreeReaderArray<uint>(*m_mcMdcHitTreeReader, "layer");
+  mcMDCparticleIndex =
+      new TTreeReaderArray<uint>(*m_mcMdcHitTreeReader, "particleIndex");
+  mcMDCparticlePDG =
+      new TTreeReaderArray<int>(*m_mcMdcHitTreeReader, "particleId");
+  mcMDCpositionX = new TTreeReaderArray<Acts::ActsScalar>(*m_mcMdcHitTreeReader,
+                                                          "xPosition");
+  mcMDCpositionY = new TTreeReaderArray<Acts::ActsScalar>(*m_mcMdcHitTreeReader,
+                                                          "yPosition");
+  mcMDCpositionZ = new TTreeReaderArray<Acts::ActsScalar>(*m_mcMdcHitTreeReader,
+                                                          "zPosition");
+  mcMDCmomentumX = new TTreeReaderArray<Acts::ActsScalar>(*m_mcMdcHitTreeReader,
+                                                          "xMomentum");
+  mcMDCmomentumY = new TTreeReaderArray<Acts::ActsScalar>(*m_mcMdcHitTreeReader,
+                                                          "yMomentum");
+  mcMDCmomentumZ = new TTreeReaderArray<Acts::ActsScalar>(*m_mcMdcHitTreeReader,
+                                                          "zMomentum");
+  mcMDCdriftDistance = new TTreeReaderArray<Acts::ActsScalar>(
+      *m_mcMdcHitTreeReader, "driftDistance");
+  mcMDCdriftSign = new TTreeReaderArray<int>(*m_mcMdcHitTreeReader,
+                                                          "driftSign");
+  mcMDCinCellStatus = new TTreeReaderArray<int>(
+      *m_mcMdcHitTreeReader, "inCellStatus");
+
+
+  recMDCcellID = new TTreeReaderArray<double>(*m_recMdcHitTreeReader, "wire");
+  recMDClayerID = new TTreeReaderArray<double>(*m_recMdcHitTreeReader, "layer");
+  recMDCparticleIndex =
       new TTreeReaderArray<int>(*m_recMdcHitTreeReader, "particleIndex");
-  MDCparticlePDG =
+  recMDCparticlePDG =
       new TTreeReaderArray<int>(*m_recMdcHitTreeReader, "particleId");
-  MDCwireR = new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader,
-                                                        "r");
-  MDCwirePhi = new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader,
-                                                        "phi");
- // MDCpositionX = new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader,
- //                                                       "xPosition");
- // MDCpositionY = new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader,
- //                                                       "yPosition");
- // MDCpositionZ = new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader,
- //                                                       "zPosition");
- // MDCmomentumX = new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader,
- //                                                       "xMomentum");
- // MDCmomentumY = new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader,
- //                                                       "yMomentum");
- // MDCmomentumZ = new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader,
- //                                                       "zMomentum");
-  MDCdriftDistance = new TTreeReaderArray<Acts::ActsScalar>(
+  recMDCwireR =
+      new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader, "r");
+  recMDCwirePhi =
+      new TTreeReaderArray<Acts::ActsScalar>(*m_recMdcHitTreeReader, "phi");
+  recMDCdriftDistance = new TTreeReaderArray<Acts::ActsScalar>(
       *m_recMdcHitTreeReader, "driftDist");
-  MDCdriftDistanceError = new TTreeReaderArray<Acts::ActsScalar>(
+  recMDCdriftDistanceError = new TTreeReaderArray<Acts::ActsScalar>(
       *m_recMdcHitTreeReader, "driftDistError");
 
   ACTS_DEBUG("Adding File " << m_cfg.filePath << " to tree '"
@@ -156,6 +174,7 @@ ActsExamples::RootBESMeasurementReader::~RootBESMeasurementReader() {
   delete particleMomentumY;
   delete particleMomentumZ;
 
+ if(m_cfg.runBesUpgrade){
   delete PIXparticleIndex;
   delete PIXparticlePDG;
   delete PIXpositionX;
@@ -164,21 +183,30 @@ ActsExamples::RootBESMeasurementReader::~RootBESMeasurementReader() {
   delete PIXmomentumX;
   delete PIXmomentumY;
   delete PIXmomentumZ;
+ }
 
-  delete MDCcellID;
-  delete MDClayerID;
-  delete MDCparticleIndex;
-  delete MDCparticlePDG;
-  delete MDCwireR;
-  delete MDCwirePhi;
- // delete MDCpositionX;
- // delete MDCpositionY;
- // delete MDCpositionZ;
- // delete MDCmomentumX;
- // delete MDCmomentumY;
- // delete MDCmomentumZ;
-  delete MDCdriftDistance;
-  delete MDCdriftDistanceError;
+  delete recMDCcellID;
+  delete recMDClayerID;
+  delete recMDCparticleIndex;
+  delete recMDCparticlePDG;
+  delete recMDCwireR;
+  delete recMDCwirePhi;
+  delete recMDCdriftDistance;
+  delete recMDCdriftDistanceError;
+
+  delete mcMDCcellID;
+  delete mcMDClayerID;
+  delete mcMDCparticleIndex;
+  delete mcMDCparticlePDG;
+  delete mcMDCdriftDistance;
+  delete mcMDCpositionX;
+  delete mcMDCpositionY;
+  delete mcMDCpositionZ;
+  delete mcMDCmomentumX;
+  delete mcMDCmomentumY;
+  delete mcMDCmomentumZ;
+  delete mcMDCdriftSign;
+  delete mcMDCinCellStatus;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootBESMeasurementReader::read(
@@ -195,7 +223,8 @@ ActsExamples::ProcessCode ActsExamples::RootBESMeasurementReader::read(
   SimParticleContainer::sequence_type unordered_particles;
 
   // 1) The simHits have a valid geometry id, but might have meaningless
-  // particle index 2) For MDC, the simHit is actually not a real sim hit, it's
+  // particle index;
+  // 2) For MDC, the simHit is actually not a real sim hit, it's
   // actually the same as the measurement
   SimHitContainer simHits;
   SimHitContainer::sequence_type unordered_hits;
@@ -207,8 +236,9 @@ ActsExamples::ProcessCode ActsExamples::RootBESMeasurementReader::read(
   IndexMultimap<Index> measurementSimHitsMap;
 
   // read in the fitted track parameters and particles
-  if (m_recMdcHitTreeReader != nullptr && m_mcPixHitTreeReader != nullptr &&
-      m_mcParticleTreeReader != nullptr && context.eventNumber < m_events) {
+  if (m_recMdcHitTreeReader != nullptr && m_mcMdcHitTreeReader != nullptr &&
+      m_mcParticleTreeReader != nullptr &&
+      context.eventNumber < m_events) {
     // The index of the sim hit among all the sim hits from this particle
     std::map<int, int> particleHitIdx;
     std::map<int, int> particlePIXHitIdx;
@@ -217,185 +247,272 @@ ActsExamples::ProcessCode ActsExamples::RootBESMeasurementReader::read(
     std::lock_guard<std::mutex> lock(m_read_mutex);
 
     int nParticles = 0;
-    int nPIXHits = 0;
-    int nMDCHits = 0;
+    int nmcPIXHits = 0;
+    int nmcMDCHits = 0;
+    int nrecMDCHits = 0;
 
     // now read
-    if (m_mcPixHitTreeReader->Next()) {
-      std::cout << "Reading mcPixHit in event " << m_evtCounter++ << std::endl;
+    if (m_cfg.runBesUpgrade){ 
+      if (m_mcPixHitTreeReader->Next()) {
+        //std::cout << "Reading mcPixHit in event " << m_evtCounter++ << std::endl;
 
-      // Reading PIX hits
-      for (size_t i = 0; i < PIXpositionX->GetSize(); ++i) {
-        // int parentID = (*PIXparentID)[i];
-        // if(parentID!=0) continue;
-        nPIXHits++;
+        // Reading PIX hits
+        for (size_t i = 0; i < PIXpositionX->GetSize(); ++i) {
+          nmcPIXHits++;
 
-        Acts::Vector3 pos((*PIXpositionX)[i], (*PIXpositionY)[i],
-                          (*PIXpositionZ)[i]);
-        Acts::Vector3 mom((*PIXmomentumX)[i]/1000, (*PIXmomentumY)[i]/1000,
-                          (*PIXmomentumZ)[i]/1000);
+          Acts::Vector3 pos((*PIXpositionX)[i], (*PIXpositionY)[i],
+                            (*PIXpositionZ)[i]);
+          Acts::Vector3 mom((*PIXmomentumX)[i] / 1000, (*PIXmomentumY)[i] / 1000,
+                            (*PIXmomentumZ)[i] / 1000);
 
-        int layerID = 0;
-        Acts::GeometryIdentifier geoId = Acts::GeometryIdentifier()
-                                             .setVolume(m_volumeIDs[0])
-                                             .setLayer(2 * (layerID + 1))
-                                             .setSensitive(1);
-        std::cout<<"Pix hit at " << geoId << std::endl;
-        std::cout<<"r = " << std::hypot((*PIXpositionX)[i],
-         (*PIXpositionY)[i]) <<", phi = " << std::atan2((*PIXpositionY)[i],
-         (*PIXpositionX)[i]) << std::endl;
-        const Acts::Surface* surfacePtr =
-            m_cfg.trackingGeometry->findSurface(geoId);
-        if(surfacePtr==nullptr){
-          std::cout<<"surface with geoId " << geoId << " is not found "<< std::endl;
-	}	
-	auto intersection = surfacePtr->intersect(context.geoContext, pos,
-                                                  mom.normalized(), true);
-        Acts::Vector3 posUpdated = intersection.intersection.position;
+          int layerID = 0;
+          Acts::GeometryIdentifier geoId = Acts::GeometryIdentifier()
+                                               .setVolume(m_volumeIDs[0])
+                                               .setLayer(2 * (layerID + 1))
+                                               .setSensitive(1);
+          // std::cout<<"Pix hit at " << geoId << std::endl;
+          const Acts::Surface* surfacePtr =
+              m_cfg.trackingGeometry->findSurface(geoId);
+          if (surfacePtr == nullptr) {
+          //  std::cout << "surface with geoId " << geoId << " is not found "
+          //            << std::endl;
+          }
+          auto intersection = surfacePtr->intersect(context.geoContext, pos,
+                                                    mom.normalized(), true);
+          Acts::Vector3 posUpdated = intersection.intersection.position;
 
-        auto cylinderSurface =
-            dynamic_cast<const Acts::CylinderSurface*>(surfacePtr);
-        if (cylinderSurface == nullptr) {
-          std::cout << "Cast PIX surface to cylinder surface failed "
-                    << std::endl;
-        } else {
-          auto bounds = cylinderSurface->bounds();
-          auto values = bounds.values();
-          // std::cout<<"PIX surface r = "<< values[0] << std::endl;
+          auto cylinderSurface =
+              dynamic_cast<const Acts::CylinderSurface*>(surfacePtr);
+          if (cylinderSurface == nullptr) {
+            std::cout << "Cast PIX surface to cylinder surface failed "
+                      << std::endl;
+          } else {
+            auto bounds = cylinderSurface->bounds();
+            auto values = bounds.values();
+            // std::cout<<"PIX surface r = "<< values[0] << std::endl;
+          }
+
+          int particleInd = (*PIXparticleIndex)[i];
+          int particlePdg = (*PIXparticlePDG)[i];
+          double mass = 0;
+          double charge = 0;
+          if (m_particleMassCharge.find(particlePdg) !=
+              m_particleMassCharge.end()) {
+            mass = m_particleMassCharge[particlePdg][0];
+            charge = m_particleMassCharge[particlePdg][1];
+            // } else {
+            //   std::cout<<"WARNING: the particle has pdgId " << particlePdg <<
+            //   std::endl;
+          }
+
+          ActsFatras::Hit::Vector4 pos4{
+              posUpdated.x() * Acts::UnitConstants::mm,
+              posUpdated.y() * Acts::UnitConstants::mm,
+              posUpdated.z() * Acts::UnitConstants::mm,
+              0 * Acts::UnitConstants::ns,
+          };
+          auto energy = std::sqrt(mom.x() * mom.x() + mom.y() * mom.y() +
+                                  mom.z() * mom.z() + mass * mass);
+          ActsFatras::Hit::Vector4 mom4{
+              mom.x() / 1000 * Acts::UnitConstants::GeV,
+              mom.y() / 1000 * Acts::UnitConstants::GeV,
+              mom.z() / 1000 * Acts::UnitConstants::GeV,
+              energy / 1000. * Acts::UnitConstants::GeV,
+          };
+          ActsFatras::Hit::Vector4 delta4{
+              0 * Acts::UnitConstants::GeV,
+              0 * Acts::UnitConstants::GeV,
+              0 * Acts::UnitConstants::GeV,
+              0 * Acts::UnitConstants::GeV,
+          };
+
+          // The particleIndex of the hit could be meaningless, i.e. the hit might
+          // a noise hit
+          ActsFatras::Hit hit(geoId, particleInd, pos4, mom4, mom4 + delta4,
+                              particleHitIdx[particleInd]);
+          unordered_hits.push_back(std::move(hit));
+
+          particleHitIdx[particleInd]++;
+          particlePIXHitIdx[particleInd]++;
+        } // loop over pix hits
+      } // if Next()
+    } // if runBesUpgrade
+
+
+    if (m_cfg.readRecMdcHit) {
+      if (m_recMdcHitTreeReader->Next()) {
+        //std::cout << "Reading recMdcHit in event " << m_evtCounter << std::endl;
+
+        // Reading MDC hits
+        for (size_t i = 0; i < recMDCcellID->GetSize(); ++i) {
+          nrecMDCHits++;
+
+          // This is totally wrong because we don't have the truth hit info in
+          // MDC. So don't use the truth hit info (except its corresponding
+          // particleId)
+          double x = (*recMDCwireR)[i] * std::cos((*recMDCwirePhi)[i]);
+          double y = (*recMDCwireR)[i] * std::sin((*recMDCwirePhi)[i]);
+          ///////////////////////////////////////////////////////////////////////////////////////////
+          Acts::Vector3 pos(x, y, 0);
+          Acts::Vector3 mom(1, 1, 1);
+          ///////////////////////////////////////////////////////////////////////////////////////////
+
+          // double dang = 2*M_PI/m_MDCnCells[(*MDClayerID)[i]];
+          int layerID = (*recMDClayerID)[i] >= 36
+                            ? (37 + ((*recMDClayerID)[i] - 36) * 2)
+                            : (*recMDClayerID)[i];
+          // int layerID = (*MDClayerID)[i];
+          int cellID = m_MDCnCells[(*recMDClayerID)[i]] - (*recMDCcellID)[i];
+
+	  int volume = m_cfg.runBesUpgrade? m_volumeIDs[1] : m_volumeIDs[0];
+          Acts::GeometryIdentifier geoId = Acts::GeometryIdentifier()
+                                               .setVolume(volume)
+                                               .setLayer((layerID + 1) * 2)
+                                               .setSensitive(cellID);
+          const Acts::Surface* surfacePtr =
+              m_cfg.trackingGeometry->findSurface(geoId);
+
+          //std::cout << "MDC hit at " << geoId << std::endl;
+
+          if (surfacePtr == nullptr) {
+            std::cout << "layerID = " << layerID << ", cellID = " << cellID
+                      << std::endl;
+          }
+
+          int particleInd = (*recMDCparticleIndex)[i];
+          int particlePdg = (*recMDCparticlePDG)[i];
+          double mass = 0;
+          double charge = 0;
+          if (m_particleMassCharge.find(particlePdg) !=
+              m_particleMassCharge.end()) {
+            mass = m_particleMassCharge[particlePdg][0];
+            charge = m_particleMassCharge[particlePdg][1];
+            //} else {
+            //  std::cout<<"WARNING: the particle has pdgId " << particlePdg <<
+            //  std::endl;
+          }
+
+          // This is totally wrong
+          ActsFatras::Hit::Vector4 pos4{
+              pos.x() * Acts::UnitConstants::mm,
+              pos.y() * Acts::UnitConstants::mm,
+              pos.z() * Acts::UnitConstants::mm,
+              0 * Acts::UnitConstants::ns,
+          };
+          auto energy = std::sqrt(mom.x() * mom.x() + mom.y() * mom.y() +
+                                  mom.z() * mom.z() + mass * mass);
+          // This is totally wrong
+          ActsFatras::Hit::Vector4 mom4{
+              mom.x() / 1000 * Acts::UnitConstants::GeV,
+              mom.y() / 1000 * Acts::UnitConstants::GeV,
+              mom.z() / 1000 * Acts::UnitConstants::GeV,
+              energy / 1000. * Acts::UnitConstants::GeV,
+          };
+          ActsFatras::Hit::Vector4 delta4{
+	      0 * Acts::UnitConstants::GeV,
+	      0 * Acts::UnitConstants::GeV,
+	      0 * Acts::UnitConstants::GeV,
+              0 * Acts::UnitConstants::GeV,
+          };
+
+          // The particleIndex of the hit could be meaningless, i.e. the hit
+          // might a noise hit
+          ActsFatras::Hit hit(geoId, particleInd, pos4, mom4, mom4 + delta4,
+                              particleHitIdx[particleInd], (*recMDCdriftDistance)[i] * 10 * Acts::UnitConstants::mm, (*recMDCdriftDistanceError)[i] * 10 * Acts::UnitConstants::mm);
+          unordered_hits.push_back(std::move(hit));
+          particleHitIdx[particleInd]++;
         }
-
-        int particleInd = (*PIXparticleIndex)[i];
-        int particlePdg = (*PIXparticlePDG)[i];
-        double mass = 0;
-        double charge = 0;
-        if (m_particleMassCharge.find(particlePdg) !=
-                                       m_particleMassCharge.end()) {
-          mass = m_particleMassCharge[particlePdg][0];
-          charge = m_particleMassCharge[particlePdg][1];
-       // } else {
-       //   std::cout<<"WARNING: the particle has pdgId " << particlePdg << std::endl;
-	}
-
-        ActsFatras::Hit::Vector4 pos4{
-            posUpdated.x() * Acts::UnitConstants::mm,
-            posUpdated.y() * Acts::UnitConstants::mm,
-            posUpdated.z() * Acts::UnitConstants::mm,
-            0 * Acts::UnitConstants::ns,
-        };
-        auto energy = std::sqrt(mom.x() * mom.x() + mom.y() * mom.y() +
-                                mom.z() * mom.z() + mass * mass);
-        ActsFatras::Hit::Vector4 mom4{
-            mom.x() / 1000 * Acts::UnitConstants::GeV,
-            mom.y() / 1000 * Acts::UnitConstants::GeV,
-            mom.z() / 1000 * Acts::UnitConstants::GeV,
-            energy / 1000. * Acts::UnitConstants::GeV,
-        };
-        ActsFatras::Hit::Vector4 delta4{
-            0 * Acts::UnitConstants::GeV,
-            0 * Acts::UnitConstants::GeV,
-            0 * Acts::UnitConstants::GeV,
-            0 * Acts::UnitConstants::GeV,
-        };
-
-        // The particleIndex of the hit could be meaningless, i.e. the hit might
-        // a noise hit
-        ActsFatras::Hit hit(geoId, particleInd, pos4, mom4, mom4 + delta4,
-                            particleHitIdx[particleInd]);
-        unordered_hits.push_back(std::move(hit));
-
-        particleHitIdx[particleInd]++;
-        particlePIXHitIdx[particleInd]++;
       }
-    }
+    } else {
+      if (m_mcMdcHitTreeReader->Next()) {
+        //std::cout << "Reading mcMdcHit in event " << m_evtCounter << std::endl;
 
-    if (m_recMdcHitTreeReader->Next()) {
-      std::cout << "Reading recMdcHit in event " << m_evtCounter << std::endl;
+        // Reading MDC hits
+        for (size_t i = 0; i < mcMDCcellID->GetSize(); ++i) {
+          nmcMDCHits++;
 
-      // Reading MDC hits
-      for (size_t i = 0; i < MDCcellID->GetSize(); ++i) {
-        // int parentID = (*MDCparentID)[i];
-        // if(parentID!=0) continue;
-        nMDCHits++;
+          Acts::Vector3 pos((*mcMDCpositionX)[i], (*mcMDCpositionY)[i],
+                            (*mcMDCpositionZ)[i]);
+          Acts::Vector3 mom((*mcMDCmomentumX)[i] / 1000,
+                            (*mcMDCmomentumY)[i] / 1000,
+                            (*mcMDCmomentumZ)[i] / 1000);
 
+          int layerID = (*mcMDClayerID)[i] >= 36
+                            ? (37 + ((*mcMDClayerID)[i] - 36) * 2)
+                            : (*mcMDClayerID)[i];
+          int cellID = m_MDCnCells[(*mcMDClayerID)[i]] - (*mcMDCcellID)[i];
 
-	//This is totally wrong because we don't have the truth hit info in MDC. So don't use the truth hit info (except its corresponding particleId)
-	double x = (*MDCwireR)[i]*std::cos((*MDCwirePhi)[i]);
-///////////////////////////////////////////////////////////////////////////////////////////
-	double y = (*MDCwireR)[i]*std::sin((*MDCwirePhi)[i]);
-        Acts::Vector3 pos(x, (*MDCdriftDistance)[i]*10, (*MDCdriftDistanceError)[i]*10);
-        Acts::Vector3 mom(1, 1, 1);
-///////////////////////////////////////////////////////////////////////////////////////////
+	  int volume = m_cfg.runBesUpgrade? m_volumeIDs[1] : m_volumeIDs[0];
+          Acts::GeometryIdentifier geoId = Acts::GeometryIdentifier()
+                                               .setVolume(volume)
+                                               .setLayer((layerID + 1) * 2)
+                                               .setSensitive(cellID);
+          
+	  //std::cout<<"Reading mcMDChit on geoId " << geoId << std::endl;
+          const Acts::Surface* surfacePtr =
+              m_cfg.trackingGeometry->findSurface(geoId);
 
+          if (surfacePtr == nullptr) {
+            std::cout << "layerID = " << layerID << ", cellID = " << cellID
+                      << std::endl;
+          }
 
-        // double dang = 2*M_PI/m_MDCnCells[(*MDClayerID)[i]];
-        int layerID = (*MDClayerID)[i] >=36 ? (37 + ((*MDClayerID)[i]-36)*2) : (*MDClayerID)[i];
-        //int layerID = (*MDClayerID)[i];
-	int cellID = m_MDCnCells[(*MDClayerID)[i]] - (*MDCcellID)[i];
-	
-        Acts::GeometryIdentifier geoId = Acts::GeometryIdentifier()
-                                             .setVolume(m_volumeIDs[1])
-                                             .setLayer((layerID + 1) * 2)
-                                             .setSensitive(cellID);
-        const Acts::Surface* surfacePtr =
-            m_cfg.trackingGeometry->findSurface(geoId);
-     
-        std::cout<<"MDC hit at " << geoId << std::endl;
-        
-	if(surfacePtr==nullptr){
-          std::cout<<"layerID = "<< layerID <<", cellID = "<< cellID << std::endl;
-	}
+          // auto intersection = surfacePtr->intersect(context.geoContext, pos,
+          //                                           mom.normalized(), true);
+          // Acts::Vector3 posUpdated = intersection.intersection.position;
+          // auto lpResult = surfacePtr->globalToLocal(context.geoContext,
+          //                                           posUpdated,
+          //                                           mom.normalized());
+          // if (not lpResult.ok()) {
+          //   ACTS_FATAL("Global to local transformation did not succeed.");
+          //   return ProcessCode::ABORT;
+          // }
 
-     //   auto intersection = surfacePtr->intersect(context.geoContext, pos,
-     //                                             mom.normalized(), true);
-     //   Acts::Vector3 posUpdated = intersection.intersection.position;
-     //   auto lpResult = surfacePtr->globalToLocal(context.geoContext,
-     //                                             posUpdated, mom.normalized());
-     //   if (not lpResult.ok()) {
-     //     ACTS_FATAL("Global to local transformation did not succeed.");
-     //     return ProcessCode::ABORT;
-     //   }
+          int particleInd = (*mcMDCparticleIndex)[i];
+          int particlePdg = (*mcMDCparticlePDG)[i];
+          double mass = 0;
+          double charge = 0;
+          if (m_particleMassCharge.find(particlePdg) !=
+              m_particleMassCharge.end()) {
+            mass = m_particleMassCharge[particlePdg][0];
+            charge = m_particleMassCharge[particlePdg][1];
+            //} else {
+            //  std::cout<<"WARNING: the particle has pdgId " << particlePdg <<
+            //  std::endl;
+          }
 
-        int particleInd = (*MDCparticleIndex)[i];
-        int particlePdg = (*MDCparticlePDG)[i];
-        double mass = 0;
-        double charge = 0;
-        if (m_particleMassCharge.find(particlePdg) !=
-                                       m_particleMassCharge.end()) {
-          mass = m_particleMassCharge[particlePdg][0];
-          charge = m_particleMassCharge[particlePdg][1];
-        //} else {
-        //  std::cout<<"WARNING: the particle has pdgId " << particlePdg << std::endl;
-	}
+          ActsFatras::Hit::Vector4 pos4{
+              pos.x() * Acts::UnitConstants::mm,
+              pos.y() * Acts::UnitConstants::mm,
+              pos.z() * Acts::UnitConstants::mm,
+              0 * Acts::UnitConstants::ns,
+          };
+          auto energy = std::sqrt(mom.x() * mom.x() + mom.y() * mom.y() +
+                                  mom.z() * mom.z() + mass * mass);
+          
+	  ActsFatras::Hit::Vector4 mom4{
+              mom.x() / 1000 * Acts::UnitConstants::GeV,
+              mom.y() / 1000 * Acts::UnitConstants::GeV,
+              mom.z() / 1000 * Acts::UnitConstants::GeV,
+              energy / 1000. * Acts::UnitConstants::GeV,
+          };
+          ActsFatras::Hit::Vector4 delta4{
+	      0 * Acts::UnitConstants::GeV,
+	      0 * Acts::UnitConstants::GeV,
+              0 * Acts::UnitConstants::GeV,
+              0 * Acts::UnitConstants::GeV,
+          };
 
-        // This is totally wrong
-        ActsFatras::Hit::Vector4 pos4{
-            pos.x() * Acts::UnitConstants::mm,
-            pos.y() * Acts::UnitConstants::mm,
-            pos.z() * Acts::UnitConstants::mm,
-            0 * Acts::UnitConstants::ns,
-        };
-        auto energy = std::sqrt(mom.x() * mom.x() + mom.y() * mom.y() +
-                                mom.z() * mom.z() + mass * mass);
-        // This is totally wrong
-        ActsFatras::Hit::Vector4 mom4{
-            mom.x() / 1000 * Acts::UnitConstants::GeV,
-            mom.y() / 1000 * Acts::UnitConstants::GeV,
-            mom.z() / 1000 * Acts::UnitConstants::GeV,
-            energy / 1000. * Acts::UnitConstants::GeV,
-        };
-        ActsFatras::Hit::Vector4 delta4{
-            0 * Acts::UnitConstants::GeV, 0 * Acts::UnitConstants::GeV,
-            0 * Acts::UnitConstants::GeV, 0 * Acts::UnitConstants::GeV,
-        };
-
-        // The particleIndex of the hit could be meaningless, i.e. the hit might
-        // a noise hit
-        ActsFatras::Hit hit(geoId, particleInd, pos4, mom4, mom4 + delta4,
-                            particleHitIdx[particleInd]);
-        unordered_hits.push_back(std::move(hit));
-        particleHitIdx[particleInd]++;
+          // The particleIndex of the hit could be meaningless, i.e. the hit
+          // might a noise hit
+          ActsFatras::Hit hit(geoId, particleInd, pos4, mom4, mom4 + delta4,
+                              particleHitIdx[particleInd], (*mcMDCdriftDistance)[i]*(*mcMDCdriftSign)[i]);
+          unordered_hits.push_back(std::move(hit));
+          particleHitIdx[particleInd]++;
+        }
       }
-    }
+
+    }  // else read mcMdcHit
 
     simHits.insert(unordered_hits.begin(), unordered_hits.end());
 
@@ -428,11 +545,13 @@ ActsExamples::ProcessCode ActsExamples::RootBESMeasurementReader::read(
         const auto& simHit = *h;
         const auto simHitIdx = simHits.index_of(h);
         auto pos = simHit.position();
-        //auto dir = simHit.unitDirection();
+        auto dir = simHit.unitDirection();
         auto particleInd = simHit.particleId();
+        auto dDist = simHit.driftDistance();
+        auto dDistError = simHit.driftDistanceError();
 
         Index measurementIdx = measurements.size();
-        sourceLinkStorage.emplace_back(moduleGeoId, measurementIdx);
+        sourceLinkStorage.emplace_back(moduleGeoId, measurementIdx, measurementIdx);
         IndexSourceLink& sourceLink = sourceLinkStorage.back();
         sourceLinks.insert(sourceLinks.end(), sourceLink);
 
@@ -440,12 +559,10 @@ ActsExamples::ProcessCode ActsExamples::RootBESMeasurementReader::read(
           std::array<Acts::BoundIndices, 2> indices = {Acts::eBoundLoc0,
                                                        Acts::eBoundLoc1};
 
-          Acts::ActsVector<2> par{m_PIXRadius[moduleGeoId.layer() / 2 - 1] *
-                                      (Acts::VectorHelpers::phi(pos) +
-                                       m_pixSmear[0] * stdNormal(rng)),
-                                       //0),
+          double radius = m_PIXRadius[moduleGeoId.layer() / 2 - 1];
+          Acts::ActsVector<2> par{radius * Acts::VectorHelpers::phi(pos) +
+                                            m_pixSmear[0] * stdNormal(rng),
                                   pos.z() + m_pixSmear[1] * stdNormal(rng)};
-                                  //pos.z()};
           Acts::ActsSymMatrix<2> cov = Acts::ActsSymMatrix<2>::Identity();
           cov(0, 0) = m_pixSmear[0] * m_pixSmear[0];
           cov(1, 1) = m_pixSmear[1] * m_pixSmear[1];
@@ -454,22 +571,46 @@ ActsExamples::ProcessCode ActsExamples::RootBESMeasurementReader::read(
               sourceLink, indices, par, cov));
         } else if (surfacePtr->type() == Acts::Surface::SurfaceType::Straw) {
           std::array<Acts::BoundIndices, 1> indices = {Acts::eBoundLoc0};
-          auto driftDistance = pos[1]; //We store the drift distance in the posY above
-          auto driftDistanceError = pos[2]; //We store the drift distance in the posZ above
 
-          //double sigma = 0.125;
-          // std::uniform_real_distribution<double> uniform(0,1);
-          // if(uniform(rng)<0.782){
-          //   sigma= 0.09;
-          // }  else {
-          //   sigma = 0.24;
-          // }
+          if (m_cfg.readRecMdcHit) {
+            auto driftDistance = dDist; 
+                //pos[1];  // We store the drift distance in the posY above
+            auto driftDistanceError = dDistError;
+                //pos[2];  // We store the drift distance in the posZ above
+            Acts::ActsVector<1> par{driftDistance};
+            Acts::ActsSymMatrix<1> cov = Acts::ActsSymMatrix<1>::Identity();
+            cov(0, 0) = driftDistanceError * driftDistanceError;
+            measurements.emplace_back(Acts::Measurement<Acts::BoundIndices, 1>(
+                sourceLink, indices, par, cov));
+        
+	  } else {
+            auto lpResult =
+                surfacePtr->globalToLocal(context.geoContext, pos, dir);
+            if (not lpResult.ok()) {
+              ACTS_FATAL("Global to local transformation did not succeed.");
+              return ProcessCode::ABORT;
+            }
+            auto lPosition = lpResult.value();
+	    auto driftDistance = lPosition[0];
+            // recalculated driftDistance, but using Geant4 drift distance sign 
+	    //auto driftDistance = std::copysign(lPosition[0], dDist);
 
-          Acts::ActsVector<1> par{driftDistance};
-          Acts::ActsSymMatrix<1> cov = Acts::ActsSymMatrix<1>::Identity();
-          cov(0, 0) = driftDistanceError*driftDistanceError;
-          measurements.emplace_back(Acts::Measurement<Acts::BoundIndices, 1>(
-              sourceLink, indices, par, cov));
+
+            double sigma = 0.125;
+            // std::uniform_real_distribution<double> uniform(0,1);
+            // if(uniform(rng)<0.782){
+            //   sigma= 0.09;
+            // }  else {
+            //   sigma = 0.24;
+            // }
+
+            Acts::ActsVector<1> par{driftDistance + sigma * stdNormal(rng)};
+            //Acts::ActsVector<1> par{driftDistance};
+            Acts::ActsSymMatrix<1> cov = Acts::ActsSymMatrix<1>::Identity();
+            cov(0, 0) = sigma * sigma;
+            measurements.emplace_back(Acts::Measurement<Acts::BoundIndices, 1>(
+                sourceLink, indices, par, cov));
+          }
 
         } else {
           ACTS_ERROR("The surface type must be Cylinder or Straw");
@@ -484,38 +625,26 @@ ActsExamples::ProcessCode ActsExamples::RootBESMeasurementReader::read(
       }
     }
 
-    //    for (size_t i = 0; i < measurements.size(); i++) {
-    //      const auto sourceLink_ = sourceLinks.nth(i);
-    //      auto geoId_ = sourceLink_->get().geometryId();
-    //    }
-
     if (m_mcParticleTreeReader->Next()) {
-      std::cout << "Reading mcParticle in event " << m_evtCounter
-                << std::endl;
+      //std::cout << "Reading mcParticle in event " << m_evtCounter << std::endl;
 
       // Reading truth particles
       for (size_t i = 0; i < particlePDG->GetSize(); ++i) {
-        if (particlePIXHitIdx[(*particleIndex)[i]] < 1) {
+        if (m_cfg.runBesUpgrade and particlePIXHitIdx[(*particleIndex)[i]] < 1) {
           continue;
         };
         nParticles++;
 
-        Acts::Vector3 pos((*particleVertexX)[i]*10, (*particleVertexY)[i]*10,
-                          (*particleVertexZ)[i]*10);
+        Acts::Vector3 pos((*particleVertexX)[i],
+                          (*particleVertexY)[i],
+                          (*particleVertexZ)[i]);
         Acts::Vector3 mom((*particleMomentumX)[i], (*particleMomentumY)[i],
                           (*particleMomentumZ)[i]);
-       double charge = m_particleMassCharge[(*particlePDG)[i]][1]; 
-       std::cout<<"particle charge = " << charge << std::endl; 
-       // double charge = 0;
-       // if ((*particlePDG)[i] == 13 or (*particlePDG)[i] == 11 or
-       //     (*particlePDG)[i] == -211 or (*particlePDG)[i] == -2212) {
-       //   charge = -1;
-       // } else if ((*particlePDG)[i] == -13 or (*particlePDG)[i] == -11 or
-       //            (*particlePDG)[i] == 211 or (*particlePDG)[i] == 2212) {
-       //   charge = 1;
-       // }
+        double charge = m_particleMassCharge[(*particlePDG)[i]][1];
+        //std::cout << "particle charge = " << charge << std::endl;
         ActsFatras::Particle particle(
-            ActsFatras::Barcode((*particleIndex)[i]), Acts::PdgParticle((*particlePDG)[i]),
+            ActsFatras::Barcode((*particleIndex)[i]),
+            Acts::PdgParticle((*particlePDG)[i]),
             charge * Acts::UnitConstants::e,
             m_particleMassCharge[(*particlePDG)[i]][0] *
                 Acts::UnitConstants::GeV);
@@ -535,14 +664,14 @@ ActsExamples::ProcessCode ActsExamples::RootBESMeasurementReader::read(
       }
     }
 
-    for (const auto& [particleInd, nHits] : particleHitIdx) {
-      std::cout << "particle " << particleInd << " has " << nHits << " nHits"
-                << ", nPIXHits = " << particlePIXHitIdx[particleInd]
-                << std::endl;
-    }
+    //for (const auto& [particleInd, nHits] : particleHitIdx) {
+      //std::cout << "particle " << particleInd << " has " << nHits << " nHits"
+      //          << ", nmcPIXHits = " << particlePIXHitIdx[particleInd]
+      //          << std::endl;
+    //}
 
-    std::cout << "nPIXHits = " << nPIXHits << ", nMDCHits = " << nMDCHits
-              << ", nParticles (nPIXHits>0) = " << nParticles << std::endl;
+    //std::cout << "nmcPIXHits = " << nmcPIXHits << ", nmcMDCHits = " << nmcMDCHits
+    //          << "nrecMDCHits = "<< nrecMDCHits << ", nParticles (nmcPIXHits>0) = " << nParticles << std::endl;
 
     // Write the collections to the EventStore
     context.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));

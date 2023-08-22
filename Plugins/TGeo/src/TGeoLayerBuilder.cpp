@@ -21,6 +21,7 @@
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
+#include "TGeoTube.h"
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config,
@@ -77,14 +78,14 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     return;
   }
 
-  std::cout << "TGeoLayerBuilder::buildLayers called " << std::endl;
+  //std::cout << "TGeoLayerBuilder::buildLayers called " << std::endl;
 
   using LayerSurfaceVector = std::vector<std::shared_ptr<const Surface>>;
   LayerSurfaceVector layerSurfaces;
 
   std::vector<LayerConfig> layerConfigs = m_cfg.layerConfigurations[type + 1];
   std::string layerType = m_layerTypes[type + 1];
-  std::cout << "layerType " << layerType << std::endl;
+  //std::cout << "layerType " << layerType << std::endl;
 
   // Appropriate screen output
   std::string addonOutput = m_cfg.layerSplitToleranceR[type + 1] > 0.
@@ -99,8 +100,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
   ACTS_DEBUG(layerType << " layers : found " << layerConfigs.size()
                        << " configuration(s)" + addonOutput);
 
-  std::cout << layerType << " layers : found " << layerConfigs.size()
-            << " configuration(s)" + addonOutput << std::endl;
+  //std::cout << layerType << " layers : found " << layerConfigs.size()
+  //          << " configuration(s)" + addonOutput << std::endl;
 
   // Helper function to fill the layer
   auto fillLayer = [&](const LayerSurfaceVector lSurfaces,
@@ -109,9 +110,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     int nb0 = 0, nt0 = 0;
     bool is_autobinning = ((lCfg.binning0.size() == 1) and
                            (std::get<int>(lCfg.binning0.at(0)) <= 0));
-    if (is_autobinning) {
-      std::cout << "is_autobinning" << std::endl;
-    }
+   // if (is_autobinning) {
+   //   std::cout << "is_autobinning" << std::endl;
+   // }
 
     if (!is_autobinning and std::get<int>(lCfg.binning0.at(pl_id)) <= 0) {
       throw std::invalid_argument(
@@ -150,23 +151,23 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       nb1 = std::get<int>(lCfg.binning1.at(pl_id));
     }
 
-    std::cout << "type = " << type << std::endl;
+    //std::cout << "type = " << type << std::endl;
 
     if (type == 0) {
       ProtoLayer pl(gctx, lSurfaces);
       ACTS_DEBUG("- creating CylinderLayer with "
                  << lSurfaces.size() << " surfaces at r = " << pl.medium(binR));
 
-      std::cout << " creating CylinderLayer with " << lSurfaces.size()
-                << " surfaces at r = " << pl.medium(binR) << std::endl;
-      std::cout << "lCfg.envelope.first = " << lCfg.envelope.first
-                << " and lCfg.envelope.second " << lCfg.envelope.second
-                << std::endl;
+      //std::cout << " creating CylinderLayer with " << lSurfaces.size()
+      //          << " surfaces at r = " << pl.medium(binR) << std::endl;
+      //std::cout << "lCfg.envelope.first = " << lCfg.envelope.first
+      //          << " and lCfg.envelope.second " << lCfg.envelope.second
+      //          << std::endl;
 
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      std::cout << "nb0 = " << nb0 << ", nb1 = " << nb1 << std::endl;
-      std::cout << "nt0 = " << nb0 << ", nt1 = " << nb1 << std::endl;
+    //  std::cout << "nb0 = " << nb0 << ", nb1 = " << nb1 << std::endl;
+    //  std::cout << "nt0 = " << nb0 << ", nt1 = " << nb1 << std::endl;
       if (nb0 >= 0 and nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
@@ -240,14 +241,14 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                                  << prange.second.second << "]");
       }
 
-      std::cout << "Start select nodes for volume " << tVolume->GetName()
-                << std::endl;
+      //std::cout << "Start select nodes for volume " << tVolume->GetName()
+      //          << std::endl;
       TGeoParser::select(tgpState, tgpOptions);
 
       ACTS_DEBUG("- number of selected nodes found : "
                  << tgpState.selectedNodes.size());
-      std::cout << "- number of selected nodes found : "
-                << tgpState.selectedNodes.size() << std::endl;
+     // std::cout << "- number of selected nodes found : "
+     //           << tgpState.selectedNodes.size() << std::endl;
 
       // This assume each selectedNode is one potential layer
       std::vector<ProtoLayer> protoLayers;
@@ -266,8 +267,25 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
         const TGeoNode& tgNode = tgElement->tgeoNode();
         ActsScalar tgThickness = tgElement->thickness();  // turn cm into mm
-        std::cout << "original detElement based on node " << tgNode.GetName()
-                  << " has thickness " << tgThickness << std::endl;
+        ActsScalar minR = 0;
+        ActsScalar maxR = 0;
+        /////////////////////////////////////////////////////////////////////////////////
+        TGeoTube* cell = dynamic_cast<TGeoTube*>(tgNode.GetVolume()->GetShape());
+        if (cell == nullptr) {
+          ACTS_WARNING(
+              "cast bad (drift cell is always a tube. This is not supposed to "
+              "happen)");
+        } else {
+          ActsScalar parameters[5];
+          cell->GetBoundingCylinder(parameters);
+          minR = cell->GetRmin() * m_cfg.unit;  // into mm
+          maxR = cell->GetRmax() * m_cfg.unit;  // into mm
+        }
+        /////////////////////////////////////////////////////////////////////////////////
+	
+	std::cout << "original detElement based on node " << tgNode.GetName()
+                  << " has thickness " << tgThickness << " and radius " << (minR+maxR)*0.5 << std::endl;
+
 
         if (m_cfg.detectorElementSplitter == nullptr) {
           std::cout << " Empty splitter" << std::endl;
@@ -279,8 +297,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                           const Acts::TGeoDetectorElement>>{tgElement}
                     : m_cfg.detectorElementSplitter->split(gctx, tgElement);
 
-        std::cout << tgElements.size() << " detElements are created for node "
-                  << snode.node->GetName() << std::endl;
+        //std::cout << tgElements.size() << " detElements are created for node "
+         //         << snode.node->GetName() << std::endl;
 
         LayerSurfaceVector thisLayerSurfaces;
         for (auto tge : tgElements) {
@@ -292,9 +310,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       }
 
       ACTS_DEBUG("- created TGeoDetectorElements : " << layerSurfaces.size());
-      std::cout << "- created a total of TGeoDetectorElements : "
-                << layerSurfaces.size() << " for volume " << layerCfg.volumeName
-                << std::endl;
+   //   std::cout << "- created a total of TGeoDetectorElements : "
+   //             << layerSurfaces.size() << " for volume " << layerCfg.volumeName
+   //             << std::endl;
 
       if (m_cfg.protoLayerHelper != nullptr and
           not layerCfg.splitConfigs.empty()) {
@@ -303,8 +321,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         //     gctx, unpack_shared_vector(layerSurfaces),
         //     layerCfg.splitConfigs);
         ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
-        std::cout << "The TGeoDetectorElements are then splitted into "
-                  << protoLayers.size() << " layers." << std::endl;
+ //       std::cout << "The TGeoDetectorElements are then splitted into "
+ //                 << protoLayers.size() << " layers." << std::endl;
 
         // Number of options mismatch and has not been configured for
         // auto-binning
@@ -353,12 +371,12 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     // auto geoID = layer->geometryId();
     // std::cout<<"layer has geoID " << geoID << std::endl;
     size_t nSensitiveSurfaces = layer->surfaceArray()->surfaces().size();
-    std::cout << "layer has " << nSensitiveSurfaces
-              << " sensitive surfaces with layer thickness "
-              << layer->thickness() << std::endl;
+  //  std::cout << "layer has " << nSensitiveSurfaces
+  //            << " sensitive surfaces with layer thickness "
+  //            << layer->thickness() << std::endl;
     for(const auto& ss : layer->surfaceArray()->surfaces()){
       if(ss->surfaceMaterial()){
-        std::cout<<"sensitive surface: "<< ss->geometryId() <<" has material " << std::endl;
+   //     std::cout<<"sensitive surface: "<< ss->geometryId() <<" has material " << std::endl;
       } 
     } 
     std::vector<std::pair<std::string, int>> surfaceBins = {{"binPhi", 1},
@@ -369,18 +387,18 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                                   surfaceBins);
 
     if (layer->surfaceRepresentation().surfaceMaterial() != nullptr) {
-      std::cout << "layer representative surface has material " << std::endl;
+      //std::cout << "layer representative surface has material " << std::endl;
     }
     auto aDescriptor = layer->approachDescriptor();
     if (aDescriptor != nullptr) {
       for (const auto& surface : aDescriptor->containedSurfaces()) {
         const CylinderBounds* cbounds =
             dynamic_cast<const CylinderBounds*>(&surface->bounds());
-        std::cout << "approach cylinder surface at r =  "
-                  << cbounds->values()[0] << std::endl;
-        if (surface->surfaceMaterial() != nullptr) {
-          std::cout << "approach surface has material " << std::endl;
-        }
+        //std::cout << "approach cylinder surface at r =  "
+        //          << cbounds->values()[0] << std::endl;
+        //if (surface->surfaceMaterial() != nullptr) {
+         // std::cout << "approach surface has material " << std::endl;
+        //}
       }
     }
   }
@@ -424,7 +442,7 @@ Acts::TGeoLayerBuilder::createProtoMaterial(
                               });
     if (binIt != surfaceBins.end()) {
       int bins = (*binIt).second;
-      std::cout << "bins =  " << bins << std::endl;
+      //std::cout << "bins =  " << bins << std::endl;
       if (bins >= 1) {
         bu += Acts::BinUtility(bins, min, max, bopt, bval);
       }
