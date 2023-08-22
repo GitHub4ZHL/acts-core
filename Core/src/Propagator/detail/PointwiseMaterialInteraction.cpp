@@ -16,16 +16,18 @@ namespace detail {
 void PointwiseMaterialInteraction::evaluatePointwiseMaterialInteraction(
     bool multipleScattering, bool energyLoss) {
   if (energyLoss) {
-    //Eloss = computeEnergyLossBethe(slab, pdg, mass, qOverP, q);
-    Eloss = computeEnergyLossLandau(slab, pdg, mass, qOverP, q);
+     Eloss = computeEnergyLossBethe(slab, pdg, mass, qOverP, q);
+    
+    //Eloss = computeEnergyLossLandau(slab, pdg, mass, qOverP, q);
  
-    double p_ = 1./std::abs(qOverP); 
-    if(p_<0.08){
-       Eloss = computeEnergyLossBethe(slab, pdg, mass, qOverP, q);
-    } else if (p_<0.14){
-       Eloss = Eloss*0.8;
-    }
-  
+//    double p_ = 1./std::abs(qOverP); 
+//    if(p_<0.08){
+//       Eloss = computeEnergyLossBethe(slab, pdg, mass, qOverP, q);
+//    } else if (p_<0.14){
+//       Eloss = Eloss*0.8;
+//    }
+
+
   }
   // Compute contributions from interactions
   if (performCovarianceTransport) {
