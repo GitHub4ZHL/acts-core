@@ -33,7 +33,9 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
     //}
     // Loop over the daughters and collect them
     auto daugthers = state.volume->GetNodes();
-    //std::cout << "volume " << volumeName << std::endl;
+    //if(TGeoPrimitivesHelper::match(options.volumeNames, volumeName.c_str())){
+    //  std::cout << "matched state volume " << volumeName << std::endl;
+    //}
     //  Daughter node iteration
     TIter iObj(daugthers);
     while (TObject* obj = iObj()) {
@@ -64,7 +66,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
     transform.SetName((nodeName + suffix).c_str());
     // Check if you had found the target node
     if (state.onBranch and
-        TGeoPrimitivesHelper::match(options.targetNames, nodeVolName.c_str())) {
+        (TGeoPrimitivesHelper::match(options.targetNames, nodeName.c_str()) or TGeoPrimitivesHelper::match(options.targetNames, nodeVolName.c_str()) )) {
       // Get the placement and orientation in respect to its mother
       const Double_t* rotation = transform.GetRotationMatrix();
       const Double_t* translation = transform.GetTranslation();
@@ -81,8 +83,8 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
 
       bool accept = true;
       if (not options.parseRanges.empty()) {
-        //std::cout << "found node! Check if its volume is within parseRanges "
-        //          << std::endl;
+        std::cout << "found node! Check if its volume is within parseRanges "
+                  << std::endl;
         auto shape =
             dynamic_cast<TGeoBBox*>(state.node->GetVolume()->GetShape());
         // It uses the bounding box of TGeoBBox
