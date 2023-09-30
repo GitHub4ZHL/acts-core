@@ -21,6 +21,7 @@
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoCEPCVXDLayerSplitter.hpp"
+#include "Acts/Plugins/TGeo/TGeoCEPCSITLayerSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoDriftChamberLayerSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Plugins/TGeo/TGeoURwellLayerSplitter.hpp"
@@ -135,6 +136,10 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       Acts::TGeoCEPCVXDLayerSplitter::Config dcConfig;
       layerBuilderConfig.detectorElementSplitter =
           std::make_shared<const Acts::TGeoCEPCVXDLayerSplitter>(dcConfig);
+    } else if (volume.cepcSITLayerSplit) {
+      Acts::TGeoCEPCSITLayerSplitter::Config dcConfig;
+      layerBuilderConfig.detectorElementSplitter =
+          std::make_shared<const Acts::TGeoCEPCSITLayerSplitter>(dcConfig);
     } else if (volume.uRwellLayerSplit) {
       Acts::TGeoURwellLayerSplitter::Config dcConfig;
       layerBuilderConfig.detectorElementSplitter =
