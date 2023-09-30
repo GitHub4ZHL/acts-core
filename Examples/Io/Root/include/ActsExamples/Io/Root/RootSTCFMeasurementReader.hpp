@@ -135,7 +135,7 @@ class RootSTCFMeasurementReader : public IReader {
   TTreeReaderArray<int>* particlePDG = nullptr;
   TTreeReaderArray<float>* particleCharge = nullptr;
   TTreeReaderArray<Acts::ActsScalar>* particleMass = nullptr;
-  TTreeReaderArray<int>* particleTrackID = nullptr;
+  //TTreeReaderArray<int>* particleTrackID = nullptr;
   TTreeReaderArray<Acts::ActsScalar>* particleVertexX = nullptr;
   TTreeReaderArray<Acts::ActsScalar>* particleVertexY = nullptr;
   TTreeReaderArray<Acts::ActsScalar>* particleVertexZ = nullptr;

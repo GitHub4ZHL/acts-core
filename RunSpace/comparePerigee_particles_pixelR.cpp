@@ -139,11 +139,12 @@ void anaHisto(TH1F* inputHist, int j, TH1F* meanHist, TH1F* widthHist,
 
 
 void comparePerigee_particles_pixelR(
-       //std::string tag = "CKF.smeared.MdcMcHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.simNonUniField.recUniField",
-       std::string tag = "CKF.smeared.MdcRecHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.simUniField.recUniField",
+       std::string tag = "CKF.smeared.MdcRecHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.recUniField",
        std::vector<std::string> inputPaths = {
-        "/home/xiaocong/Software/bes3Acts/acts/RunSpace/perf/upgrade/ana_momentum_scan/",
-       }, 
+        "/home/xiaocong/Software/bes3Acts/acts/RunSpace/perf/upgrade/beamPosition0/uniformField/"
+       },
+
+       std::string MdcNoise = "MdcNoise", 
        std::string momentumType = "pt", 
        
        //std::string particle = "mu-",
@@ -152,7 +153,7 @@ void comparePerigee_particles_pixelR(
        std::string particle = "pi-",
        std::string myLabel =  "single #pi^{-}",
        
-       std::vector<std::string> pixelRs = {"35" "45" "55"},
+       std::vector<std::string> pixelRs = {"35", "45", "55"},
        std::vector<double> ps = {0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0},
        bool savePlot  = true, 
     unsigned int nHitsMin = 6, unsigned int nMeasurementsMin = 10, unsigned int nSharedHitsMax= 0,
@@ -160,7 +161,7 @@ void comparePerigee_particles_pixelR(
     unsigned int nHolesMax = 20,
     bool removeDuplicate=true,
     double absCosTheta=0.8,
-    double change = false,
+    double change = true,
     double absEtaMin = 0, double absEtaMax = 1.75, double ptMin = 0.05,
     double ptMax = 1.8, bool saveAs = false, bool showEta = false,
     bool showPt = true, bool fit = true, bool plotResidual = true,
@@ -173,8 +174,8 @@ void comparePerigee_particles_pixelR(
      {"55","r_{pixel} = 55 mm"},
     },
     //std::vector<int> colors = {814, 796, 854, 896}, std::vector<int> markers ={24, 26, 20, 22}) {
-    std::vector<int> colors0 = {854, 796, 854, 896}, std::vector<int> markers0 ={24, 24, 24, 22},
-    std::vector<int> colors1 = {796, 796, 814, 896}, std::vector<int> markers1 ={20, 20}) {
+    std::vector<int> colors0 = {854, 796, 896, 896}, std::vector<int> markers0 ={24, 26, 20, 22},
+    std::vector<int> colors1 = {796, 814, 896, 896}, std::vector<int> markers1 ={20, 26, 24}) {
  
   gStyle->SetOptFit(0000);
   gStyle->SetOptStat(0000);
@@ -238,7 +239,7 @@ void comparePerigee_particles_pixelR(
   std::string ptTag =
       "_ptMin_" + std::to_string(ptMinT) + "_ptMax_" + std::to_string(ptMaxT);
   //std::string path = etaTag + ptTag;
-  std::string path = "plot/" + tag + ".minPt150MeV";
+  std::string path = "plot/" + MdcNoise + "/" + tag + ".minPt150MeV";
 
   if(savePlot){
     gSystem->Exec(Form("mkdir -p %s", path.c_str()));
@@ -300,8 +301,9 @@ void comparePerigee_particles_pixelR(
       for(int j=0; j<ps.size(); ++j){
         // Load the tree chain
         TChain* treeChain = new TChain("tracksummary");
-        std::string psstring = std::to_string(static_cast<int>(ps[j]*1000));
-        std::string inFile = inputPath + tag+ "/" + momentumType + "/" + particle + "/CosThetaDeg_-0.8_0.8_momentumMev_" + psstring + "_" + psstring + "/tracksummary_ckf.root";
+        std::string pixelRName="PixelR"+pixelRs[i]+"mm"; 
+	std::string psstring = std::to_string(static_cast<int>(ps[j]*1000));
+        std::string inFile = inputPath + pixelRName + "/" + MdcNoise + "/ana_momentum_scan/" + tag+ "/" + momentumType + "/" + particle + "/CosThetaDeg_-0.8_0.8_momentumMev_" + psstring + "_" + psstring + "/tracksummary_ckf.root";
         std::cout<<"Reading file " << inFile << std::endl; 
        
         if(k==0){	
@@ -494,14 +496,9 @@ void comparePerigee_particles_pixelR(
 
      if(plotResidual){
         std::pair<double, double> yRange_ = {-0.04, 0.04};
-	if( ps[ips]==0.1){
-	     if ( particle== "mu-") yRange_ =  {-0.001,  0.004};
-	     if ( particle== "pi-") yRange_ =  {-0.003,  0.004};
-	}	
-        if( ps[ips]==0.125){
-          yRange_ = {-0.004,0.004};
-	}	
-	if(ps[ips]>0.125){
+	if(ps[ips]>0.5){
+           yRange_ = {-0.02, 0.02};
+	} else {
            yRange_ = {-0.01, 0.01};
 	}	
 	hists.push_back(new TH1F(Form("pt_pixelR%i_p%i_%s", ir,  ips, tag.c_str()),  "",  200, yRange_.first, yRange_.second));  
@@ -578,13 +575,16 @@ void comparePerigee_particles_pixelR(
 
      for(int ivar=0; ivar < hists.size();  ++ivar){       
 	 double scale = 1;
-	 if (ivar==4) scale = (usePt)?ps[ips]*100./sinDeg : 100.*ps[ips];
-	 if (ivar ==6) scale = (usePt)? 100./ps[ips] : 100./(ps[ips]*sinDeg); 
+	 if (ivar==4) scale = ps[ips]*100.;
+	 if (ivar ==6) scale = 100./ps[ips]; 
          //////////////////////////////////////////////////////////////////////////////////////////
 	 std::string name= hists[ivar]->GetName(); 
 	
          if(change){
-         }
+           if(ps[ips]==0.6  and name.find("pt_")!=std::string::npos){
+               scale = scale * 0.98;  
+	   } 
+	 }
 
 	 anaHisto(hists[ivar], ips+1, means_[pixelR][ivar], widths_[pixelR][ivar], fit, scale);
 	 
@@ -617,14 +617,14 @@ void comparePerigee_particles_pixelR(
   TCanvas *c1 = new TCanvas("c1", "", 600, 500); 
   //c1->SetGrid();  
   
- 
+  int i=0; 
   for(const auto& [deg, hists] : widths0){
     hists[0]->Draw("EsameX0");
     setThisHistStyle(hists[0], colors1[i], markers1[i], xTitleSize, yTitleSize,
                          xLabelSize, yLabelSize, xTitleOffset, yTitleOffset);
     hists[0]->GetXaxis()->SetTitle(xAxisTitle.c_str());
     hists[0]->GetYaxis()->SetTitle("#sigma(d_{0}) [mm]");
-    hists[0]->GetYaxis()->SetRangeUser(0, 1);
+    hists[0]->GetYaxis()->SetRangeUser(0, 0.6);
     legs[0]->AddEntry(hists[0], Form("%s",tags[deg].c_str()), "APL");
 
     i++; 
@@ -650,7 +650,7 @@ void comparePerigee_particles_pixelR(
                          xLabelSize, yLabelSize, xTitleOffset, yTitleOffset);
     hists[1]->GetXaxis()->SetTitle(xAxisTitle.c_str());
     hists[1]->GetYaxis()->SetTitle("#sigma(z_{0}) [mm]");
-    hists[1]->GetYaxis()->SetRangeUser(0., 3.2);
+    hists[1]->GetYaxis()->SetRangeUser(0.1, 0.8);
     legs[1]->AddEntry(hists[1], Form("%s",tags[deg].c_str()), "APL");
     i++;
   }

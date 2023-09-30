@@ -86,29 +86,47 @@ Double_t myfunction(Double_t *xx, Double_t *p)
    return f;
 }
 
+Double_t doubleGaus(Double_t *xx, Double_t *p)
+{
+   Double_t x =xx[0];
+   Double_t f = p[0]*exp(-0.5*pow((x-p[1])/p[2],2)) + p[3]*exp(-0.5*pow((x-p[4])/p[5],2));
+   return f;
+}
+
 
 void anaHisto(TH1F* inputHist, int j, TH1F* meanHist, TH1F* widthHist,
               bool fit = false, double scale=1, bool gausFit = true) {
   // evaluate mean and width via the Gauss fit
   assert(inputHist != nullptr);
+  TFitResultPtr r; 
   if (inputHist->GetEntries() > 0) {
     if (fit) {
       //TFitResultPtr r = inputHist->Fit("gaus", "QS0");
       TF1 *fb = nullptr;
       if(gausFit) {
         fb = new TF1("fb","gaus(0)", inputHist->GetBinLowEdge(1) , inputHist->GetBinLowEdge(1) +  inputHist->GetBinWidth(1)*inputHist->GetNbinsX()); 
+        r = inputHist->Fit("fb", "SQ0");
       } 
       else {
-        //fb = new TF1("fb","pol2(0)+[3]*gaus(4)",inputHist->GetBinLowEdge(1),inputHist->GetBinLowEdge(1) +  inputHist->GetBinWidth(1)*inputHist->GetNbinsX()); 
-        fb = new TF1("fb",myfunction,inputHist->GetBinLowEdge(1),inputHist->GetBinLowEdge(1) +  inputHist->GetBinWidth(1)*inputHist->GetNbinsX(),6); 
-      } 
+        
+        TF1 *fa = new TF1("fa","gaus(0)", inputHist->GetBinLowEdge(1), inputHist->GetBinLowEdge(1) +  inputHist->GetBinWidth(1)*inputHist->GetNbinsX());
+        TFitResultPtr rt = inputHist->Fit("fa","SQ0");	
+        
+	//fb = new TF1("fb","pol2(0)+[3]*gaus(4)",inputHist->GetBinLowEdge(1),inputHist->GetBinLowEdge(1) +  inputHist->GetBinWidth(1)*inputHist->GetNbinsX()); 
+        fb = new TF1("fb",doubleGaus,inputHist->GetBinLowEdge(1),inputHist->GetBinLowEdge(1) +  inputHist->GetBinWidth(1)*inputHist->GetNbinsX(),6); 
+	fb->SetParameter(0,rt->Parameter(0)*0.9);
+        fb->SetParameter(1,rt->Parameter(1));
+        fb->SetParameter(2,rt->Parameter(2)*0.9);
+        fb->SetParameter(3,rt->Parameter(0)*0.1);
+        fb->SetParameter(4,rt->Parameter(1));
+        fb->SetParameter(5,rt->Parameter(2));
+        r = inputHist->Fit("fb","S");
+      }
       
-      TFitResultPtr r = inputHist->Fit("fb", "SQ0");
       //Fit again 
       //if (r.Get() and ((r->Status() % 1000) == 0)) {
       if (r.Get()) {
-        // fill the mean and width into 'j'th bin of the meanHist and widthHist,
-        // respectively
+        // fill the mean and width into 'j'th bin of the meanHist and widthHist, respectively
         if(gausFit) {
           meanHist->SetBinContent(j, r->Parameter(1));
           meanHist->SetBinError(j, r->ParError(1));
@@ -119,7 +137,9 @@ void anaHisto(TH1F* inputHist, int j, TH1F* meanHist, TH1F* widthHist,
         } else {
           meanHist->SetBinContent(j, r->Parameter(1));
           meanHist->SetBinError(j, r->ParError(1));
-          widthHist->SetBinContent(j, r->Parameter(2)*scale);
+          double sigma = std::sqrt(r->Parameter(0)/(r->Parameter(0)+r->Parameter(3))*r->Parameter(2)*r->Parameter(2) + r->Parameter(3)/(r->Parameter(0)+r->Parameter(3))*r->Parameter(5)*r->Parameter(5)); 
+
+	  widthHist->SetBinContent(j, sigma*scale);
           widthHist->SetBinError(j, r->ParError(2));
           std::cout<<"bin " << j  << " hist "<< widthHist->GetName() << " range " << inputHist->GetBinLowEdge(1) <<", " <<inputHist->GetBinLowEdge(1) +  inputHist->GetBinWidth(1)*inputHist->GetNbinsX() << ", width = "<< r->Parameter(2)*scale << ", scale = " << scale/100. << std::endl; 
 	}	
@@ -141,9 +161,10 @@ void anaHisto(TH1F* inputHist, int j, TH1F* meanHist, TH1F* widthHist,
 //compare with besiii
 void comparePerigee_particles_besiii(
        //std::string tag = "CKF.smeared.MdcMcHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.simNonUniField.recUniField",
-       std::string tag = "CKF.smeared.MdcRecHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.simUniField.recUniField",
+       std::string tag = "CKF.smeared.MdcRecHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.recUniField",
        std::vector<std::string> inputPaths = {
-        "/home/xiaocong/Software/bes3Acts/acts/RunSpace/perf/upgrade/ana_momentum_scan/",
+        //"/home/xiaocong/Software/bes3Acts/acts/RunSpace/perf/upgrade/ana_momentum_scan/",
+        "/home/xiaocong/Software/bes3Acts/acts/RunSpace/perf/upgrade/beamPosition0/uniformField/PixelR35mm/MdcNoise/ana_momentum_scan/" 
        }, 
        std::string momentumType = "pt", 
        
@@ -158,13 +179,13 @@ void comparePerigee_particles_besiii(
        //std::vector<double> ps = {0.1, 0.125, 0.15, 0.175, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8},
        std::vector<double> ps = {0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0},
        //std::vector<double> ps = {1}, 
-       bool savePlot  = true, 
+       bool savePlot  = false, 
     unsigned int nHitsMin = 6, unsigned int nMeasurementsMin = 10, unsigned int nSharedHitsMax= 0,
     unsigned int nOutliersMax = 2000,
     unsigned int nHolesMax = 20,
     bool removeDuplicate=true,
     double absCosTheta=0.8,
-    double change = false,
+    double change = true,
     double absEtaMin = 0, double absEtaMax = 1.75, double ptMin = 0.05,
     double ptMax = 1.8, bool saveAs = false, bool showEta = false,
     bool showPt = true, bool fit = true, bool plotResidual = true,
@@ -197,16 +218,31 @@ void comparePerigee_particles_besiii(
 
   std::string saveTag ="BESIII_" + particle + "_res"; 
 
+  std::vector<double> res_baseline_d0_mu;
+  std::vector<double> res_baseline_z0_mu;
+  std::vector<double> res_baseline_pt_mu;
+  std::vector<double> res_baseline_d0_pi;
+  std::vector<double> res_baseline_z0_pi;
+  std::vector<double> res_baseline_pt_pi;
 
   //BESIII MDC, NoNoise
-  std::vector<double> res_baseline_d0_mu = {0.758196, 0.568167, 0.350244, 0.282359, 0.235621, 0.203377, 0.186421, 0.167997, 0.178668, 0.154688};
-  std::vector<double> res_baseline_z0_mu = {2.73258, 2.0557, 1.69544, 1.67806, 1.56414, 1.57185, 1.5423, 1.55707, 1.5658, 1.61883};
-  std::vector<double> res_baseline_pt_mu = {0.78686, 0.646977, 0.511286, 0.488084, 0.471469, 0.488177, 0.520249, 0.540422, 0.576917, 0.596171};
-  std::vector<double> res_baseline_d0_pi = {0.8105733,0.5335777,0.4024322,0.2685817,1.8144701,0.4920346,0.1787475,0.2808079,0.1567809,0.1519803};
-  //std::vector<double> res_baseline_d0_pi = {0.8105733, 0.5335777, 0.4024322, 0.2685817, 0.235621, 0.203377, 0.1787475, 0.2808079, 0.1567809, 0.1519803};
-  std::vector<double> res_baseline_z0_pi = {2.1938996,1.9567146,1.7501994,1.6778297,1.6848743,1.645434,1.6191842,1.6504373,1.6530731,1.610228};
-  std::vector<double> res_baseline_pt_pi = {1.1029,0.8377,0.5527,0.5538,0.5116,0.5143,0.5427,0.5684,0.5692,0.5819};
+  if(inputPaths.size()>0 and inputPaths[0].find("NoNoise")!=std::string::npos){
+    res_baseline_d0_mu = {0.758196, 0.568167, 0.350244, 0.282359, 0.235621, 0.203377, 0.186421, 0.167997, 0.178668, 0.154688};
+    res_baseline_z0_mu = {2.73258, 2.0557, 1.69544, 1.67806, 1.56414, 1.57185, 1.5423, 1.55707, 1.5658, 1.61883};
+    res_baseline_pt_mu = {0.78686, 0.646977, 0.511286, 0.488084, 0.471469, 0.488177, 0.520249, 0.540422, 0.576917, 0.596171};
 
+    res_baseline_d0_pi = {0.7596639,0.5217099,0.3403738,0.2622421,0.2167364,0.1941705,0.1768702,0.1645426,0.1558902,0.1519909};
+    res_baseline_z0_pi = {2.1938996,1.9567146,1.7501994,1.6778297,1.6848743,1.645434,1.6191842,1.6504373,1.6530731,1.6102287};
+    res_baseline_pt_pi = {1.1028 ,0.8378 ,0.5528 ,0.4806 ,0.4932 ,0.4921 ,0.5179 ,0.5486 ,0.5707 ,0.5837};
+  } else if(inputPaths.size()>0 and inputPaths[0].find("MdcNoise")!=std::string::npos) {
+    res_baseline_d0_mu = {0.7012878,0.5007562,0.3284813,0.2617759,0.2144439,0.1939418,0.1798048,0.1663854,0.1599709,0.1509344};
+    res_baseline_z0_mu = {2.1605595,1.9354269,1.7389809,1.7162574,1.6858014,1.6631839,1.6908794,1.6956561,1.6566616,1.6585871};
+    res_baseline_pt_mu = {0.7922 ,0.6293 ,0.5144 ,0.4719 ,0.4796 ,0.4823 ,0.5163 ,0.5375 ,0.5614 ,0.5989};
+    
+    res_baseline_d0_pi = {0.7711642,0.5299564,0.3433170 ,0.2647804,0.2188641,0.1957706,0.1812031,0.1675078,0.1582237,0.1547489};
+    res_baseline_z0_pi = {2.3136981,2.0187536,1.8132783,1.7308714,1.7375512,1.7019103,1.6811738,1.7140671,1.7196474,1.6709669};
+    res_baseline_pt_pi = {1.0887 ,0.8518 ,0.5588 ,0.4831 ,0.5041 ,0.4982 ,0.5252 ,0.5603 ,0.5779 ,0.5966};
+  }
 
 
 
@@ -244,7 +280,13 @@ void comparePerigee_particles_besiii(
   std::string ptTag =
       "_ptMin_" + std::to_string(ptMinT) + "_ptMax_" + std::to_string(ptMaxT);
   //std::string path = etaTag + ptTag;
-  std::string path = "plot/" + tag + ".minPt150MeV";
+  std::string path; 
+  if(inputPaths.size()>0 and inputPaths[0].find("MdcNoise")!=std::string::npos){ 
+    path = "plot/MdcNoise/" + tag + ".minPt150MeV";
+  } else {
+    path = "plot/NoNoise/" + tag + ".minPt150MeV";
+  }
+
 
   if(savePlot){
     gSystem->Exec(Form("mkdir -p %s", path.c_str()));
@@ -280,6 +322,7 @@ void comparePerigee_particles_besiii(
   std::pair<double, double> pullRange = {-5, 5};
   std::vector<std::pair<double, double>> resRanges = {
       {-5, 5},     {-5, 5},   {-0.1, 0.1},
+      //{-3, 3},     {-3, 3},   {-0.1, 0.1},
       {-0.03, 0.03}, {-0.3, 0.3}, {-3.5, 3.5},
   };
  
@@ -516,22 +559,14 @@ void comparePerigee_particles_besiii(
      }
 
      if(plotResidual){
-        std::pair<double, double> yRange_ = {-0.04, 0.04};
-	if( ps[ips]==0.1){
-           if(tag=="baseline"){ 
-	     yRange_ =  {-0.002,  0.004};
-	   } else {
-	     if ( particle== "mu-") yRange_ =  {-0.001,  0.004};
-	     if ( particle== "pi-") yRange_ =  {-0.003,  0.004};
-	   }
-	}	
-        if( ps[ips]==0.125){
-          yRange_ = {-0.004,0.004};
-	}	
-	if(ps[ips]>0.125){
-           yRange_ = {-0.01, 0.01};
-	}	
-	hists.push_back(new TH1F(Form("pt_deg%i_p%i_%s", ideg,  ips, tag.c_str()),  "",  200, yRange_.first, yRange_.second));  
+       std::pair<double, double> yRange_ = {-0.04, 0.04};
+       if(ps[ips]>0.5){
+          yRange_ = {-0.02, 0.02};
+       } else {
+          yRange_ = {-0.01, 0.01};
+       }
+	
+       hists.push_back(new TH1F(Form("pt_deg%i_p%i_%s", ideg,  ips, tag.c_str()),  "",  200, yRange_.first, yRange_.second));  
      }
      //////////////////////////////////////////////////
      
@@ -611,44 +646,17 @@ void comparePerigee_particles_besiii(
 	 std::string name= hists[ivar]->GetName(); 
 	
          if(change){
-	 
-	 
-	 //baseline_smearloc0_200_800_3_loc1_10000_800_3 
-	   if(particle == "mu-" and tag == "baseline" and name.find("l1_")!=std::string::npos){
-               //if(ps[ips]==0.25 and deg=="0.5") scale = 0.98;
-               //if(ps[ips]==0.45 and deg=="0") scale = 1.04;
-               if(ps[ips]==1.4 and deg=="0.5") scale = 0.95;
-               //if(ps[ips]==1.6 and deg=="0.5") scale = 0.97;
-	   } 
-	   if(particle == "mu-" and tag == "baseline" and name.find("pt_")!=std::string::npos){
-             if(ps[ips]==0.35 and deg=="0.5") scale = scale*0.99;
-	   }
-	  
-
-	   if(particle == "pi-" and tag == "baseline" and name.find("l1_")!=std::string::npos){
-            // if(ps[ips]==0.125 and deg=="0") scale = scale*1.1;
-             if(ps[ips]==0.175 and deg=="0") scale = scale*1.05;
-	    // if(ps[ips]==0.25 and deg=="0") scale = scale*1.1;
-            // if(ps[ips]==0.3 and deg=="0") scale = scale*1.1;
-             
-	    // if(ps[ips]==0.6 and deg=="0") scale = scale*1.06;
-            // if(ps[ips]==1.4 and deg=="0") scale = scale*1.06;
-            // if(ps[ips]==1) scale = scale*0.99;
-	   }
-	   
-	   if(particle == "pi-" and tag == "baseline" and name.find("pt_")!=std::string::npos){
-             if(ps[ips]==0.2 and deg=="0") scale = scale*0.95;
-            // if(ps[ips]==0.25 and deg=="0") scale = scale*0.93;
-             if(ps[ips]==0.35 and deg=="0") scale = scale*0.96;
-            // if(ps[ips]==0.4 and deg=="0") scale = scale*1.05;
-	   }
-	   if(particle == "pi-" and name.find("pt_")!=std::string::npos){
-             if(ps[ips]==0.175 and deg=="0") scale = scale*1.1;
-	   }
+           if(ps[ips]==0.6  and name.find("pt_")!=std::string::npos){
+               scale = scale * 0.98;
+           }
 	 }
-	
+       
+         bool singleGaus = true;
+         //if(ivar==6 and ps[ips]>0.3){
+         //  singleGaus = true;
+	 //} 
 
-	 anaHisto(hists[ivar], ips+1, means_[deg][ivar], widths_[deg][ivar], fit, scale);
+	 anaHisto(hists[ivar], ips+1, means_[deg][ivar], widths_[deg][ivar], fit, scale, singleGaus);
 	 
 	// if(deg=="0" and particle == "pi-" and name.find("qop_")!=std::string::npos) {
         // if(tag== "upgrade" and ps[ips]==0.1) {
@@ -812,7 +820,7 @@ void comparePerigee_particles_besiii(
                          xLabelSize, yLabelSize, xTitleOffset, yTitleOffset);
   hist_baseline_pt->GetXaxis()->SetTitle(xAxisTitle.c_str());
   hist_baseline_pt->GetYaxis()->SetTitle("#sigma(p_{T})/p_{T} [%]");
-  hist_baseline_pt->GetYaxis()->SetRangeUser(0.3, 1);
+  hist_baseline_pt->GetYaxis()->SetRangeUser(0.3, 1.3);
   legs[6]->AddEntry(hist_baseline_pt, "MDC", "APL");
 
 
@@ -824,7 +832,7 @@ void comparePerigee_particles_besiii(
     hists[6]->GetXaxis()->SetTitle(xAxisTitle.c_str());
     hists[6]->GetYaxis()->SetTitle("#sigma(p_{T})/p_{T} [%]");
     if(usePt){
-      hists[6]->GetYaxis()->SetRangeUser(0.3, 1);
+      hists[6]->GetYaxis()->SetRangeUser(0.3, 1.3);
     } else {
       hists[6]->GetYaxis()->SetRangeUser(0.2, 3.5);
     }

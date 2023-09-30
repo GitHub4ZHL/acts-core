@@ -82,8 +82,8 @@ ActsExamples::RootSTCFMeasurementReader::RootSTCFMeasurementReader(
       new TTreeReaderArray<float>(*m_treeReader, "MCParticleCol.momentum.y");
   particleMomentumZ =
       new TTreeReaderArray<float>(*m_treeReader, "MCParticleCol.momentum.z");
-  particleTrackID =
-      new TTreeReaderArray<int>(*m_treeReader, "MCParticleCol.trackID");
+  //particleTrackID =
+  //    new TTreeReaderArray<int>(*m_treeReader, "MCParticleCol.trackID");
   // particleTime  = new
   // TTreeReaderArray<int>(*m_treeReader,"MCParticleCol.time");
 
@@ -158,7 +158,7 @@ ActsExamples::RootSTCFMeasurementReader::~RootSTCFMeasurementReader() {
   delete particlePDG;
   delete particleCharge;
   delete particleMass;
-  delete particleTrackID;
+  //delete particleTrackID;
   delete particleVertexX;
   delete particleVertexY;
   delete particleVertexZ;
@@ -502,6 +502,7 @@ ActsExamples::ProcessCode ActsExamples::RootSTCFMeasurementReader::read(
                    (*particlePDG)[i] == 211 or (*particlePDG)[i] == 2212) {
           charge = 1;
         }
+	// The barcode of the particle is just the index 'i'.
         ActsFatras::Particle particle(
             ActsFatras::Barcode(i), Acts::PdgParticle((*particlePDG)[i]),
             charge * Acts::UnitConstants::e,

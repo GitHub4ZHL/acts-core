@@ -7,7 +7,8 @@ detType="upgrade"
 #tag=CKF.smeared.MdcMcHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.simUniField.recUniField
 
 fieldTypes=("nonUniformField" "uniformField")
-tags=("CKF.smeared.MdcRecHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.simNonUniField.recUniField" "CKF.smeared.MdcRecHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.simUniField.recUniField")
+#tags=("CKF.smeared.MdcRecHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.simNonUniField.recUniField" "CKF.smeared.MdcRecHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.simUniField.recUniField")
+tag=CKF.smeared.MdcRecHits.PreditedDriftSign.chi2Cut30.maxPropSteps330.betheLoss.recUniField
 
 ckfPropSteps="330"
 configFilePath=/home/xiaocong/Software/bes3Acts/acts/build/bin
@@ -17,10 +18,22 @@ particles=("mu-" "pi-")
 #momentumTypes=("p" "pt")
 momentumTypes=("pt")
 
+#originTypes=("realBeamPosition" "beamPosition0")
+originTypes=("beamPosition0")
+pixelRs=("55")
+MdcNoiseTypes=("MdcNoise" "NoNoise")
 
+
+
+for ((l=0; l<${#pixelRs[@]};++l)); do
+for ((p=0; p<${#MdcNoiseTypes[@]};++p)); do
+for ((j=0; j<${#originTypes[@]};++j)); do
 for ((n=0; n<${#fieldTypes[@]};++n)); do
+pixelRName=PixelR${pixelRs[l]}mm
+MdcNoise=${MdcNoiseTypes[p]}
+originType=${originTypes[j]}
 fieldType=${fieldTypes[n]}
-tag=${tags[n]}
+#tag=${tags[n]}
 
   for ((m=0; m<${#momentumTypes[@]};++m)); do
     momentumType=${momentumTypes[m]}
@@ -74,9 +87,9 @@ tag=${tags[n]}
       #fi
       
   
-      inputDir=/home/xiaocong/Software/bes3Acts/acts/RunSpace/samples/${detType}/${fieldType}/ana_momentum_scan/${momentumType}/${particle}
+      inputDir=/home/xiaocong/Software/bes3Acts/acts/RunSpace/samples/${detType}/${originType}/${fieldType}/${pixelRName}/${MdcNoise}/ana_momentum_scan/${momentumType}/${particle}
       inputFile=single_${particle}_CosThetaDeg_-${absCosTheta}_${absCosTheta}_momentumMev_${momentum}_${momentum}.root
-      outputDir=/home/xiaocong/Software/bes3Acts/acts/RunSpace/perf/${detType}/ana_momentum_scan/${tag}/${momentumType}/${particle}/CosThetaDeg_-${absCosTheta}_${absCosTheta}_momentumMev_${momentum}_${momentum}/
+      outputDir=/home/xiaocong/Software/bes3Acts/acts/RunSpace/perf/${detType}/${originType}/${fieldType}/${pixelRName}/${MdcNoise}/ana_momentum_scan/${tag}/${momentumType}/${particle}/CosThetaDeg_-${absCosTheta}_${absCosTheta}_momentumMev_${momentum}_${momentum}/
       
       mkdir -p ${outputDir}
       
@@ -95,12 +108,12 @@ tag=${tags[n]}
               --ckf-selection-chi2max 30.0 \
               --ckf-initial-variance-inflation=100:100:100:100:100:1  \
               --mat-input-type file  \
-              --mat-input-file=${configFilePath}/mat-bes_${detType}_alt5_manual_MDI2_MDCLayer100.json  \
-              --geo-tgeo-filename=${configFilePath}/bes_pixel_mdc_Pip.root  \
+              --mat-input-file=${configFilePath}/mat-bes_${detType}_pixel${pixelRs[l]}mm_alt5_manual_MDI2_MDCLayer100.json  \
+	      --geo-tgeo-filename=${configFilePath}/bes_pixel${pixelRs[l]}mm_mdc_Pip.root  \
               --geo-tgeo-jsonconfig=${configFilePath}/tgeo_bes_${detType}_config.json  \
               --bf-constant-tesla=0:0:-1"
     
-      echo $run
+      #echo $run
       
       eval $run
       #echo ======================================== 
@@ -110,6 +123,9 @@ tag=${tags[n]}
   
   done
 
+done
+done
+done
 done
 
 

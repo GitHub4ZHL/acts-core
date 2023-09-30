@@ -125,7 +125,7 @@ class RootBESMeasurementReader : public IReader {
       208, 208, 240, 240, 240, 240, 256, 256, 256, 256, 288, 288, 288};
 
   std::array<int, 2> m_volumeIDs = {6, 8};
-  std::array<Acts::ActsScalar, 1> m_PIXRadius = {35};
+  std::array<Acts::ActsScalar, 1> m_PIXRadius = {55};
   std::array<double, 2> m_pixSmear = {0.00866,
                                       0.05774};
 
