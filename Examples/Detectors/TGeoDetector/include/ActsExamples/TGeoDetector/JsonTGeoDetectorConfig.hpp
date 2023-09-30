@@ -154,6 +154,7 @@ void from_json(const nlohmann::json& j,
     vol.itkModuleSplit = false;
   }
 
+  vol.cepcVXDLayerSplit = j.at("geo-tgeo-cepc-vxd-layer-split");
   vol.driftChamberLayerSplit = j.at("geo-tgeo-dc-layer-split");
   vol.uRwellLayerSplit = j.at("geo-tgeo-urwell-layer-split");
 }

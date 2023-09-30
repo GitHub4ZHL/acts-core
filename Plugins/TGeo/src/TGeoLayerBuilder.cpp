@@ -260,7 +260,11 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                 ? m_cfg.identifierProvider->identify(gctx, *snode.node)
                 : Identifier();
 
-        // create the elementary detElement
+        //if(m_cfg.identifierProvider == nullptr){
+        //   std::cout<<"No identifierProvider !" << std::endl;
+	//}
+
+        // create the elementary detElement from the TGeo node
         auto tgElement =
             m_cfg.elementFactory(identifier, *snode.node, *snode.transform,
                                  layerCfg.localAxes, m_cfg.unit, nullptr);
@@ -280,19 +284,20 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
           cell->GetBoundingCylinder(parameters);
           minR = cell->GetRmin() * m_cfg.unit;  // into mm
           maxR = cell->GetRmax() * m_cfg.unit;  // into mm
+	  std::cout << "original detElement based on node " << tgNode.GetName()
+                  << " has thickness " << tgThickness << " and radius " << (minR+maxR)*0.5 << std::endl;
+
         }
         /////////////////////////////////////////////////////////////////////////////////
 	
-	std::cout << "original detElement based on node " << tgNode.GetName()
-                  << " has thickness " << tgThickness << " and radius " << (minR+maxR)*0.5 << std::endl;
-
-
+        bool emptySplitter = false;
         if (m_cfg.detectorElementSplitter == nullptr) {
           std::cout << " Empty splitter" << std::endl;
+	  emptySplitter = true;
         }
         std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
             tgElements =
-                (m_cfg.detectorElementSplitter == nullptr)
+                emptySplitter 
                     ? std::vector<std::shared_ptr<
                           const Acts::TGeoDetectorElement>>{tgElement}
                     : m_cfg.detectorElementSplitter->split(gctx, tgElement);

@@ -38,111 +38,90 @@ Acts::TGeoDriftChamberLayerSplitter::split(
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
       tgDetectorElements = {};
 
-  // get the number of sense wires in this layer
-  int nSenseWires = 0;
-  // The cells on this layer
+  // The objects (no concept of cell for CEPC DC) on this layer
   auto daugthers = tgNode.GetVolume()->GetNodes();
   // The relative position of layer w.r.t. chamber 
   const TGeoMatrix* lmatrix = tgNode.GetMatrix();
   //std::cout<<"layer matrix print " << std::endl;
   //lmatrix->Print();
+  
+  TGeoTube* layer = dynamic_cast<TGeoTube*>(tgNode.GetVolume()->GetShape());
+  ActsScalar parameters[5];
+  layer->GetBoundingCylinder(parameters);
+  ActsScalar minR = layer->GetRmin() * m_cfg.unitScalar;
+  ActsScalar maxR = layer->GetRmax() * m_cfg.unitScalar;
 
+  ActsScalar thickness = maxR-minR;
+
+  std::cout<<"minR = "<< minR << ", maxR " << maxR << std::endl;
+
+  int nSenseWires = 0;
   TIter iObj(daugthers);
   while (TObject* obj = iObj()) {
     TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
     if (node != nullptr) {
-      // This is a cell. Check its size
-      TGeoTube* cell = dynamic_cast<TGeoTube*>(node->GetVolume()->GetShape());
-      if (cell == nullptr) {
-        ACTS_WARNING(
-            "cast bad (drift cell is always a tube. This is not supposed to "
-            "happen)");
-      } else {
-        ActsScalar parameters[5];
-        cell->GetBoundingCylinder(parameters);
-        ActsScalar minR = cell->GetRmin() * m_cfg.unitScalar;  // in cm
-        ActsScalar maxR = cell->GetRmax() * m_cfg.unitScalar;  // in cm
-        ActsScalar deltaPhi =
-            std::abs(parameters[2] - parameters[3]) * M_PI / 180;
-        // calcuate the approximate lineBounds r
-        ActsScalar distanceToOuterCorner = std::hypot(maxR * std::cos(deltaPhi/2) - (minR + maxR) / 2,
-                                  maxR * std::sin(deltaPhi/2));
-        ActsScalar distanceToInnerCorner = std::hypot((minR + maxR) / 2 - minR * std::cos(deltaPhi/2),
-                                  minR * std::sin(deltaPhi/2));
-	ActsScalar thickness = maxR - minR;
-        ACTS_DEBUG("cast good: drift cell has minR = "
-                   << minR << ", maxR = " << maxR << " and deltaPhi "
-                   << deltaPhi << " (deg) and thickness " << thickness);
-        //std::cout<<"distanceToOuterCorner = " << distanceToOuterCorner <<", distanceToInnerConer = " << distanceToInnerCorner <<", thickness/2 = " << thickness/2 << std::endl; 
-        //std::cout<<"cast good: drift cell has minR = "
-        //           << minR << ", maxR = " << maxR << " and deltaPhi "
-        //           << deltaPhi << " (deg) and thickness " << thickness << std::endl; 
+      std::string nodeName = node->GetName(); 
+      if (nodeName.find("SignalWire_") == std::string::npos) {
+        continue;
+      }
+      const TGeoMatrix* smatrix = node->GetMatrix();
+      // Find the inner W wire
+      TGeoNode* WNode = node->GetVolume()->FindNode("SignalWireW_0");
+      if (WNode != nullptr) {
+        TGeoTube* wire = dynamic_cast<TGeoTube*>(WNode->GetVolume()->GetShape());
+        if (wire == nullptr) {
+          ACTS_WARNING(
+              "cast bad (signal wire is always a tube. This is not supposed to "
+              "happen)");
+        } else {
+          const TGeoMatrix* wmatrix = WNode->GetMatrix();
+          ActsScalar halfZ = wire->GetDz() * m_cfg.unitScalar;
+          ACTS_DEBUG("half length of the sense wire: " << halfZ);
+          //std::cout<<"half length of the sense wire: " << halfZ << std::endl;;
 
-        // The relative position of cell w.r.t. layer
-        const TGeoMatrix* cmatrix = node->GetMatrix();
-        //std::cout<<"cell matrix print " << std::endl;
-	//cmatrix->Print();
+          //std::cout<<"wire matrix print " << std::endl;
+          //wmatrix->Print();
+          TGeoHMatrix transform =
+              TGeoCombiTrans(*lmatrix) * TGeoCombiTrans(*smatrix) * TGeoCombiTrans(*wmatrix);
 
-        auto grandDaugthers = node->GetVolume()->GetNodes();
-        TIter jObj(grandDaugthers);
-        while (TObject* dobj = jObj()) {
-          TGeoNode* dNode = dynamic_cast<TGeoNode*>(dobj);
-          if (dNode != nullptr) {
-            std::string dNodeName = dNode->GetName();
-	    //std::cout<<"Loop over the daughter with name  "<< dNodeName << " in the cell " << std::endl; 
-	    if (dNodeName.find("SignalWire") != std::string::npos) {
-              ACTS_DEBUG("Found sense wire" << dNodeName
-                                            << " in the drift cell");
-              // create a Line surface
-              nSenseWires++;
-              TGeoTube* wire =
-                  dynamic_cast<TGeoTube*>(dNode->GetVolume()->GetShape());
-              if (wire == nullptr) {
-                ACTS_WARNING("Failed to cast to TGeoTube");
-              } else {
-                ActsScalar halfZ = wire->GetDz() * m_cfg.unitScalar;
-                ACTS_DEBUG("half length of the sense wire: " << halfZ);
-		//std::cout<<"half length of the sense wire: " << halfZ << std::endl;;
+          // Get the placement and orientation in respect to its mother
+          const Double_t* rotation = transform.GetRotationMatrix();
+          const Double_t* translation = transform.GetTranslation();
+          // Create a eigen transform
+          Vector3 t(translation[0] * m_cfg.unitScalar,
+                    translation[1] * m_cfg.unitScalar,
+                    translation[2] * m_cfg.unitScalar);
+          //std::cout<<"supposed translation " << t << std::endl;	
+          Vector3 cx(rotation[0], rotation[3], rotation[6]);
+          Vector3 cy(rotation[1], rotation[4], rotation[7]);
+          Vector3 cz(rotation[2], rotation[5], rotation[8]);
+          auto etrf = TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t);
+          //std::cout<<"cx = "<< cx.transpose() << std::endl;
+          //std::cout<<"cy = "<< cy.transpose() << std::endl;
+          //std::cout<<"cz = "<< cz.transpose() << std::endl;
+          if(rotation[8]!=1){
+            throw std::runtime_error("Only axial wire for CEPC DC!");
+	  }
 
-                const TGeoMatrix* wmatrix = dNode->GetMatrix();
-		//std::cout<<"wire matrix print " << std::endl;
-		//wmatrix->Print();
-                // Is this correct?
-                TGeoHMatrix transform =
-                    TGeoCombiTrans(*lmatrix) * TGeoCombiTrans(*cmatrix) * TGeoCombiTrans(*wmatrix);
+          // make a lineBounds
+          //auto tgWire = std::make_shared<Acts::LineBounds>(distanceToOuterCorner, halfZ);
+          auto tgWire = std::make_shared<Acts::LineBounds>(thickness/2, halfZ);
 
-                // Get the placement and orientation in respect to its mother
-                const Double_t* rotation = transform.GetRotationMatrix();
-                const Double_t* translation = transform.GetTranslation();
-		// Create a eigen transform
-                Vector3 t(translation[0] * m_cfg.unitScalar,
-                          translation[1] * m_cfg.unitScalar,
-                          translation[2] * m_cfg.unitScalar);
-	        //std::cout<<"supposed translation " << t << std::endl;	
-                Vector3 cx(rotation[0], rotation[3], rotation[6]);
-                Vector3 cy(rotation[1], rotation[4], rotation[7]);
-                Vector3 cz(rotation[2], rotation[5], rotation[8]);
-                auto etrf = TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t);
+          // Create a new detector element per split
+          auto tgDetectorElement =
+              std::make_shared<Acts::TGeoDetectorElement>(
+                  tgIdentifier, *node, etrf, tgWire, thickness);
 
-                // make a lineBounds
-                //auto tgWire = std::make_shared<Acts::LineBounds>(distanceToOuterCorner, halfZ);
-                auto tgWire = std::make_shared<Acts::LineBounds>(thickness/2, halfZ);
-
-                // Create a new detector element per split
-                auto tgDetectorElement =
-                    std::make_shared<Acts::TGeoDetectorElement>(
-                        tgIdentifier, *node, etrf, tgWire, thickness);
-
-                tgDetectorElements.push_back(tgDetectorElement);
-              }
-            }
-          }
+          tgDetectorElements.push_back(tgDetectorElement);
+        
+          nSenseWires++;
         }
       }
     }
   }
 
   ACTS_DEBUG("Found " << nSenseWires << " sense wires on this layer");
+  std::cout<<"Found " << nSenseWires << " sense wires on this layer" << std::endl;
 
   if (not tgDetectorElements.empty()) {
     return tgDetectorElements;
