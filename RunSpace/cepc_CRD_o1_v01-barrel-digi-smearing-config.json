@@ -1,0 +1,95 @@
+{
+  "acts-geometry-hierarchy-map" : {
+    "format-version" : 0,
+    "value-identifier" : "digitization-configuration"
+  },
+                                  "entries"
+      : [
+        {
+          "layer" : 2,
+          "volume" : 10,
+          "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.0028, "type" : "Gauss"},
+              {"index" : 1, "mean" : 0.0, "stddev" : 0.0028, "type" : "Gauss"}
+            ]
+          }
+        },
+        {
+          "layer" : 4,
+          "volume" : 10,
+          "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.006, "type" : "Gauss"},
+              {"index" : 1, "mean" : 0.0, "stddev" : 0.006, "type" : "Gauss"}
+            ]
+          }
+        },
+        {
+          "layer" : 6,
+          "volume" : 10,
+          "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.004, "type" : "Gauss"},
+              {"index" : 1, "mean" : 0.0, "stddev" : 0.004, "type" : "Gauss"}
+            ]
+          }
+        },
+        {
+          "layer" : 8,
+          "volume" : 10,
+          "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.004, "type" : "Gauss"},
+              {"index" : 1, "mean" : 0.0, "stddev" : 0.004, "type" : "Gauss"}
+            ]
+          }
+        },
+        {
+          "layer" : 10,
+          "volume" : 10,
+          "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.004, "type" : "Gauss"},
+              {"index" : 1, "mean" : 0.0, "stddev" : 0.004, "type" : "Gauss"}
+            ]
+          }
+        },
+        {
+          "layer" : 12,
+          "volume" : 10,
+          "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.004, "type" : "Gauss"},
+              {"index" : 1, "mean" : 0.0, "stddev" : 0.004, "type" : "Gauss"}
+            ]
+          }
+        },
+	{
+          "volume" : 12,
+          "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.0072, "type" : "Gauss"},
+              {"index" : 1, "mean" : 0.0, "stddev" : 0.086, "type" : "Gauss"}
+            ]
+          }
+        },
+	{
+          "volume" : 14,
+          "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.110, "type" : "Gauss"}
+            ]
+          }
+        },
+	{
+          "volume" : 15,
+          "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.0072, "type" : "Gauss"},
+              {"index" : 1, "mean" : 0.0, "stddev" : 0.086, "type" : "Gauss"}
+            ]
+          }
+        }
+      ]
+}

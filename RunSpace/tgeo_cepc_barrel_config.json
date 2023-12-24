@@ -1,0 +1,403 @@
+{
+  "Volumes": [
+    {
+      "Splitters": {
+        "CylinderDisk": {
+          "geo-tgeo-cyl-nphi-segs": 100,
+          "geo-tgeo-cyl-nz-segs": 1,
+          "geo-tgeo-disc-nphi-segs": 0,
+          "geo-tgeo-disc-nr-segs": 0
+        }
+      },
+      "geo-tgeo-binning0": {
+        "central": [[-1,0]],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-binning1": {
+        "central": [[-1,0]],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-cyl-disc-split": false,
+      "geo-tgeo-itk-module-split": false,
+      "geo-tgeo-dc-layer-split": false,
+      "geo-tgeo-cepc-vxd-layer-split": true,
+      "geo-tgeo-cepc-sit-layer-split": false,
+      "geo-tgeo-cepc-ftd-layer-split": false,
+      "geo-tgeo-urwell-layer-split": false,
+      "geo-tgeo-layer-r-ranges": {
+        "central": {
+          "lower": 10,
+          "upper": 70
+        },
+        "negative": {
+          "lower": 0.0,
+          "upper": 0.0
+        },
+        "positive": {
+          "lower": 0.0,
+          "upper": 0.0
+        }
+      },
+      "geo-tgeo-layer-r-split": {
+        "central": 1,
+        "negative": 0.0,
+        "positive": 0.0
+      },
+      "geo-tgeo-layer-z-ranges": {
+        "central": {
+          "lower": -220,
+          "upper": 220
+        },
+        "negative": {
+          "lower": 0.0,
+          "upper": 0.0
+        },
+        "positive": {
+          "lower": 0.0,
+          "upper": 0.0
+        }
+      },
+      "geo-tgeo-layer-z-split": {
+        "central": 0.0,
+        "negative": 0.0,
+        "positive": 0.0
+      },
+      "geo-tgeo-sensitive-axes": {
+        "central": "XY",
+        "negative": "",
+        "positive": ""
+      },
+      "geo-tgeo-sensitive-names": {
+        "central": ["layer_assembly_0_1","layer_assembly_1_2","layer_assembly_2_3","layer_assembly_3_4","layer_assembly_4_5","layer_assembly_5_6"],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-sfbin-phi-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-sfbin-r-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-sfbin-z-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-subvolume-names": {
+        "central": "VXD_envelope",
+        "negative": "",
+        "positive": ""
+      },
+      "geo-tgeo-volume-layers": {
+        "central": true,
+        "negative": false,
+        "positive": false
+      },
+      "geo-tgeo-volume-name": "VXD"
+    },
+    {
+      "Splitters": {
+        "CylinderDisk": {
+          "geo-tgeo-cyl-nphi-segs": 100,
+          "geo-tgeo-cyl-nz-segs": 1,
+          "geo-tgeo-disc-nphi-segs": 0,
+          "geo-tgeo-disc-nr-segs": 0
+        }
+      },
+      "geo-tgeo-binning0": {
+        "central": [[-1,0]],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-binning1": {
+        "central": [[-1,0]],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-cyl-disc-split": false,
+      "geo-tgeo-itk-module-split": false,
+      "geo-tgeo-dc-layer-split": false,
+      "geo-tgeo-cepc-vxd-layer-split": false,
+      "geo-tgeo-cepc-sit-layer-split": true,
+      "geo-tgeo-cepc-ftd-layer-split": false,
+      "geo-tgeo-urwell-layer-split": false,
+      "geo-tgeo-layer-r-ranges": {
+        "central": {
+          "lower": 225,
+          "upper": 775
+        },
+        "negative": {
+          "lower": 0.0,
+          "upper": 0.0
+        },
+        "positive": {
+          "lower": 0.0,
+          "upper": 0.0
+        }
+      },
+      "geo-tgeo-layer-r-split": {
+        "central": 50,
+        "negative": 0.0,
+        "positive": 0.0
+      },
+      "geo-tgeo-layer-z-ranges": {
+        "central": {
+          "lower": -1400,
+          "upper": 1400
+        },
+        "negative": {
+          "lower": 0.0,
+          "upper": 0.0
+        },
+        "positive": {
+          "lower": 0.0,
+          "upper": 0.0
+        }
+      },
+      "geo-tgeo-layer-z-split": {
+        "central":  0.0,
+        "negative": 0.0,
+        "positive": 0.0
+      },
+      "geo-tgeo-sensitive-axes": {
+        "central": "XY",
+        "negative": "",
+        "positive": ""
+      },
+      "geo-tgeo-sensitive-names": {
+        "central": ["layer_0_0","layer_1_1","layer_2_2","layer_3_3"],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-sfbin-phi-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-sfbin-r-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-sfbin-z-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-subvolume-names": {
+        "central": "SIT_assembly",
+        "negative": "",
+        "positive": ""
+      },
+      "geo-tgeo-volume-layers": {
+        "central": true,
+        "negative": false,
+        "positive": false
+      },
+      "geo-tgeo-volume-name": "SIT"
+    },
+    {
+      "Splitters": {
+        "CylinderDisk": {
+          "geo-tgeo-cyl-nphi-segs": 200,
+          "geo-tgeo-cyl-nz-segs": 0,
+          "geo-tgeo-disc-nphi-segs": 0,
+          "geo-tgeo-disc-nr-segs": 0
+        }
+      },
+      "geo-tgeo-binning0": {
+        "central": [[-1,0]],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-binning1": {
+        "central": [[-1,0]],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-cyl-disc-split": false,
+      "geo-tgeo-itk-module-split": false,
+      "geo-tgeo-dc-layer-split": true,
+      "geo-tgeo-cepc-vxd-layer-split": false,
+      "geo-tgeo-cepc-sit-layer-split": false,
+      "geo-tgeo-cepc-ftd-layer-split": false,
+      "geo-tgeo-urwell-layer-split": false,
+      "geo-tgeo-layer-r-ranges": {
+        "central": {
+          "lower": 790,
+          "upper": 1810 
+        },
+        "negative": {
+          "lower": 0.0,
+          "upper": 0.0
+        },
+        "positive": {
+          "lower": 0.0,
+          "upper": 0.0
+        }
+      },
+      "geo-tgeo-layer-r-split": {
+        "central": 100,
+        "negative": 0.0,
+        "positive": 0.0
+      },
+      "geo-tgeo-layer-z-ranges": {
+        "central": {
+          "lower": -3000,
+          "upper": 3000
+        },
+        "negative": {
+          "lower": 0.0,
+          "upper": 0.0
+        },
+        "positive": {
+          "lower": 0.0,
+          "upper": 0.0
+        }
+      },
+      "geo-tgeo-layer-z-split": {
+        "central": 2400,
+        "negative": 0.0,
+        "positive": 0.0
+      },
+      "geo-tgeo-sensitive-axes": {
+        "central": "XY",
+        "negative": "",
+        "positive": ""
+      },
+      "geo-tgeo-sensitive-names": {
+        "central": ["DriftChamber_layer_vol_0","DriftChamber_layer_vol_1","DriftChamber_layer_vol_2","DriftChamber_layer_vol_3","DriftChamber_layer_vol_4","DriftChamber_layer_vol_5","DriftChamber_layer_vol_6","DriftChamber_layer_vol_7","DriftChamber_layer_vol_8","DriftChamber_layer_vol_9","DriftChamber_layer_vol_10","DriftChamber_layer_vol_11","DriftChamber_layer_vol_12","DriftChamber_layer_vol_13","DriftChamber_layer_vol_14","DriftChamber_layer_vol_15","DriftChamber_layer_vol_16","DriftChamber_layer_vol_17","DriftChamber_layer_vol_18","DriftChamber_layer_vol_19","DriftChamber_layer_vol_20","DriftChamber_layer_vol_21","DriftChamber_layer_vol_22","DriftChamber_layer_vol_23","DriftChamber_layer_vol_24","DriftChamber_layer_vol_25","DriftChamber_layer_vol_26","DriftChamber_layer_vol_27","DriftChamber_layer_vol_28","DriftChamber_layer_vol_29","DriftChamber_layer_vol_30","DriftChamber_layer_vol_31","DriftChamber_layer_vol_32","DriftChamber_layer_vol_33","DriftChamber_layer_vol_34","DriftChamber_layer_vol_35","DriftChamber_layer_vol_36","DriftChamber_layer_vol_37","DriftChamber_layer_vol_38","DriftChamber_layer_vol_39","DriftChamber_layer_vol_40","DriftChamber_layer_vol_41","DriftChamber_layer_vol_42","DriftChamber_layer_vol_43","DriftChamber_layer_vol_44","DriftChamber_layer_vol_45","DriftChamber_layer_vol_46","DriftChamber_layer_vol_47","DriftChamber_layer_vol_48","DriftChamber_layer_vol_49","DriftChamber_layer_vol_50","DriftChamber_layer_vol_51","DriftChamber_layer_vol_52","DriftChamber_layer_vol_53","DriftChamber_layer_vol_54","DriftChamber_layer_vol_55","DriftChamber_layer_vol_56","DriftChamber_layer_vol_57","DriftChamber_layer_vol_58","DriftChamber_layer_vol_59","DriftChamber_layer_vol_60","DriftChamber_layer_vol_61","DriftChamber_layer_vol_62","DriftChamber_layer_vol_63","DriftChamber_layer_vol_64","DriftChamber_layer_vol_65","DriftChamber_layer_vol_66","DriftChamber_layer_vol_67","DriftChamber_layer_vol_68","DriftChamber_layer_vol_69","DriftChamber_layer_vol_70","DriftChamber_layer_vol_71","DriftChamber_layer_vol_72","DriftChamber_layer_vol_73","DriftChamber_layer_vol_74","DriftChamber_layer_vol_75","DriftChamber_layer_vol_76","DriftChamber_layer_vol_77","DriftChamber_layer_vol_78","DriftChamber_layer_vol_79","DriftChamber_layer_vol_80","DriftChamber_layer_vol_81","DriftChamber_layer_vol_82","DriftChamber_layer_vol_83","DriftChamber_layer_vol_84","DriftChamber_layer_vol_85","DriftChamber_layer_vol_86","DriftChamber_layer_vol_87","DriftChamber_layer_vol_88","DriftChamber_layer_vol_89","DriftChamber_layer_vol_90","DriftChamber_layer_vol_91","DriftChamber_layer_vol_92","DriftChamber_layer_vol_93","DriftChamber_layer_vol_94","DriftChamber_layer_vol_95","DriftChamber_layer_vol_96","DriftChamber_layer_vol_97","DriftChamber_layer_vol_98","DriftChamber_layer_vol_99"], 
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-sfbin-phi-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-sfbin-r-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-sfbin-z-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-subvolume-names": {
+        "central": "DriftChamber_chamber_vol",
+        "negative": "",
+        "positive": ""
+      },
+      "geo-tgeo-volume-layers": {
+        "central": true,
+        "negative": false,
+        "positive": false
+      },
+      "geo-tgeo-volume-name": "DC"
+    },
+    {
+      "Splitters": {
+        "CylinderDisk": {
+          "geo-tgeo-cyl-nphi-segs": 100,
+          "geo-tgeo-cyl-nz-segs": 1,
+          "geo-tgeo-disc-nphi-segs": 0,
+          "geo-tgeo-disc-nr-segs": 0
+        }
+      },
+      "geo-tgeo-binning0": {
+        "central": [[-1,0]],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-binning1": {
+        "central": [[-1,0]],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-cyl-disc-split": false,
+      "geo-tgeo-itk-module-split": false,
+      "geo-tgeo-dc-layer-split": false,
+      "geo-tgeo-cepc-vxd-layer-split": false,
+      "geo-tgeo-cepc-sit-layer-split": true,
+      "geo-tgeo-cepc-ftd-layer-split": false,
+      "geo-tgeo-urwell-layer-split": false,
+      "geo-tgeo-layer-r-ranges": {
+        "central": {
+          "lower": 1810,
+          "upper": 1820 
+        },
+        "negative": {
+          "lower": 0.0,
+          "upper": 0.0
+        },
+        "positive": {
+          "lower": 0.0,
+          "upper": 0.0
+        }
+      },
+      "geo-tgeo-layer-r-split": {
+        "central": 50,
+        "negative": 0.0,
+        "positive": 0.0
+      },
+      "geo-tgeo-layer-z-ranges": {
+        "central": {
+          "lower": -3000,
+          "upper": 3000
+        },
+        "negative": {
+          "lower": 0.0,
+          "upper": 0.0
+        },
+        "positive": {
+          "lower": 0.0,
+          "upper": 0.0
+        }
+      },
+      "geo-tgeo-layer-z-split": {
+        "central": 900,
+        "negative": 0.0,
+        "positive": 0.0
+      },
+      "geo-tgeo-sensitive-axes": {
+        "central": "XY",
+        "negative": "",
+        "positive": ""
+      },
+      "geo-tgeo-sensitive-names": {
+        "central": ["layer_0_00x1"],
+        "negative": [],
+        "positive": []
+      },
+      "geo-tgeo-sfbin-phi-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-sfbin-r-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-sfbin-z-tolerance": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "geo-tgeo-subvolume-names": {
+        "central": "SET_envelope",
+        "negative": "",
+        "positive": ""
+      },
+      "geo-tgeo-volume-layers": {
+        "central": true,
+        "negative": false,
+        "positive": false
+      },
+      "geo-tgeo-volume-name": "SET"
+    }
+  ],
+  "geo-tgeo-beampipe-parameters": [
+    10,
+    200.0,
+    1 
+  ],
+  "geo-tgeo-build-beampipe": true,
+  "geo-tgeo-unit-scalor": 10.0
+}
