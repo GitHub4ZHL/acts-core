@@ -22,6 +22,7 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -60,7 +61,6 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     const GeometryContext& gctx, TrackingVolumePtr existingVolume,
     VolumeBoundsPtr externalBounds) const {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
-  std::cout<<"Configured to build volume : " << m_cfg.volumeName  << std::endl; 
   if (existingVolume) {
     ACTS_DEBUG("- will wrap/enclose : " << existingVolume->volumeName());
   }
@@ -72,7 +72,6 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   // now analyize the layers that are provided
   // -----------------------------------------------------
   ACTS_DEBUG("-> Building layers");
-  std::cout << "-> Building layers" << std::endl;
   LayerVector negativeLayers;
   LayerVector centralLayers;
   LayerVector positiveLayers;
@@ -243,7 +242,6 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                 wConfig.cVolumeConfig.zMin, wConfig.cVolumeConfig.zMax,
                 m_cfg.volumeName + "::Barrel")
           : nullptr;
-   std::cout<<"creating tracking volume " << m_cfg.volumeName << " at rMin = " << wConfig.cVolumeConfig.rMin <<" rMax = " << wConfig.cVolumeConfig.rMax << std::endl;
 
   // Helper method to check for
 
@@ -371,7 +369,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                                          << " layers, and rmin/rmax = "
                                          << volumeRminRmax[ir].first << "/"
                                          << volumeRminRmax[ir].second);
-            endcapContainer.push_back(tvHelper->createTrackingVolume(
+	    endcapContainer.push_back(tvHelper->createTrackingVolume(
                 gctx, rLayers, centralConfig.volumes, m_cfg.volumeMaterial,
                 volumeRminRmax[ir].first, volumeRminRmax[ir].second,
                 endcapConfig.zMin, endcapConfig.zMax,
@@ -401,6 +399,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   auto nEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.nVolumeConfig,
                               "::NegativeEndcap");
 
+
   // The positive endcap is created if present
   auto pEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.pVolumeConfig,
                               "::PositiveEndcap");
@@ -418,13 +417,17 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volume = nEndcap;
       // Set the inner or outer material
       if (not m_cfg.buildToRadiusZero) {
+	if(m_cfg.boundaryMaterial[0])
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
                                        Acts::tubeInnerCover);
       }
+      if(m_cfg.boundaryMaterial[1])
       volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
                                      Acts::tubeOuterCover);
+      if(m_cfg.boundaryMaterial[2])
       volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[2],
                                      Acts::negativeFaceXY);
+      if(m_cfg.boundaryMaterial[3])
       volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[3],
                                      Acts::positiveFaceXY);
     }
@@ -449,13 +452,17 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volume = pEndcap;
       // Set the inner or outer material
       if (not m_cfg.buildToRadiusZero) {
+	if(m_cfg.boundaryMaterial[0])
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
                                        Acts::tubeInnerCover);
       }
+      if(m_cfg.boundaryMaterial[1])
       volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
                                      Acts::tubeOuterCover);
+      if(m_cfg.boundaryMaterial[4])
       volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[4],
                                      Acts::negativeFaceXY);
+      if(m_cfg.boundaryMaterial[5])
       volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[5],
                                      Acts::positiveFaceXY);
     }
@@ -468,6 +475,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // the new volume is the only one present
     volume = nEndcap ? nEndcap : (barrel ? barrel : pEndcap);
   }
+
 
   // Prepare the gap volumes first
   TrackingVolumePtr existingVolumeCp = existingVolume;
@@ -591,6 +599,7 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
       }
       // proceed further if it is a Disc layer
       const RadialBounds* dBounds = dynamic_cast<const RadialBounds*>(
+      //const DiscTrapezoidBounds* dBounds = dynamic_cast<const DiscTrapezoidBounds*>(
           &(layer->surfaceRepresentation().bounds()));
       if (dBounds != nullptr) {
         // now we have access to all the information
@@ -598,7 +607,7 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
         double rMaxD = dBounds->rMax();
         double zMinD = center.z() - 0.5 * thickness;
         double zMaxD = center.z() + 0.5 * thickness;
-        lConfig.rMin =
+	lConfig.rMin =
             std::min(lConfig.rMin, rMinD - m_cfg.layerEnvelopeR.first);
         lConfig.rMax =
             std::max(lConfig.rMax, rMaxD + m_cfg.layerEnvelopeR.second);
@@ -630,7 +639,6 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
   // overwrite to radius 0 if needed
   if (m_cfg.buildToRadiusZero) {
     ACTS_VERBOSE("This layer builder is configured to build to the beamline.");
-    std::cout<<"This layer builder is configured to build to the beamline." << std::endl;
     lConfig.rMin = 0.;
   }
 
