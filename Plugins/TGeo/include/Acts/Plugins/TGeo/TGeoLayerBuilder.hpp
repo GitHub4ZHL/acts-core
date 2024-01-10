@@ -198,7 +198,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
           binning,
       const std::vector<std::pair<std::string, int>>& surfaceBins) const;
 
-  void addCylinderLayerProtoMaterial(
+  void addLayerProtoMaterial(
       Layer& layer,
       const std::vector<std::pair<const std::string, Acts::BinningOption>>&
           binning,
@@ -206,6 +206,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
       const std::vector<std::pair<std::string, int>>& innerApproachSurfaceBins,
       const std::vector<std::pair<std::string, int>>& outerApproachSurfaceBins)
       const;
+
 };
 
 inline void TGeoLayerBuilder::registerSplit(

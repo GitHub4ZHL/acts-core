@@ -22,6 +22,7 @@
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoCEPCVXDLayerSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoCEPCSITLayerSplitter.hpp"
+#include "Acts/Plugins/TGeo/TGeoCEPCFTDLayerSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoDriftChamberLayerSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Plugins/TGeo/TGeoURwellLayerSplitter.hpp"
@@ -140,6 +141,10 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       Acts::TGeoCEPCSITLayerSplitter::Config dcConfig;
       layerBuilderConfig.detectorElementSplitter =
           std::make_shared<const Acts::TGeoCEPCSITLayerSplitter>(dcConfig);
+    } else if (volume.cepcFTDLayerSplit) {
+      Acts::TGeoCEPCFTDLayerSplitter::Config dcConfig;
+      layerBuilderConfig.detectorElementSplitter =
+          std::make_shared<const Acts::TGeoCEPCFTDLayerSplitter>(dcConfig);
     } else if (volume.uRwellLayerSplit) {
       Acts::TGeoURwellLayerSplitter::Config dcConfig;
       layerBuilderConfig.detectorElementSplitter =
@@ -507,6 +512,7 @@ auto TGeoDetector::finalize(
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Config config;
 
+  std::cout<<"entering TGeoDetector::finalize " << std::endl;
   config.fileName = vm["geo-tgeo-filename"].as<std::string>();
 
   config.surfaceLogLevel =

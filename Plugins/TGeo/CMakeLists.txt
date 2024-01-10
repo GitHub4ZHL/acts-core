@@ -3,6 +3,7 @@ add_library(
   src/TGeoCylinderDiscSplitter.cpp
   src/TGeoCEPCVXDLayerSplitter.cpp
   src/TGeoCEPCSITLayerSplitter.cpp
+  src/TGeoCEPCFTDLayerSplitter.cpp
   src/TGeoURwellLayerSplitter.cpp
   src/TGeoDriftChamberLayerSplitter.cpp
   src/TGeoDetectorElement.cpp

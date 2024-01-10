@@ -123,6 +123,7 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
 
       bool cepcVXDLayerSplit = false;
       bool cepcSITLayerSplit = false;
+      bool cepcFTDLayerSplit = false;
       bool driftChamberLayerSplit = false;
       bool uRwellLayerSplit = false;
     };
