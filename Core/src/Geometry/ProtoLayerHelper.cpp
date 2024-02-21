@@ -43,7 +43,12 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
 
   // Loop over surfaces and sort into clusters
   for (auto& sf : surfaces) {
-    auto sfExtent = sf->polyhedronRepresentation(gctx, 1).extent();
+    //Added by X.Cong to prevent onHyperPlane (change m_range min to 0) for StrawSurface 
+    int nsegs = 1;
+    if(sf->type() == Surface::Straw) {
+      nsegs = 2; 
+    }
+    auto sfExtent = sf->polyhedronRepresentation(gctx, nsegs).extent();
     sfExtent.envelope()[sorting.first] = {sorting.second, sorting.second};
     auto& sfCluster = findCluster(sfExtent);
     sfCluster.first.extend(sfExtent);
