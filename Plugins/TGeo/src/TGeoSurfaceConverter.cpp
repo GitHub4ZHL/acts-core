@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 
 #include <algorithm>
 #include <array>
@@ -41,6 +42,7 @@
 #include "TGeoBoolNode.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoMatrix.h"
+#include "TGeoNode.h"
 #include "TGeoShape.h"
 #include "TGeoTrd1.h"
 #include "TGeoTrd2.h"
@@ -112,6 +114,75 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
   }
   return {bounds, transform, thickness};
 }
+
+
+std::tuple<std::shared_ptr<const Acts::LineBounds>, const Acts::Transform3,
+           double>
+Acts::TGeoSurfaceConverter::lineComponents(const TGeoNode& tGeoNode,
+                                               const Double_t* rotation,
+                                               const Double_t* translation,
+                                               const std::string& axes,
+                                               double scalor) noexcept(false) {
+  std::shared_ptr<const LineBounds> bounds = nullptr;
+  Transform3 transform = Transform3::Identity();
+  double thickness = 0.;
+
+  // Check if it's a tube (segment)
+  auto  tgShape = tGeoNode.GetVolume()->GetShape();
+  auto tube = dynamic_cast<const TGeoTube*>(tgShape);
+  if (tube != nullptr) {
+    if (!boost::istarts_with(axes, "XY") && !boost::istarts_with(axes, "YX")) {
+      throw std::invalid_argument(
+          "TGeoShape -> LineSurface (full): can only be converted with "
+          "'(x/X)(y/Y)(*)' or '(y/Y)(x/X)(*) axes.");
+    }
+
+    // The sign of the axes
+    int xs = std::islower(axes.at(0)) != 0 ? -1 : 1;
+    int ys = std::islower(axes.at(1)) != 0 ? -1 : 1;
+
+    // Create translation and rotation
+    Vector3 t(scalor * translation[0], scalor * translation[1],
+              scalor * translation[2]);
+    bool flipxy = !boost::istarts_with(axes, "X");
+    Vector3 ax = flipxy ? xs * Vector3(rotation[1], rotation[4], rotation[7])
+                        : xs * Vector3(rotation[0], rotation[3], rotation[6]);
+    Vector3 ay = flipxy ? ys * Vector3(rotation[0], rotation[3], rotation[6])
+                        : ys * Vector3(rotation[1], rotation[4], rotation[7]);
+    Vector3 az = ax.cross(ay);
+
+    double minR = tube->GetRmin() * scalor;
+    double maxR = tube->GetRmax() * scalor;
+    double deltaR = maxR - minR;
+    double halfZ = tube->GetDz() * scalor;
+    if (halfZ > deltaR) {
+      transform = TGeoPrimitivesHelper::makeTransform(ax, ay, az, t);
+      //TODO: This criteria and the thickness is currently hardcoded 
+      if(maxR<4){
+        // get mother
+        auto motherNode = tGeoNode.GetMotherVolume();
+        if(motherNode!=nullptr){
+           std::string motherNodeName = motherNode->GetName();
+           TGeoTube* cell = dynamic_cast<TGeoTube*>(motherNode->GetShape());
+           ActsScalar parameters[5];
+           cell->GetBoundingCylinder(parameters);
+           ActsScalar cellMinR = cell->GetRmin() * scalor;
+           ActsScalar cellMaxR = cell->GetRmax() * scalor;
+	   //The geo-tgeo-layer-r-split should be smaller than 0.1. 
+	   bounds = std::make_shared<LineBounds>((cellMaxR - cellMinR)/2 - 0.1, halfZ);	
+	} else {
+	   //Make 4.8 a bit smaller than 5. Nasty hardcode 
+	   bounds = std::make_shared<LineBounds>(4.8, halfZ);
+        } 
+      }
+      thickness = deltaR;
+    }
+  }
+  return {bounds, transform, thickness};
+}
+
+
+
 
 std::tuple<std::shared_ptr<const Acts::DiscBounds>, const Acts::Transform3,
            double>
