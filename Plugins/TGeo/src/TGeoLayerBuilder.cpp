@@ -153,6 +153,13 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
+      //Hacks added by X.Cong to help splitting of lineSurfaces 
+      if(lSurfaces.size()>0 ){
+         if(lSurfaces[0]->type() == Acts::Surface::Straw){
+	   pl.envelope[Acts::binR] = {0,0}; 
+	 }
+      } 
+      ///////////////////// 
       if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
