@@ -243,6 +243,8 @@ if (ACTS_SETUP_VECMEM)
   endif()
 endif()
 
+add_subdirectory(thirdparty/STCFDetector)
+
 find_package(Filesystem REQUIRED)
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
