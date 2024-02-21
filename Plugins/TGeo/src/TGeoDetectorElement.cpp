@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 
 #include <tuple>
 #include <utility>
@@ -45,14 +46,27 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   auto sensor = m_detElement->GetVolume();
   auto tgShape = sensor->GetShape();
 
-  auto [cBounds, cTransform, cThickness] =
-      TGeoSurfaceConverter::cylinderComponents(*tgShape, rotation, translation,
+  auto [lBounds, lTransform, lThickness] =
+      //TGeoSurfaceConverter::lineComponents(*tgShape, rotation, translation,
+      TGeoSurfaceConverter::lineComponents(tGeoNode, rotation, translation,
                                                axes, scalor);
-  if (cBounds != nullptr) {
-    m_transform = cTransform;
-    m_bounds = cBounds;
-    m_thickness = cThickness;
-    m_surface = Surface::makeShared<CylinderSurface>(cBounds, *this);
+  if (lBounds != nullptr) {
+    m_transform = lTransform;
+    m_bounds = lBounds;
+    m_thickness = lThickness;
+    m_surface = Surface::makeShared<StrawSurface>(lBounds, *this);
+  }
+
+  if(m_surface == nullptr) {
+    auto [cBounds, cTransform, cThickness] =
+        TGeoSurfaceConverter::cylinderComponents(*tgShape, rotation, translation,
+                                                 axes, scalor);
+    if (cBounds != nullptr) {
+      m_transform = cTransform;
+      m_bounds = cBounds;
+      m_thickness = cThickness;
+      m_surface = Surface::makeShared<CylinderSurface>(cBounds, *this);
+    }
   }
 
   // Check next if you do not have a surface
