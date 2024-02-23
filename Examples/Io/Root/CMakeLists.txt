@@ -16,6 +16,7 @@ add_library(
   src/RootTrackStatesWriter.cpp
   src/RootTrackSummaryReader.cpp
   src/RootTrackSummaryWriter.cpp
+  src/RootSTCFMeasurementReader.cpp
   src/RootBFieldWriter.cpp
   src/RootAthenaNTupleReader.cpp
 )
@@ -28,7 +29,7 @@ target_link_libraries(
     ActsCore ActsPluginIdentification ActsExamplesDigitization
     ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking ActsExamplesMaterialMapping
     Threads::Threads
-  PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
+    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer)
 
 install(
   TARGETS ActsExamplesIoRoot
