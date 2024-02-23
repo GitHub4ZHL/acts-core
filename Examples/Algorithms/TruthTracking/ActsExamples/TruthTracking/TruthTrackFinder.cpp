@@ -16,6 +16,7 @@
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
+#include <map>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
@@ -38,15 +39,26 @@ TruthTrackFinder::TruthTrackFinder(const Config& config,
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing output proto tracks collection");
   }
-
+  // Added by Xiaocong
+  if (m_cfg.inputSimulatedHits.empty()) {
+    throw std::invalid_argument("Missing input simulated hits collection");
+  }
+  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument("Missing input measurement sim hits map");
+  }
+  //////////////////////////
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  m_inputSimHits.initialize(m_cfg.inputSimulatedHits);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
 
 ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
   // prepare input collections
   const auto& particles = m_inputParticles(ctx);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& simHitsMap = m_inputMeasurementSimHitsMap(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
   // compute particle_id -> {hit_id...} map from the
   // hit_id -> {particle_id...} map on the fly.
@@ -64,10 +76,52 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE(" - Prototrack from " << hits.size() << " hits");
     // fill hit indices to create the proto track
     ProtoTrack track;
-    track.reserve(hits.size());
-    for (const auto& hit : hits) {
-      track.emplace_back(hit.second);
+
+    if (m_cfg.removeHitsFromLoops) {
+      std::map<const double, std::pair<const Index, Acts::GeometryIdentifier>>
+          trackHitList;
+      for (const auto& hit : hits) {
+        const auto measurementIndex = hit.second;
+        const auto simHitIndex = simHitsMap.find(measurementIndex)->second;
+        const auto simHit = simHits.nth(simHitIndex);
+        const auto geoId = simHit->geometryId();
+        const auto simHitTime = simHit->time();
+        trackHitList.insert(std::make_pair(
+            simHitTime, std::make_pair(measurementIndex, geoId)));
+      }
+      ACTS_VERBOSE("There are " << trackHitList.size()
+                                << " total sim hits for the particle ");
+
+      // remove the hits from looping tracks from the list
+      std::map<const Acts::GeometryIdentifier, const Index>
+          trackHitFilteredList;
+      // The hit in trackHitList are sorted in time
+      for (const auto& [time, measurement] : trackHitList) {
+        const auto measurementIndex = measurement.first;
+        const auto geoId = measurement.second;
+        // only store hit with surface that is not intersected yet
+        if (trackHitFilteredList.find(geoId) != trackHitFilteredList.end()) {
+          break;
+        } else {
+          trackHitFilteredList.emplace(geoId, measurementIndex);
+        }
+      }
+      ACTS_VERBOSE("After removing hits from loops, there are "
+                   << trackHitFilteredList.size()
+                   << " sim hits for the particle ");
+
+      track.reserve(trackHitFilteredList.size());
+      for (const auto& [geoId, measurementIndex] : trackHitFilteredList) {
+        track.emplace_back(measurementIndex);
+      }
+
+    } else {
+      track.reserve(hits.size());
+      for (const auto& hit : hits) {
+        track.emplace_back(hit.second);
+      }
     }
+
     // add proto track to the output collection
     tracks.emplace_back(std::move(track));
   }

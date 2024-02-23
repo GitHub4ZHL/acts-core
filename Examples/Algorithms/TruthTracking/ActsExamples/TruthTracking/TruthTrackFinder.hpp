@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -35,14 +36,21 @@ struct AlgorithmContext;
 class TruthTrackFinder final : public IAlgorithm {
  public:
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+  using HitSimHitsMap = IndexMultimap<Index>;
 
   struct Config {
     /// The input truth particles that should be used to create proto tracks.
     std::string inputParticles;
     /// The input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
+    /// Input measurement to simulated hit map for truth position
+    std::string inputMeasurementSimHitsMap;
+    /// Input simulated hit collection
+    std::string inputSimulatedHits;
     /// The output proto tracks collection.
     std::string outputProtoTracks;
+    /// Whether remove hits from additional loops
+    bool removeHitsFromLoops = false;
   };
 
   TruthTrackFinder(const Config& config, Acts::Logging::Level level);
@@ -59,6 +67,11 @@ class TruthTrackFinder final : public IAlgorithm {
 
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
+
+  ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
