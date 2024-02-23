@@ -124,6 +124,10 @@ int runRecTruthTracks(
   trackFinderCfg.inputParticles = inputParticles;
   trackFinderCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
+  trackFinderCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
+  trackFinderCfg.inputMeasurementSimHitsMap =
+      digiCfg.outputMeasurementSimHitsMap;
+
   trackFinderCfg.outputProtoTracks = "prototracks";
   sequencer.addAlgorithm(
       std::make_shared<TruthTrackFinder>(trackFinderCfg, logLevel));
@@ -144,6 +148,7 @@ int runRecTruthTracks(
       vm["fit-energy-loss-correction"].as<bool>(), reverseFilteringMomThreshold,
       Acts::FreeToBoundCorrection(
           vm["fit-ftob-nonlinear-correction"].as<bool>()));
+  fitter.calibrator = std::make_shared<PassThroughCalibrator>(); 
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
