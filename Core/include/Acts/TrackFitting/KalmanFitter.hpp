@@ -390,7 +390,7 @@ class KalmanFitter {
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
       std::string direction = state.options.direction.toString();
-      if (surface != nullptr) {
+      if (surface != nullptr and !navigator.navigationBreak(state.navigation)) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
