@@ -64,6 +64,7 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   // same file from multiple threads are unsafe.
   // must always be opened internally
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
+
   if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + m_cfg.filePath + "'");
   }
@@ -75,6 +76,10 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
     m_matchingTree->Branch("particle_id", &m_treeParticleId);
     m_matchingTree->Branch("matched", &m_treeIsMatched);
   }
+
+  // The first bin for track eff, second bin for fake rate, and third bin for
+  // duplicate tracks rate
+  m_perfSummary = new TEfficiency("perfSummary", "", 3, -0.5, 2.5);
 
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
@@ -104,6 +109,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
   float duplicationRate_particle =
       float(m_nTotalDuplicateParticles) / m_nTotalParticles;
 
+  ACTS_DEBUG("nTotalParticles                = " << m_nTotalParticles);
   ACTS_DEBUG("nTotalTracks                = " << m_nTotalTracks);
   ACTS_DEBUG("nTotalMatchedTracks         = " << m_nTotalMatchedTracks);
   ACTS_DEBUG("nTotalDuplicateTracks       = " << m_nTotalDuplicateTracks);
@@ -129,6 +135,18 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
     m_outputFile->WriteObject(&v, name);
   };
 
+  TVectorF vTracks(4);
+  vTracks[0] = m_nTotalTracks;
+  vTracks[1] = m_nTotalMatchedTracks;
+  vTracks[2] = m_nTotalDuplicateTracks;
+  vTracks[3] = m_nTotalFakeTracks;
+
+  TVectorF vParticles(4);
+  vParticles[0] = m_nTotalParticles;
+  vParticles[1] = m_nTotalMatchedParticles;
+  vParticles[2] = m_nTotalDuplicateParticles;
+  vParticles[3] = m_nTotalFakeParticles;
+
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
@@ -141,9 +159,14 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
     write_float(eff_particle, "eff_particles");
     write_float(fakeRate_particle, "fakerate_particles");
     write_float(duplicationRate_particle, "duplicaterate_particles");
+    m_outputFile->WriteObject(&vTracks, "tracks_info");
+    m_outputFile->WriteObject(&vParticles, "particles_info");
 
     if (m_matchingTree != nullptr) {
       m_matchingTree->Write();
+    }
+    if (m_perfSummary != nullptr) {
+      m_perfSummary->Write();
     }
 
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
@@ -231,6 +254,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
 
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
+    m_perfSummary->Fill(1, isFake);  // 1 is the bin center for fake rate
 
     // Use neural network classification for duplication rate plots
     // Currently, the network used for this example can only handle
@@ -248,6 +272,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       // Fill the duplication rate
       m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                  isDuplicated);
+      m_perfSummary->Fill(
+          2, isDuplicated);  // 2 is the bin center for duplicate rate
     }
     // Counting number of total trajectories
     m_nTotalTracks++;
@@ -276,6 +302,9 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         // Fill the duplication rate
         m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                    isDuplicated);
+        m_perfSummary->Fill(
+            2,
+            isDuplicated);  // 2 is the bin center for duplicate rate
       }
     }
   }
@@ -318,6 +347,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     }
     // Fill efficiency plots
     m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
+    m_perfSummary->Fill(0,
+                        isReconstructed);  // 0 is the bin center for efficiency
     // Fill number of duplicated tracks for this particle
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedTracks - 1);

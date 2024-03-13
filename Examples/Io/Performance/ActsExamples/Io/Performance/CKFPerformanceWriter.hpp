@@ -99,6 +99,8 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
+  TEfficiency* m_perfSummary{nullptr};
+
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
   EffPlotTool::EffPlotCache m_effPlotCache;
