@@ -52,7 +52,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
-    double thickness, TelescopeSurfaceType surfaceType,
+    const std::vector<double>& thickness, TelescopeSurfaceType surfaceType,
     Acts::BinningValue binValue = Acts::BinningValue::binZ);
 
 }  // end of namespace Telescope

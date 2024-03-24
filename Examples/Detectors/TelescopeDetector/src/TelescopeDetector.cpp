@@ -41,6 +41,12 @@ auto ActsExamples::Telescope::TelescopeDetector::finalize(
         "provided stereo angles.");
   }
 
+  if (cfg.thickness.size() != cfg.stereos.size()) {
+    throw std::invalid_argument(
+        "The number of provided thickness must match the number of "
+        "provided stereo angles.");
+  }
+
   config = cfg;
 
   // Sort the provided distances

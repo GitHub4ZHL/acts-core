@@ -56,13 +56,15 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
   G4double worldSize =
       std::max({std::abs(m_cfg.offsets[0]) + m_cfg.bounds[0] * 0.5,
                 std::abs(m_cfg.offsets[1]) + m_cfg.bounds[1] * 0.5,
-                m_cfg.positions.back() + m_cfg.thickness});
+                m_cfg.positions.back() +
+                    0.5 * (m_cfg.thickness.front() + m_cfg.thickness.back())});
 
   // Envelope parameters
   //
   G4double envSizeX = m_cfg.bounds[0] * mm;
   G4double envSizeY = m_cfg.bounds[1] * mm;
-  G4double envSizeZ = length + m_cfg.thickness * mm;
+  G4double envSizeZ =
+      length + 0.5 * (m_cfg.thickness.front() + m_cfg.thickness.back()) * mm;
 
   // Option to switch on/off checking of volumes overlaps
   //
@@ -140,17 +142,19 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
       0,                      // copy number
       checkOverlaps);         // overlaps checking
 
-  // Layer
-  //
-
-  G4Box* solidLayer = new G4Box("Layer Solid", 0.5 * m_cfg.bounds[0],
-                                0.5 * m_cfg.bounds[1], 0.5 * m_cfg.thickness);
-
-  G4LogicalVolume* logicLayer = new G4LogicalVolume(solidLayer,  // its solid
-                                                    silicon,     // its material
-                                                    "Layer Logic");  // its name
-
   for (std::size_t i = 0; i < m_cfg.positions.size(); ++i) {
+    // Layer
+    //
+
+    G4Box* solidLayer =
+        new G4Box("Layer Solid #" + std::to_string(i), 0.5 * m_cfg.bounds[0],
+                  0.5 * m_cfg.bounds[1], 0.5 * m_cfg.thickness[i]);
+
+    G4LogicalVolume* logicLayer =
+        new G4LogicalVolume(solidLayer,  // its solid
+                            silicon,     // its material
+                            "Layer Logic #" + std::to_string(i));  // its name
+
     new G4PVPlacement(
         nullptr,                                                // no rotation
         G4ThreeVector(0, 0, m_cfg.positions[i] * mm - center),  // at position

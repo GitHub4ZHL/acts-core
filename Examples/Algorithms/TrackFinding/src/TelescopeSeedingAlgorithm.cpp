@@ -117,8 +117,8 @@ ActsExamples::ProcessCode ActsExamples::TelescopeSeedingAlgorithm::execute(
 
           trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
                                        m_cfg.particleHypothesis);
-          return true; 
-	},
+          return true;
+        },
         measurement);
   }
 

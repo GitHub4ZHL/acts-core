@@ -48,7 +48,7 @@ struct TelescopeDetector {
     std::vector<double> stereos{{0, 0, 0, 0, 0, 0}};
     std::array<double, 2> offsets{{0, 0}};
     std::array<double, 2> bounds{{25, 100}};
-    double thickness{80_um};
+    std::vector<double> thickness{{80_um, 80_um, 80_um, 80_um, 80_um, 80_um}};
     int surfaceType{0};
     int binValue{2};
   };
