@@ -73,6 +73,9 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
     /// Min reco-truth matching probability
     double truthMatchProbMin = 0.5;
 
+    ////
+    int nMeasurementsCut = 4;
+
     /// Write additional matching details to a TTree
     bool writeMatchingDetails = false;
 

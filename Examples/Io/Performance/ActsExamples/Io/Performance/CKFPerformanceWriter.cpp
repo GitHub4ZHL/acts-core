@@ -254,7 +254,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
 
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
-    m_perfSummary->Fill(1, isFake);  // 1 is the bin center for fake rate
+    m_perfSummary->Fill(isFake, 1);  // 1 is the bin center for fake rate
 
     // Use neural network classification for duplication rate plots
     // Currently, the network used for this example can only handle
@@ -272,8 +272,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       // Fill the duplication rate
       m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                  isDuplicated);
-      m_perfSummary->Fill(
-          2, isDuplicated);  // 2 is the bin center for duplicate rate
+      m_perfSummary->Fill(isDuplicated,
+                          2);  // 2 is the bin center for duplicate rate
     }
     // Counting number of total trajectories
     m_nTotalTracks++;
@@ -302,9 +302,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         // Fill the duplication rate
         m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                    isDuplicated);
-        m_perfSummary->Fill(
-            2,
-            isDuplicated);  // 2 is the bin center for duplicate rate
+        m_perfSummary->Fill(isDuplicated,
+                            2);  // 2 is the bin center for duplicate rate
       }
     }
   }
@@ -347,8 +346,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     }
     // Fill efficiency plots
     m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
-    m_perfSummary->Fill(0,
-                        isReconstructed);  // 0 is the bin center for efficiency
+    m_perfSummary->Fill(isReconstructed,
+                        0);  // 0 is the bin center for efficiency
     // Fill number of duplicated tracks for this particle
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedTracks - 1);
