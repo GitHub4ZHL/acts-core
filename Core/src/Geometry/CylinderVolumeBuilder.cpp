@@ -21,8 +21,8 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -369,7 +369,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                                          << " layers, and rmin/rmax = "
                                          << volumeRminRmax[ir].first << "/"
                                          << volumeRminRmax[ir].second);
-	    endcapContainer.push_back(tvHelper->createTrackingVolume(
+            endcapContainer.push_back(tvHelper->createTrackingVolume(
                 gctx, rLayers, centralConfig.volumes, m_cfg.volumeMaterial,
                 volumeRminRmax[ir].first, volumeRminRmax[ir].second,
                 endcapConfig.zMin, endcapConfig.zMax,
@@ -399,7 +399,6 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   auto nEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.nVolumeConfig,
                               "::NegativeEndcap");
 
-
   // The positive endcap is created if present
   auto pEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.pVolumeConfig,
                               "::PositiveEndcap");
@@ -417,19 +416,19 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volume = nEndcap;
       // Set the inner or outer material
       if (not m_cfg.buildToRadiusZero) {
-	if(m_cfg.boundaryMaterial[0])
-        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
-                                       Acts::tubeInnerCover);
+        if (m_cfg.boundaryMaterial[0])
+          volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
+                                         Acts::tubeInnerCover);
       }
-      if(m_cfg.boundaryMaterial[1])
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
-                                     Acts::tubeOuterCover);
-      if(m_cfg.boundaryMaterial[2])
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[2],
-                                     Acts::negativeFaceXY);
-      if(m_cfg.boundaryMaterial[3])
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[3],
-                                     Acts::positiveFaceXY);
+      if (m_cfg.boundaryMaterial[1])
+        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
+                                       Acts::tubeOuterCover);
+      if (m_cfg.boundaryMaterial[2])
+        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[2],
+                                       Acts::negativeFaceXY);
+      if (m_cfg.boundaryMaterial[3])
+        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[3],
+                                       Acts::positiveFaceXY);
     }
     if (barrel) {
       // Assign boundary material if existing
@@ -452,19 +451,19 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volume = pEndcap;
       // Set the inner or outer material
       if (not m_cfg.buildToRadiusZero) {
-	if(m_cfg.boundaryMaterial[0])
-        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
-                                       Acts::tubeInnerCover);
+        if (m_cfg.boundaryMaterial[0])
+          volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
+                                         Acts::tubeInnerCover);
       }
-      if(m_cfg.boundaryMaterial[1])
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
-                                     Acts::tubeOuterCover);
-      if(m_cfg.boundaryMaterial[4])
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[4],
-                                     Acts::negativeFaceXY);
-      if(m_cfg.boundaryMaterial[5])
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[5],
-                                     Acts::positiveFaceXY);
+      if (m_cfg.boundaryMaterial[1])
+        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
+                                       Acts::tubeOuterCover);
+      if (m_cfg.boundaryMaterial[4])
+        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[4],
+                                       Acts::negativeFaceXY);
+      if (m_cfg.boundaryMaterial[5])
+        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[5],
+                                       Acts::positiveFaceXY);
     }
     // and low lets create the new volume
     volume =
@@ -475,7 +474,6 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // the new volume is the only one present
     volume = nEndcap ? nEndcap : (barrel ? barrel : pEndcap);
   }
-
 
   // Prepare the gap volumes first
   TrackingVolumePtr existingVolumeCp = existingVolume;
@@ -590,7 +588,7 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
             CylinderBounds::eHalfLengthZ);
         lConfig.rMin =
             std::min(lConfig.rMin, rMinC - m_cfg.layerEnvelopeR.first);
-	lConfig.rMax =
+        lConfig.rMax =
             std::max(lConfig.rMax, rMaxC + m_cfg.layerEnvelopeR.second);
         lConfig.zMin =
             std::min(lConfig.zMin, center.z() - hZ - m_cfg.layerEnvelopeZ);
@@ -599,7 +597,8 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
       }
       // proceed further if it is a Disc layer
       const RadialBounds* dBounds = dynamic_cast<const RadialBounds*>(
-      //const DiscTrapezoidBounds* dBounds = dynamic_cast<const DiscTrapezoidBounds*>(
+          // const DiscTrapezoidBounds* dBounds = dynamic_cast<const
+          // DiscTrapezoidBounds*>(
           &(layer->surfaceRepresentation().bounds()));
       if (dBounds != nullptr) {
         // now we have access to all the information
@@ -607,7 +606,7 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
         double rMaxD = dBounds->rMax();
         double zMinD = center.z() - 0.5 * thickness;
         double zMaxD = center.z() + 0.5 * thickness;
-	lConfig.rMin =
+        lConfig.rMin =
             std::min(lConfig.rMin, rMinD - m_cfg.layerEnvelopeR.first);
         lConfig.rMax =
             std::max(lConfig.rMax, rMaxD + m_cfg.layerEnvelopeR.second);

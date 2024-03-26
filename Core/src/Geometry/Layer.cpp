@@ -177,11 +177,15 @@ Acts::Layer::compatibleSurfaces(
     SurfaceIntersection sfi =
         sf.intersect(gctx, position, options.navDir * direction, boundaryCheck);
     // check if intersection is valid and pathLimit has not been exceeded
-    auto updatedOverstepLimit = (sf.type()==Surface::SurfaceType::Straw)?overstepLimit*100:overstepLimit;  
-    auto updatedPathLimit = (sf.type()==Surface::SurfaceType::Straw)?pathLimit*10:pathLimit;  
- 
-    if (sfi && detail::checkIntersection(sfi.intersection, updatedPathLimit,
-                                         updatedOverstepLimit, s_onSurfaceTolerance)) {
+    auto updatedOverstepLimit = (sf.type() == Surface::SurfaceType::Straw)
+                                    ? overstepLimit * 100
+                                    : overstepLimit;
+    auto updatedPathLimit =
+        (sf.type() == Surface::SurfaceType::Straw) ? pathLimit * 10 : pathLimit;
+
+    if (sfi &&
+        detail::checkIntersection(sfi.intersection, updatedPathLimit,
+                                  updatedOverstepLimit, s_onSurfaceTolerance)) {
       // Now put the right sign on it
       sfi.intersection.pathLength *= options.navDir;
       sIntersections.push_back(sfi);
