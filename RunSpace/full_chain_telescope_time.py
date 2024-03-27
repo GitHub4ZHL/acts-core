@@ -145,7 +145,7 @@ addGeant4(
     trackingGeometry=trackingGeometry,
     field=field,
     rnd=rnd,
-    logLevel=acts.logging.VERBOSE,
+    #logLevel=acts.logging.VERBOSE,
     #volumeMappings = ["Layer #0 Phys"],
     g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory(teleG4Config),
     preSelectParticles=ParticleSelectorConfig(

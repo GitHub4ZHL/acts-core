@@ -72,6 +72,7 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
 
   // Materials
   G4Material* galactic = nist->FindOrBuildMaterial("G4_Galactic");
+  G4Material* air = nist->FindOrBuildMaterial("G4_AIR");
   G4Material* silicon =
       new G4Material("Silicon", 14, 28.0855 * g / mole, 2.329 * g / cm3);
 
@@ -92,7 +93,7 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
   G4Box* solidWorld = new G4Box("World Solid", worldSize, worldSize, worldSize);
 
   G4LogicalVolume* logicWorld =
-      new G4LogicalVolume(solidWorld, galactic, "World Logic");
+      new G4LogicalVolume(solidWorld, air, "World Logic");
 
   m_world = new G4PVPlacement(nullptr,          // no rotation
                               G4ThreeVector(),  // position
@@ -111,7 +112,7 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
 
   G4LogicalVolume* logicEnv1 =
       new G4LogicalVolume(solidEnv,              // its solid
-                          galactic,              // its material
+                          air,                   // its material
                           "Envelope #1 Logic");  // its name
 
   G4VPhysicalVolume* physEnv1 =
@@ -128,7 +129,7 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
   //
   G4LogicalVolume* logicEnv2 =
       new G4LogicalVolume(solidEnv,              // its solid
-                          galactic,              // its material
+                          air,                   // its material
                           "Envelope #2 Logic");  // its name
 
   G4VPhysicalVolume* physEnv2 = new G4PVPlacement(
