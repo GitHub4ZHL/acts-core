@@ -8,6 +8,7 @@ from acts.examples import (
     RandomNumbers,
     EventGenerator,
     FixedMultiplicityGenerator,
+    PoissonMultiplicityGenerator,
     CsvParticleWriter,
     ParticlesPrinter,
     RootParticleWriter,
@@ -107,7 +108,8 @@ def addParticleGun(
         level=customLogLevel(),
         generators=[
             EventGenerator.Generator(
-                multiplicity=FixedMultiplicityGenerator(n=multiplicity),
+                #multiplicity=FixedMultiplicityGenerator(n=multiplicity),
+                multiplicity=PoissonMultiplicityGenerator(mean=multiplicity),
                 vertex=vtxGen
                 or acts.examples.GaussianVertexGenerator(
                     mean=acts.Vector4(0, 0, 0, 0),
