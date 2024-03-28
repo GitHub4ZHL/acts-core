@@ -20,7 +20,7 @@ install*
 .asetup.save
 
 #json output
-*.json
+#*.json
 #root output
 *.root
 #csv output
