@@ -205,7 +205,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   std::vector<float> inputFeatures(3);
 
   for (const auto& track : tracks) {
-	if (track.nMeasurements() < 4){
+	if (track.nMeasurements() < m_cfg.nMeasurementsCut){
 	  continue;
 	}
     // Check if the reco track has fitted track parameters

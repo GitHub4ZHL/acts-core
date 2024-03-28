@@ -1,18 +1,18 @@
 import ROOT
 
-file_path_wot = "/home/ZhangHaolin/ACTS/acts-ai/RunSpace/result-without-time/trackstates_ckf.root"
-file_path_wt = "/home/ZhangHaolin/ACTS/acts-ai/RunSpace/result-with-time/trackstates_ckf.root"
+file_path_wot = "/home/ZhangHaolin/ACTS/acts/RunSpace/result-without-time/trackstates_ckf.root"
+file_path_wt = "/home/ZhangHaolin/ACTS/acts/RunSpace/result-with-time/trackstates_ckf.root"
 file_wot = ROOT.TFile.Open(file_path_wot, "READ")
 file_wt = ROOT.TFile.Open(file_path_wt, "READ")
 
 c1 = ROOT.TCanvas("c1", "Canvas for DUT Resolution loc0", 800, 600)
 
 trackstates_wot= file_wot.Get("trackstates")
-trackstates_wot.Draw("res_eLOC0_ubs>>hist_DUT_Res_wot(150, -0.2, 0.2)", "layer_id==8")
+trackstates_wot.Draw("res_eLOC0_ubs>>hist_DUT_Res_wot(150, -0.2, 0.2)", "layer_id==8 && nMeasurements>4")
 hist_DUT_Res_wot = ROOT.gDirectory.Get("hist_DUT_Res_wot")
 
 trackstates_wt= file_wt.Get("trackstates")
-trackstates_wt.Draw("res_eLOC0_ubs>>hist_DUT_Res_wt(150, -0.2, 0.2)", "layer_id==8", "same")
+trackstates_wt.Draw("res_eLOC0_ubs>>hist_DUT_Res_wt(150, -0.2, 0.2)", "layer_id==8 && nMeasurements>4", "same")
 hist_DUT_Res_wt = ROOT.gDirectory.Get("hist_DUT_Res_wt")
 
 #hist_DUT_Res.SetTitle("DUT Resolution-loc0 with Time")
