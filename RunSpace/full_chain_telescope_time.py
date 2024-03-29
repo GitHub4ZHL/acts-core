@@ -105,7 +105,7 @@ if not outputDir.exists():
     outputDir.mkdir()
 
 rnd = acts.examples.RandomNumbers(seed=42)
-s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
 
 addParticleGun(
     s,
@@ -167,6 +167,7 @@ addDigitization(
     trackingGeometry,
     field,
     digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-digi-config-telescope-time.json"),
+    #digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope-with-time.json"),
     outputDirRoot=outputDir,
     rnd=rnd,
     #logLevel=acts.logging.VERBOSE

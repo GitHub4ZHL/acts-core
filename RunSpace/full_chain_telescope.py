@@ -30,7 +30,7 @@ from acts.examples.reconstruction import (
 )
 
 teleG4Config=TelescopeDetector.Config();
-teleG4Config.bounds=[14.08, 28.16]
+teleG4Config.bounds=[14.08, 28.04]
 teleG4Config.positions=[30, 60, 90, 105, 120, 150, 180]
 teleG4Config.stereos=[0, 0, 0, 0, 0, 0, 0]
 teleG4Config.thickness = [80*u.um, 80*u.um, 80*u.um, 1*u.um, 80*u.um, 80*u.um, 80*u.um]
@@ -39,7 +39,7 @@ teleG4Config.binValue=0
 u = acts.UnitConstants
 
 detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
-    bounds=[14.08, 28.16],
+    bounds=[14.08, 28.04],
     positions=[30, 60, 90, 105, 120, 150, 180],
     stereos=[0, 0, 0, 0, 0, 0, 0],
     thickness=[80*u.um, 80*u.um, 80*u.um, 1*u.um, 80*u.um, 80*u.um, 80*u.um],
@@ -105,7 +105,7 @@ if not outputDir.exists():
     outputDir.mkdir()
 
 rnd = acts.examples.RandomNumbers(seed=42)
-s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
 
 addParticleGun(
     s,
@@ -146,7 +146,7 @@ addGeant4(
     field=field,
     rnd=rnd,
     #logLevel=acts.logging.VERBOSE,
-    #volumeMappings = ["Layer #0 Phys"],
+    #materialMappings = ["Silicon"],
     g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory(teleG4Config),
     preSelectParticles=ParticleSelectorConfig(
             rho=(0.0, 300 * u.mm),
@@ -167,6 +167,7 @@ addDigitization(
     trackingGeometry,
     field,
     digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-digi-config-telescope.json"),
+    #digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope.json"),
     outputDirRoot=outputDir,
     rnd=rnd,
     #logLevel=acts.logging.VERBOSE
