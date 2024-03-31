@@ -1023,8 +1023,11 @@ def addKalmanTracks(
         inputClusters=clusters if clusters is not None else "",
         outputTracks="kfTracks",
         pickTrack=-1,
-        fit=acts.examples.makeKalmanFitterFunction(
-            trackingGeometry, field, **kalmanOptions
+        #fit=acts.examples.makeKalmanFitterFunction(
+        #    trackingGeometry, field, **kalmanOptions
+        #),
+        fit=acts.examples.makeGsfFitterFunction(
+            trackingGeometry, field, **gsfOptions
         ),
         calibrator=calibrator,
     )
@@ -1168,7 +1171,7 @@ def addCKFTracks(
         writeSummary=writeTrajectories,
         writeCKFperformance=True,
         writeFinderPerformance=False,
-        writeFitterPerformance=False,
+        writeFitterPerformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )
@@ -1260,7 +1263,8 @@ def addTrackWriters(
             s.addWriter(
                 acts.examples.TrackFitterPerformanceWriter(
                     level=acts.logging.INFO,
-                    inputParticles="truth_seeds_selected",
+                    #inputParticles="truth_seeds_selected",
+                    inputParticles="particles_selected",
                     inputTracks=tracks,
                     inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(
