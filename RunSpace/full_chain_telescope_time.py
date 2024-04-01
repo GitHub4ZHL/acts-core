@@ -20,7 +20,7 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addTelescopeSeeding,
     addCKFTracks,
-    addTruthTrackingGsf,
+    addGSFTracks,
     TrackSelectorConfig,
     CkfConfig,
     addAmbiguityResolution,
@@ -100,6 +100,7 @@ else:
 
 outputDir = Path.cwd() / "result-with-time"
 
+#field = acts.MagneticFieldProvider
 field = acts.ConstantBField(acts.Vector3(0, 0, 0)) # u.T
 if not outputDir.exists():
     outputDir.mkdir()
@@ -188,11 +189,19 @@ addCKFTracks(
     trackingGeometry,
     field, 
     CkfConfig(
-        chi2CutOff=15.0,
-        numMeasurementsCutOff=10,
+        chi2CutOff=50.0,
+        numMeasurementsCutOff=1,
     ),
     outputDirRoot=outputDir,
     #logLevel=acts.logging.DEBUG,
 )
 
+''' Temporarily unable to run successfully
+addGSFTracks(
+    s, 
+    trackingGeometry,
+    field,
+    outputDirRoot=outputDir,
+)
+'''
 s.run()

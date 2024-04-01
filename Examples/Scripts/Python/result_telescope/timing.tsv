@@ -1,8 +1,0 @@
-identifier	time_total_s	time_perevent_s
-Reader:EventGenerator	3.785e-05	3.785e-05
-Algorithm:ParticleSelector	7.314e-06	7.314e-06
-Algorithm:Geant4Simulation	0.3368	0.3368
-Writer:RootParticleWriter	0.0009509	0.0009509
-Writer:RootSimHitWriter	2.535e-06	2.535e-06
-Algorithm:DigitizationAlgorithm	7.57e-05	7.57e-05
-Writer:RootMeasurementWriter	2.064e-06	2.064e-06

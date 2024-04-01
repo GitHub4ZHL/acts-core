@@ -1023,12 +1023,12 @@ def addKalmanTracks(
         inputClusters=clusters if clusters is not None else "",
         outputTracks="kfTracks",
         pickTrack=-1,
-        #fit=acts.examples.makeKalmanFitterFunction(
-        #    trackingGeometry, field, **kalmanOptions
-        #),
-        fit=acts.examples.makeGsfFitterFunction(
-            trackingGeometry, field, **gsfOptions
+        fit=acts.examples.makeKalmanFitterFunction(
+            trackingGeometry, field, **kalmanOptions
         ),
+        #fit=acts.examples.makeGsfFitterFunction(
+        #    trackingGeometry, field, **gsfOptions
+        #),
         calibrator=calibrator,
     )
     s.addAlgorithm(fitAlg)
@@ -1160,7 +1160,6 @@ def addCKFTracks(
     )
     s.addAlgorithm(trackFinder)
     s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
-
     addTrackWriters(
         s,
         name="ckf",
@@ -1171,13 +1170,43 @@ def addCKFTracks(
         writeSummary=writeTrajectories,
         writeCKFperformance=True,
         writeFinderPerformance=False,
-        writeFitterPerformance=True,
+        writeFitterPerformance=False,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )
 
     return s
 
+gsfOptions = {
+    "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
+    "maxComponents": 4,
+    #"abortOnError": False,
+    #"disableAllMaterialHandling": False,
+    #"finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
+    "weightCutoff": 1.0e-4,
+    "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
+    "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
+    "level": acts.logging.INFO,
+}
+
+def addGSFTracks(
+    s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    field,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    logLevel: acts.logging.Level = None,
+):
+    logLevel = acts.examples.defaultLogging(s, logLevel)()
+    s.addAlgorithm(
+    acts.examples.RefittingAlgorithm(
+        acts.logging.INFO,
+        #field,
+        inputTracks="ckfTracks",
+        outputTracks="gsfTracks",
+        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
+    )
+)
+    return 0
 
 def addTrackWriters(
     s: acts.examples.Sequencer,

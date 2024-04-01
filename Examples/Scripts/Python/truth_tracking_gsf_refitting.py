@@ -15,6 +15,7 @@ outputDir = Path.cwd()
 # detector, trackingGeometry, _ = getOpenDataDetector()
 detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
 field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+#field = acts.MagneticFieldProvider
 
 s = runTruthTrackingKalman(
     trackingGeometry,
@@ -28,9 +29,11 @@ s = runTruthTrackingKalman(
 gsfOptions = {
     "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
     "maxComponents": 4,
-    "abortOnError": False,
-    "disableAllMaterialHandling": False,
-    "finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
+    #"abortOnError": False,
+    #"disableAllMaterialHandling": False,
+    #"finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
+    "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
+    "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
     "weightCutoff": 1.0e-4,
     "level": acts.logging.INFO,
 }

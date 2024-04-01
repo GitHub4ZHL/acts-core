@@ -188,11 +188,20 @@ addCKFTracks(
     trackingGeometry,
     field, 
     CkfConfig(
-        chi2CutOff=15.0,
-        numMeasurementsCutOff=10,
+        chi2CutOff=50,
+        numMeasurementsCutOff=1,
     ),
     outputDirRoot=outputDir,
     #logLevel=acts.logging.DEBUG,
 )
+
+''' Temporarily unable to run successfully
+addGSFTracks(
+    s,
+    trackingGeometry,
+    field,
+    outputDirRoot=outputDir,
+)
+'''
 
 s.run()
