@@ -20,7 +20,7 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addTelescopeSeeding,
     addCKFTracks,
-    addGSFTracks,
+    addTruthTrackingGsf,
     TrackSelectorConfig,
     CkfConfig,
     addAmbiguityResolution,
@@ -30,7 +30,7 @@ from acts.examples.reconstruction import (
 )
 
 teleG4Config=TelescopeDetector.Config();
-teleG4Config.bounds=[14.08, 28.16]
+teleG4Config.bounds=[14.08, 28.04]
 teleG4Config.positions=[30, 60, 90, 105, 120, 150, 180]
 teleG4Config.stereos=[0, 0, 0, 0, 0, 0, 0]
 teleG4Config.thickness = [80*u.um, 80*u.um, 80*u.um, 1*u.um, 80*u.um, 80*u.um, 80*u.um]
@@ -39,7 +39,7 @@ teleG4Config.binValue=0
 u = acts.UnitConstants
 
 detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
-    bounds=[14.08, 28.06],
+    bounds=[14.08, 28.04],
     positions=[30, 60, 90, 105, 120, 150, 180],
     stereos=[0, 0, 0, 0, 0, 0, 0],
     thickness=[80*u.um, 80*u.um, 80*u.um, 1*u.um, 80*u.um, 80*u.um, 80*u.um],
@@ -51,27 +51,27 @@ detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
 
 mul = int(input("multiplicity = "))
 if mul == 1:
-    outputDir = Path.cwd() / "wt_multiplicity_1"
+    outputDir = Path.cwd() / "wot_multiplicity_1"
 elif mul == 2:
-    outputDir = Path.cwd() / "wt_multiplicity_2"
+    outputDir = Path.cwd() / "wot_multiplicity_2"
 elif mul == 4:
-    outputDir = Path.cwd() / "wt_multiplicity_4"
+    outputDir = Path.cwd() / "wot_multiplicity_4"
 elif mul == 6:
-    outputDir = Path.cwd() / "wt_multiplicity_6"
+    outputDir = Path.cwd() / "wot_multiplicity_6"
 elif mul == 8:
-    outputDir = Path.cwd() / "wt_multiplicity_8"
+    outputDir = Path.cwd() / "wot_multiplicity_8"
 elif mul == 10:
-    outputDir = Path.cwd() / "wt_multiplicity_10"
+    outputDir = Path.cwd() / "wot_multiplicity_10"
 elif mul == 12:
-    outputDir = Path.cwd() / "wt_multiplicity_12"
+    outputDir = Path.cwd() / "wot_multiplicity_12"
 elif mul == 14:
-    outputDir = Path.cwd() / "wt_multiplicity_14"
+    outputDir = Path.cwd() / "wot_multiplicity_14"
 elif mul == 16:
-    outputDir = Path.cwd() / "wt_multiplicity_16"
+    outputDir = Path.cwd() / "wot_multiplicity_16"
 elif mul == 18:
-    outputDir = Path.cwd() / "wt_multiplicity_18"
+    outputDir = Path.cwd() / "wot_multiplicity_18"
 elif mul == 20:
-    outputDir = Path.cwd() / "wt_multiplicity_20"
+    outputDir = Path.cwd() / "wot_multiplicity_20"
 else:
     print("multiplicity error")
 
@@ -80,17 +80,17 @@ else:
 '''
 stddev_p = float(input("value of Y-Z stddev"))
 if stddev_p == 0:
-    outputDir = Path.cwd() / "wt_pos_stddev_0"
+    outputDir = Path.cwd() / "wot_pos_stddev_0"
 elif stddev_p == 1:
-    outputDir = Path.cwd() / "wt_pos_stddev_1"
+    outputDir = Path.cwd() / "wot_pos_stddev_1"
 elif stddev_p == 2:
-    outputDir = Path.cwd() / "wt_pos_stddev_2"
+    outputDir = Path.cwd() / "wot_pos_stddev_2"
 elif stddev_p == 3:
-    outputDir = Path.cwd() / "wt_pos_stddev_3"
+    outputDir = Path.cwd() / "wot_pos_stddev_3"
 elif stddev_p == 4:
-    outputDir = Path.cwd() / "wt_pos_stddev_4"
+    outputDir = Path.cwd() / "wot_pos_stddev_4"
 elif stddev_p == 5:
-    outputDir = Path.cwd() / "wt_pos_stddev_5"
+    outputDir = Path.cwd() / "wot_pos_stddev_4"
 else:
     print("pos_stddev error")
 '''
@@ -99,20 +99,19 @@ else:
 '''
 stddev_t = float(input("value of time stddev"))
 if stddev_t == 0:
-    outputDir = Path.cwd() / "wt_time_stddev_0"
+    outputDir = Path.cwd() / "wot_time_stddev_0"
 elif stddev_t == 1:
-    outputDir = Path.cwd() / "wt_time_stddev_1"
+    outputDir = Path.cwd() / "wot_time_stddev_1"
 elif stddev_t == 2:
-    outputDir = Path.cwd() / "wt_time_stddev_2"
+    outputDir = Path.cwd() / "wot_time_stddev_2"
 elif stddev_t == 3:
-    outputDir = Path.cwd() / "wt_time_stddev_3"
+    outputDir = Path.cwd() / "wot_time_stddev_3"
 else:
     print("time_stddev error")
 '''
 
-#outputDir = Path.cwd() / "result-with-time"
+#outputDir = Path.cwd() / "result-without-time"
 
-#field = acts.MagneticFieldProvider
 field = acts.ConstantBField(acts.Vector3(0, 0, 0)) # u.T
 if not outputDir.exists():
     outputDir.mkdir()
@@ -159,7 +158,7 @@ addGeant4(
     field=field,
     rnd=rnd,
     #logLevel=acts.logging.VERBOSE,
-    #volumeMappings = ["Layer #0 Phys"],
+    #materialMappings = ["Silicon"],
     g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory(teleG4Config),
     preSelectParticles=ParticleSelectorConfig(
             rho=(0.0, 300 * u.mm),
@@ -179,8 +178,8 @@ addDigitization(
     s,
     trackingGeometry,
     field,
-    digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-digi-config-telescope-time.json"),
-    #digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope-with-time.json"),
+    digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-digi-config-telescope.json"),
+    #digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope.json"),
     outputDirRoot=outputDir,
     rnd=rnd,
     #logLevel=acts.logging.VERBOSE
@@ -201,7 +200,7 @@ addCKFTracks(
     trackingGeometry,
     field, 
     CkfConfig(
-        chi2CutOff=50.0,
+        chi2CutOff=50,
         numMeasurementsCutOff=1,
     ),
     outputDirRoot=outputDir,
@@ -210,10 +209,11 @@ addCKFTracks(
 
 ''' Temporarily unable to run successfully
 addGSFTracks(
-    s, 
+    s,
     trackingGeometry,
     field,
     outputDirRoot=outputDir,
 )
 '''
+
 s.run()

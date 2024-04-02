@@ -3,7 +3,7 @@ import pathlib, acts, acts.examples
 from pathlib import Path
 from typing import Optional, Union
 from acts import UnitConstants as u
-from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory 
+from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory
 from acts.examples import TelescopeDetector
 
 from acts.examples.simulation import (
@@ -20,7 +20,6 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addTelescopeSeeding,
     addCKFTracks,
-    addTruthTrackingGsf,
     TrackSelectorConfig,
     CkfConfig,
     addAmbiguityResolution,
@@ -29,14 +28,17 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
+# Config
+u = acts.UnitConstants
+field = acts.ConstantBField(acts.Vector3(0, 0, 0)) # u.T
+rnd = acts.examples.RandomNumbers(seed=42)
+
 teleG4Config=TelescopeDetector.Config();
 teleG4Config.bounds=[14.08, 28.04]
 teleG4Config.positions=[30, 60, 90, 105, 120, 150, 180]
 teleG4Config.stereos=[0, 0, 0, 0, 0, 0, 0]
 teleG4Config.thickness = [80*u.um, 80*u.um, 80*u.um, 1*u.um, 80*u.um, 80*u.um, 80*u.um]
 teleG4Config.binValue=0
-
-u = acts.UnitConstants
 
 detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
     bounds=[14.08, 28.04],
@@ -46,156 +48,153 @@ detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
     binValue=0,
 )
 
-# ParticleGun Configurationi
-# Modify multiplicity
+max_multiplicity = int(input("Loop multiplicity from 1 to "))
 
-mul = int(input("multiplicity = "))
-if mul == 1:
-    outputDir = Path.cwd() / "wot_multiplicity_1"
-elif mul == 2:
-    outputDir = Path.cwd() / "wot_multiplicity_2"
-elif mul == 4:
-    outputDir = Path.cwd() / "wot_multiplicity_4"
-elif mul == 6:
-    outputDir = Path.cwd() / "wot_multiplicity_6"
-elif mul == 8:
-    outputDir = Path.cwd() / "wot_multiplicity_8"
-elif mul == 10:
-    outputDir = Path.cwd() / "wot_multiplicity_10"
-elif mul == 12:
-    outputDir = Path.cwd() / "wot_multiplicity_12"
-elif mul == 14:
-    outputDir = Path.cwd() / "wot_multiplicity_14"
-elif mul == 16:
-    outputDir = Path.cwd() / "wot_multiplicity_16"
-elif mul == 18:
-    outputDir = Path.cwd() / "wot_multiplicity_18"
-elif mul == 20:
-    outputDir = Path.cwd() / "wot_multiplicity_20"
-else:
-    print("multiplicity error")
+# Begin multiplicity loop
+for multiplicity in range(1, max_multiplicity+1):
+    # Without time
+    outputDir = Path.cwd() / f"wot_multiplicity_{multiplicity}"
+    if not outputDir.exists():
+        outputDir.mkdir()
+    s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
 
-
-# Modify position stddev
-'''
-stddev_p = float(input("value of Y-Z stddev"))
-if stddev_p == 0:
-    outputDir = Path.cwd() / "wot_pos_stddev_0"
-elif stddev_p == 1:
-    outputDir = Path.cwd() / "wot_pos_stddev_1"
-elif stddev_p == 2:
-    outputDir = Path.cwd() / "wot_pos_stddev_2"
-elif stddev_p == 3:
-    outputDir = Path.cwd() / "wot_pos_stddev_3"
-elif stddev_p == 4:
-    outputDir = Path.cwd() / "wot_pos_stddev_4"
-elif stddev_p == 5:
-    outputDir = Path.cwd() / "wot_pos_stddev_4"
-else:
-    print("pos_stddev error")
-'''
-
-# Modify time stddev
-'''
-stddev_t = float(input("value of time stddev"))
-if stddev_t == 0:
-    outputDir = Path.cwd() / "wot_time_stddev_0"
-elif stddev_t == 1:
-    outputDir = Path.cwd() / "wot_time_stddev_1"
-elif stddev_t == 2:
-    outputDir = Path.cwd() / "wot_time_stddev_2"
-elif stddev_t == 3:
-    outputDir = Path.cwd() / "wot_time_stddev_3"
-else:
-    print("time_stddev error")
-'''
-
-#outputDir = Path.cwd() / "result-without-time"
-
-field = acts.ConstantBField(acts.Vector3(0, 0, 0)) # u.T
-if not outputDir.exists():
-    outputDir.mkdir()
-
-rnd = acts.examples.RandomNumbers(seed=42)
-s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
-
-addParticleGun(
+    addParticleGun(
     s,
     MomentumConfig(4 * u.GeV, 4 * u.GeV, transverse=True),
     EtaConfig(-0.0113, 0.0113, uniform=True),
     PhiConfig(-0.0 * u.degree, 0.649 * u.degree),
     ParticleConfig(1, acts.PdgParticle.eElectron, randomizeCharge=False),
-    #multiplicity=20,
-    multiplicity=mul, # To modify the value of multiplicity
+    multiplicity=multiplicity,
     rnd=rnd,
     vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0.*u.mm, 3.04*u.mm, 3.04*u.mm, 1.52*u.ns)),
-    #vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0*u.mm, stddev_p*u.mm, stddev_p*u.mm, 1.52*u.ns)),
-    #vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0*u.mm, 5.*u.mm, 5.*u.um, stddev_t*u.ns)),
-)
+    #logLevel=acts.logging.VERBOSE,
+    )
 
-'''
-addFatras(
-    s,
-    trackingGeometry,
-    field,
-    rnd=rnd,
-    preSelectParticles=ParticleSelectorConfig(
-        rho=(0.0 * u.mm, 300.0 * u.mm),
-        absZ=(0.0 * u.mm, 200.0 * u.mm),
-        eta=(-3, 3),
-        pt=(1 * u.GeV, None),
-        removeNeutral=True,
-    ),
-    outputDirRoot=outputDir,
-)
-
-'''
-
-addGeant4(
+    addGeant4(
     s,
     detector=None,
     trackingGeometry=trackingGeometry,
     field=field,
     rnd=rnd,
-    #logLevel=acts.logging.VERBOSE,
-    #materialMappings = ["Silicon"],
     g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory(teleG4Config),
     preSelectParticles=ParticleSelectorConfig(
-            rho=(0.0, 300 * u.mm),
-            absZ=(-200.0, 200.0 * u.m),
-            eta=(-3.0, 3.0),
+            rho=(0.0, 30 * u.mm),
+            absZ=(-30.0, 30.0 * u.m),
+            eta=(-1.0, 1.0),
             pt=(1 * u.GeV, None),
             removeNeutral=True,
     ),
     outputDirRoot=outputDir,
-    #logLevel=acts.logging.VERBOSE,
     killVolume=trackingGeometry.worldVolume,
     killAfterTime=1000 * u.ns,
-)
+    #logLevel=acts.logging.VERBOSE,
+    )
 
-
-addDigitization(
+    addDigitization(
     s,
     trackingGeometry,
     field,
     digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-digi-config-telescope.json"),
-    #digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope.json"),
     outputDirRoot=outputDir,
     rnd=rnd,
     #logLevel=acts.logging.VERBOSE
-)
+    )
 
-
-addTelescopeSeeding(
+    addTelescopeSeeding(
     s,
     trackingGeometry,
     initialSigmas={1, 1, 1, 1, 1, 1},
     initialVarInflation={1, 1, 1, 1, 1, 1},
     outputDirRoot=outputDir,
     #logLevel=acts.logging.VERBOSE,
-)
+    )
 
-addCKFTracks(
+    addCKFTracks(
+    s,
+    trackingGeometry,
+    field,
+    CkfConfig(
+        chi2CutOff=50,
+        numMeasurementsCutOff=1,
+    ),
+    outputDirRoot=outputDir,
+    #logLevel=acts.logging.VERBOSE,
+    )
+
+    ''' Temporarily unable to run successfully
+    addGSFTracks(
+        s,
+        trackingGeometry,
+        field,
+        outputDirRoot=outputDir,
+        #logLevel=acts.logging.VERBOSE,
+    )
+    '''
+    continue
+    s.run()
+    print(f"Finished telescope simulation and reconstruction without time of multiplicity = {multiplicity}")
+# End multiplicity loop
+
+# Begin multiplicity loop
+for multiplicity in range(1, max_multiplicity+1):
+    # With time
+    outputDir = Path.cwd() / f"wt_multiplicity_{multiplicity}"
+    if not outputDir.exists():
+        outputDir.mkdir()
+    s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
+
+    addParticleGun(
+    s,
+    MomentumConfig(4 * u.GeV, 4 * u.GeV, transverse=True),
+    EtaConfig(-0.0113, 0.0113, uniform=True),
+    PhiConfig(-0.0 * u.degree, 0.649 * u.degree),
+    ParticleConfig(1, acts.PdgParticle.eElectron, randomizeCharge=False),
+    multiplicity=multiplicity,
+    rnd=rnd,
+    vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0.*u.mm, 3.04*u.mm, 3.04*u.mm, 1.52*u.ns)),
+    #logLevel=acts.logging.VERBOSE,    
+    )
+
+    addGeant4(
+    s,
+    detector=None,
+    trackingGeometry=trackingGeometry,
+    field=field,
+    rnd=rnd,
+    g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory(teleG4Config),
+    preSelectParticles=ParticleSelectorConfig(
+            rho=(0.0, 30 * u.mm),
+            absZ=(-30.0, 30.0 * u.m),
+            eta=(-1.0, 1.0),
+            pt=(1 * u.GeV, None),
+            removeNeutral=True,
+    ),
+    outputDirRoot=outputDir,
+    killVolume=trackingGeometry.worldVolume,
+    killAfterTime=1000 * u.ns,
+    #logLevel=acts.logging.VERBOSE,
+    )
+
+    addDigitization(
+    s,
+    trackingGeometry,
+    field,
+    digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-digi-config-telescope-time.json"),
+    outputDirRoot=outputDir,
+    rnd=rnd,
+    #logLevel=acts.logging.VERBOSE
+    )
+
+    addTelescopeSeeding(
+    s,
+    trackingGeometry,
+    initialSigmas={1, 1, 1, 1, 1, 1},
+    initialVarInflation={1, 1, 1, 1, 1, 1},
+    outputDirRoot=outputDir,
+    #logLevel=acts.logging.VERBOSE,
+    )
+
+    addCKFTracks(
     s, 
     trackingGeometry,
     field, 
@@ -204,16 +203,21 @@ addCKFTracks(
         numMeasurementsCutOff=1,
     ),
     outputDirRoot=outputDir,
-    #logLevel=acts.logging.DEBUG,
-)
+    #logLevel=acts.logging.VERBOSE,
+    )
 
-''' Temporarily unable to run successfully
-addGSFTracks(
-    s,
-    trackingGeometry,
-    field,
-    outputDirRoot=outputDir,
-)
-'''
+    ''' Temporarily unable to run successfully
+    addGSFTracks(
+        s,
+        trackingGeometry,
+        field,
+        outputDirRoot=outputDir,
+        #logLevel=acts.logging.VERBOSE,
+    )
+    '''
 
-s.run()
+    s.run()
+    print(f"Finished telescope simulation and reconstruction with time of multiplicity = {multiplicity}")
+
+# End multiplicity loop
+print("All OK!")
