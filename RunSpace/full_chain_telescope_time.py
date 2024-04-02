@@ -48,21 +48,33 @@ detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
 
 # ParticleGun Configurationi
 # Modify multiplicity
-'''
+
 mul = int(input("multiplicity = "))
 if mul == 1:
     outputDir = Path.cwd() / "wt_multiplicity_1"
 elif mul == 2:
     outputDir = Path.cwd() / "wt_multiplicity_2"
-elif mul == 3:
-    outputDir = Path.cwd() / "wt_multiplicity_3"
 elif mul == 4:
     outputDir = Path.cwd() / "wt_multiplicity_4"
-elif mul == 5:
-    outputDir = Path.cwd() / "wt_multiplicity_5"
+elif mul == 6:
+    outputDir = Path.cwd() / "wt_multiplicity_6"
+elif mul == 8:
+    outputDir = Path.cwd() / "wt_multiplicity_8"
+elif mul == 10:
+    outputDir = Path.cwd() / "wt_multiplicity_10"
+elif mul == 12:
+    outputDir = Path.cwd() / "wt_multiplicity_12"
+elif mul == 14:
+    outputDir = Path.cwd() / "wt_multiplicity_14"
+elif mul == 16:
+    outputDir = Path.cwd() / "wt_multiplicity_16"
+elif mul == 18:
+    outputDir = Path.cwd() / "wt_multiplicity_18"
+elif mul == 20:
+    outputDir = Path.cwd() / "wt_multiplicity_20"
 else:
     print("multiplicity error")
-'''
+
 
 # Modify position stddev
 '''
@@ -98,7 +110,7 @@ else:
     print("time_stddev error")
 '''
 
-outputDir = Path.cwd() / "result-with-time"
+#outputDir = Path.cwd() / "result-with-time"
 
 #field = acts.MagneticFieldProvider
 field = acts.ConstantBField(acts.Vector3(0, 0, 0)) # u.T
@@ -114,8 +126,8 @@ addParticleGun(
     EtaConfig(-0.0113, 0.0113, uniform=True),
     PhiConfig(-0.0 * u.degree, 0.649 * u.degree),
     ParticleConfig(1, acts.PdgParticle.eElectron, randomizeCharge=False),
-    multiplicity=20,
-    #multiplicity=mul, # To modify the value of multiplicity
+    #multiplicity=20,
+    multiplicity=mul, # To modify the value of multiplicity
     rnd=rnd,
     vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0.*u.mm, 3.04*u.mm, 3.04*u.mm, 1.52*u.ns)),
     #vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0*u.mm, stddev_p*u.mm, stddev_p*u.mm, 1.52*u.ns)),

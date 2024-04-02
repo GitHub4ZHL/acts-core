@@ -1,8 +1,8 @@
 import ROOT
 
 # Get root files
-file_path_wot = "/home/ZhangHaolin/ACTS/acts/RunSpace/result-without-time/trackstates_ckf.root"
-file_path_wt = "/home/ZhangHaolin/ACTS/acts/RunSpace/result-with-time/trackstates_ckf.root"
+file_path_wot = "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_20/trackstates_ckf.root"
+file_path_wt = "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_20/trackstates_ckf.root"
 file_wot = ROOT.TFile.Open(file_path_wot, "READ")
 file_wt = ROOT.TFile.Open(file_path_wt, "READ")
 
@@ -24,7 +24,7 @@ hist_DUT_Res_wt = ROOT.gDirectory.Get("hist_DUT_Res_wt")
 hist_DUT_Res_wot.SetTitle("DUT loc1 resolution w/wo time")
 
 # Gauss fit
-
+'''
 gaussFit_wot = ROOT.TF1("gaussFit", "gaus", -0.2, 0.2)
 gaussFit_wot.SetParLimits(0, 1600, 2000)
 gaussFit_wot.SetLineColor(ROOT.kBlue)
@@ -44,12 +44,12 @@ mean_wt = gaussFit_wt.GetParameter(1)
 sigma_wt = gaussFit_wt.GetParameter(2)
 gaussFit_wt.GetXaxis().SetTitle("Resolution")
 gaussFit_wt.GetYaxis().SetTitle("Entries")
-
+'''
 hist_DUT_Res_wot.Draw()
 hist_DUT_Res_wt.Draw("same")
 
 # Legend
-
+'''
 legend = ROOT.TLegend(0.6, 0.7, 0.9, 0.9)
 legend.SetTextSize(0.025)
 legend.SetFillStyle(1) # Transparent
@@ -57,10 +57,10 @@ legend.SetFillStyle(1) # Transparent
 legend.AddEntry(hist_DUT_Res_wot, f"mean:{mean_wot:.0f} stddev: {sigma_wot:.3f} mm", "L")
 legend.AddEntry(hist_DUT_Res_wt, f"mean: {mean_wt:.0f} stddev: {sigma_wt:.3f} mm", "L")
 legend.Draw()
-
+'''
 c1.Update()
-c1.SaveAs("DUT-Res-eLOC1-digi.pdf")
-#c1.SaveAs("DUT-Res-eLOC1.png")
+#c1.SaveAs("DUT-Res-eLOC1-digi.pdf")
+c1.SaveAs("DUT-Res-eLOC1.png")
 
 file_wot.Close()
 file_wt.Close()

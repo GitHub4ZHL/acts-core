@@ -1,8 +1,8 @@
 import ROOT
 
 # Get root files
-file_path_wot = "/home/ZhangHaolin/ACTS/acts/RunSpace/result-without-time/trackstates_ckf.root"
-file_path_wt = "/home/ZhangHaolin/ACTS/acts/RunSpace/result-with-time/trackstates_ckf.root"
+file_path_wot = "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_20/trackstates_ckf.root"
+file_path_wt = "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_20/trackstates_ckf.root"
 file_wot = ROOT.TFile.Open(file_path_wot, "READ")
 file_wt = ROOT.TFile.Open(file_path_wt, "READ")
 
@@ -59,8 +59,8 @@ legend.AddEntry(hist_DUT_Res_wt, f"mean: {mean_wt:.0f} stddev: {sigma_wt:.3f} mm
 legend.Draw()
 '''
 c1.Update()
-c1.SaveAs("DUT-Res-eLOC0.pdf")
-#c1.SaveAs("DUT-Res-eLOC0.png")
+#c1.SaveAs("DUT-Res-eLOC0.pdf")
+c1.SaveAs("DUT-Res-eLOC0.png")
 
 file_wot.Close()
 file_wt.Close()
