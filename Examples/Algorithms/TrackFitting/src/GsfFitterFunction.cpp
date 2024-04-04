@@ -69,6 +69,7 @@ using DirectFitter =
 using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
+using RefittingSourceLink = RefittingCalibrator::RefittingSourceLink;
 
 struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   Fitter fitter;
@@ -86,15 +87,17 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   Acts::ComponentMergeMethod mergeMethod =
       Acts::ComponentMergeMethod::eMaxWeight;
 
-  IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
+  IndexSourceLink::SurfaceAccessor m_indexSlSurfaceAccessor;
+  RefittingSourceLink::SurfaceAccessor m_refitSlSurfaceAccessor;
 
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
                         const Acts::TrackingGeometry& trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
-        m_slSurfaceAccessor{trkGeo} {}
+        m_indexSlSurfaceAccessor{trkGeo},
+        m_refitSlSurfaceAccessor{trkGeo} {}
 
-  template <typename calibrator_t>
+  template <typename calibrator_t, typename sourcelink_t>
   auto makeGsfOptions(const GeneralFitterOptions& options,
                       const calibrator_t& calibrator) const {
     Acts::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
@@ -117,9 +120,19 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    gsfOptions.extensions.surfaceAccessor
-        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &m_slSurfaceAccessor);
+
+    if constexpr (std::is_same_v<typename sourcelink_t::SurfaceAccessor,
+                                 IndexSourceLink::SurfaceAccessor>) {
+      gsfOptions.extensions.surfaceAccessor
+          .connect<&sourcelink_t::SurfaceAccessor::operator()>(
+              &m_indexSlSurfaceAccessor);
+    } else if constexpr (std::is_same_v<typename sourcelink_t::SurfaceAccessor,
+                                        RefittingSourceLink::SurfaceAccessor>) {
+      gsfOptions.extensions.surfaceAccessor
+          .connect<&sourcelink_t::SurfaceAccessor::operator()>(
+              &m_refitSlSurfaceAccessor);
+    }
+
     switch (reductionAlg) {
       case MixtureReductionAlgorithm::weightCut: {
         gsfOptions.extensions.mixtureReducer
@@ -139,7 +152,9 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
                                const GeneralFitterOptions& options,
                                const MeasurementCalibratorAdapter& calibrator,
                                TrackContainer& tracks) const override {
-    const auto gsfOptions = makeGsfOptions(options, calibrator);
+    const auto gsfOptions =
+        makeGsfOptions<MeasurementCalibratorAdapter, IndexSourceLink>(
+            options, calibrator);
 
     using namespace Acts::GsfConstants;
     if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
@@ -166,7 +181,9 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       const RefittingCalibrator& calibrator,
       const std::vector<const Acts::Surface*>& surfaceSequence,
       TrackContainer& tracks) const override {
-    const auto gsfOptions = makeGsfOptions(options, calibrator);
+    const auto gsfOptions =
+        makeGsfOptions<RefittingCalibrator, RefittingSourceLink>(options,
+                                                                 calibrator);
 
     using namespace Acts::GsfConstants;
     if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {

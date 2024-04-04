@@ -44,6 +44,8 @@ class Surface;
 class TrackingGeometry;
 }  // namespace Acts
 
+using namespace ActsExamples;
+
 namespace {
 
 using Stepper = Acts::EigenStepper<>;
@@ -56,6 +58,7 @@ using DirectFitter =
 using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
+using RefittingSourceLink = RefittingCalibrator::RefittingSourceLink;
 
 struct SimpleReverseFilteringLogic {
   double momentumThreshold = 0;
@@ -81,15 +84,19 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
 
-  IndexSourceLink::SurfaceAccessor slSurfaceAccessor;
+  // IndexSourceLink::SurfaceAccessor slSurfaceAccessor;
+
+  IndexSourceLink::SurfaceAccessor m_indexSlSurfaceAccessor;
+  RefittingSourceLink::SurfaceAccessor m_refitSlSurfaceAccessor;
 
   KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
                            const Acts::TrackingGeometry& trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
-        slSurfaceAccessor{trkGeo} {}
+        m_indexSlSurfaceAccessor{trkGeo},
+        m_refitSlSurfaceAccessor{trkGeo} {}
 
-  template <typename calibrator_t>
+  template <typename calibrator_t, typename sourcelink_t>
   auto makeKfOptions(const GeneralFitterOptions& options,
                      const calibrator_t& calibrator) const {
     Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
@@ -114,9 +121,22 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    kfOptions.extensions.surfaceAccessor
-        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &slSurfaceAccessor);
+
+    if constexpr (std::is_same_v<typename sourcelink_t::SurfaceAccessor,
+                                 IndexSourceLink::SurfaceAccessor>) {
+      kfOptions.extensions.surfaceAccessor
+          .connect<&sourcelink_t::SurfaceAccessor::operator()>(
+              &m_indexSlSurfaceAccessor);
+    } else if constexpr (std::is_same_v<typename sourcelink_t::SurfaceAccessor,
+                                        RefittingSourceLink::SurfaceAccessor>) {
+      kfOptions.extensions.surfaceAccessor
+          .connect<&sourcelink_t::SurfaceAccessor::operator()>(
+              &m_refitSlSurfaceAccessor);
+    }
+
+    //    kfOptions.extensions.surfaceAccessor
+    //        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+    //            &slSurfaceAccessor);
 
     return kfOptions;
   }
@@ -126,7 +146,9 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
                                const GeneralFitterOptions& options,
                                const MeasurementCalibratorAdapter& calibrator,
                                TrackContainer& tracks) const override {
-    const auto kfOptions = makeKfOptions(options, calibrator);
+    const auto kfOptions =
+        makeKfOptions<MeasurementCalibratorAdapter, IndexSourceLink>(
+            options, calibrator);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       kfOptions, tracks);
   }
@@ -138,7 +160,9 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
       const RefittingCalibrator& calibrator,
       const std::vector<const Acts::Surface*>& surfaceSequence,
       TrackContainer& tracks) const override {
-    const auto kfOptions = makeKfOptions(options, calibrator);
+    const auto kfOptions =
+        makeKfOptions<RefittingCalibrator, RefittingSourceLink>(options,
+                                                                calibrator);
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                             initialParameters, kfOptions, surfaceSequence,
                             tracks);
