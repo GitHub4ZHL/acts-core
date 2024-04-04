@@ -1198,14 +1198,29 @@ def addGSFTracks(
 ):
     logLevel = acts.examples.defaultLogging(s, logLevel)()
     s.addAlgorithm(
-    acts.examples.RefittingAlgorithm(
-        acts.logging.INFO,
-        #field,
-        inputTracks="ckfTracks",
-        outputTracks="gsfTracks",
-        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
+        acts.examples.RefittingAlgorithm(
+            acts.logging.INFO,
+            #field,
+            inputTracks="ckfTracks",
+            outputTracks="gsfTracks",
+            fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
+        )
+    ) 
+    addTrackWriters(
+        s,
+        name="gsf",
+        tracks="gsfTracks",
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeStates=False,
+        writeSummary=True,
+        writeCKFperformance=False,
+        writeFinderPerformance=False,
+        writeFitterPerformance=True,
+        logLevel=logLevel,
+        writeCovMat=writeCovMat,
     )
-)
+
     return 0
 
 def addTrackWriters(

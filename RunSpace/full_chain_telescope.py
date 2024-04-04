@@ -121,7 +121,7 @@ for multiplicity in range(1, max_multiplicity+1):
     #logLevel=acts.logging.VERBOSE,
     )
 
-    ''' Temporarily unable to run successfully
+    #''' Temporarily unable to run successfully
     addGSFTracks(
         s,
         trackingGeometry,
@@ -129,7 +129,7 @@ for multiplicity in range(1, max_multiplicity+1):
         outputDirRoot=outputDir,
         #logLevel=acts.logging.VERBOSE,
     )
-    '''
+    #'''
     continue
     s.run()
     print(f"Finished telescope simulation and reconstruction without time of multiplicity = {multiplicity}")
