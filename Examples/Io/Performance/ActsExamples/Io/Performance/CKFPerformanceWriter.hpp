@@ -73,10 +73,10 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
     /// Min reco-truth matching probability
     double truthMatchProbMin = 0.5;
 
-	/// nMeasurementsCut
-	unsigned int nMeasurementsCut = 4;
+    /// nMeasurementsCut
+    unsigned int nMeasurementsCut = 4;
 
-	/// Write additional matching details to a TTree
+    /// Write additional matching details to a TTree
     bool writeMatchingDetails = false;
 
     /// function to check if neural network predicted track label is

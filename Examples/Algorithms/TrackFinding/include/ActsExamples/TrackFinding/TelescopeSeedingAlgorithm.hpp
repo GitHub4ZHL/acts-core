@@ -56,7 +56,7 @@ class TelescopeSeedingAlgorithm final : public IAlgorithm {
     /// The q/p of the track
     double qOp = -1. / 4;
     /// The time of the track on the first plane
-    //double time = 100 * Acts::UnitConstants::ps;
+    // double time = 100 * Acts::UnitConstants::ps;
     double time = 0;
     /// Initial covariance matrix diagonal.
     std::array<double, 6> initialSigmas = {

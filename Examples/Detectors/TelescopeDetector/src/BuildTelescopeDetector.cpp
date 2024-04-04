@@ -52,8 +52,8 @@ ActsExamples::Telescope::buildDetector(
   const auto pBounds =
       std::make_shared<const Acts::RectangleBounds>(bounds[0], bounds[1]);
   // The radial bounds for disc surface
-  const auto rBounds =
-	  std::make_shared<const Acts::RadialBounds>(std::min(bounds[0], bounds[1]), std::max(bounds[0], bounds[1]));
+  const auto rBounds = std::make_shared<const Acts::RadialBounds>(
+      std::min(bounds[0], bounds[1]), std::max(bounds[0], bounds[1]));
   // Material of the surfaces
   Acts::Material silicon = Acts::Material::fromMassDensity(
       9.370_cm, 46.52_cm, 28.0855, 14, 2.329_g / 1_cm3);

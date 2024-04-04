@@ -25,6 +25,7 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
+#include "ActsExamples/TrackFinding/TelescopeSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
@@ -33,7 +34,6 @@
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
-#include "ActsExamples/TrackFinding/TelescopeSeedingAlgorithm.hpp"
 
 #include <array>
 #include <cstddef>
@@ -296,8 +296,11 @@ void addTrackFinding(Context& ctx) {
       magneticField, bFieldMin, initialSigmas, initialVarInflation,
       particleHypothesis);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(                                                                                                                                  ActsExamples::TelescopeSeedingAlgorithm, mex, "TelescopeSeedingAlgorithm",                                                                                  inputMeasurements,                                                                                                                                          outputTrackParameters, trackingGeometry,                                                                                                                    selectedLayer, phi, theta, qOp, time,
-      initialSigmas, initialVarInflation, noTimeVarInflation,                                                                                                     particleHypothesis);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TelescopeSeedingAlgorithm, mex, "TelescopeSeedingAlgorithm",
+      inputMeasurements, outputTrackParameters, trackingGeometry, selectedLayer,
+      phi, theta, qOp, time, initialSigmas, initialVarInflation,
+      noTimeVarInflation, particleHypothesis);
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
     using Config = Alg::Config;
