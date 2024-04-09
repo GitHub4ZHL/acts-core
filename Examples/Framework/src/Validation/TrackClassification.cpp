@@ -112,3 +112,41 @@ void ActsExamples::identifyContributingParticles(
   }
   sortHitCount(particleHitCounts);
 }
+
+void ActsExamples::identifyContributingParticles(
+    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const IndexSourceLink& sl,
+    std::vector<ParticleHitCount>& particleHitCounts) {
+  particleHitCounts.clear();
+  // register all particles that generated this hit
+  auto hitIndex = sl.index();
+  for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
+    increaseHitCount(particleHitCounts, hitParticle.second);
+  }
+  sortHitCount(particleHitCounts);
+}
+
+void ActsExamples::identifyContributingParticles(
+    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const ConstTrackContainer::ConstTrackProxy& track, int excludedLayer,
+    std::vector<ParticleHitCount>& particleHitCounts) {
+  particleHitCounts.clear();
+
+  for (const auto& state : track.trackStatesReversed()) {
+    // no truth info with non-measurement state
+    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      continue;
+    }
+    // register all particles that generated this hit
+    IndexSourceLink sl =
+        state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+    if (static_cast<int>(sl.geometryId().layer()) == excludedLayer) {
+      continue;
+    }
+    auto hitIndex = sl.index();
+    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
+      increaseHitCount(particleHitCounts, hitParticle.second);
+    }
+  }
+  sortHitCount(particleHitCounts);
+}

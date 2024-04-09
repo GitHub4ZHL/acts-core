@@ -62,4 +62,14 @@ void identifyContributingParticles(
     const ConstTrackContainer::ConstTrackProxy& track,
     std::vector<ParticleHitCount>& particleHitCounts);
 
+void identifyContributingParticles(
+    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const IndexSourceLink& sl,
+    std::vector<ParticleHitCount>& particleHitCounts);
+
+void identifyContributingParticles(
+    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const ConstTrackContainer::ConstTrackProxy& track, int excludedLayer,
+    std::vector<ParticleHitCount>& particleHitCounts);
+
 }  // namespace ActsExamples
