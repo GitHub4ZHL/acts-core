@@ -54,8 +54,10 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     // transforming first to local positions and average that ensures that the
     // averaged position is still on the surface. the averaged global position
     // might not be on the surface anymore.
-    auto result = surface.globalToLocal(gCtx, simHit.position(),
-                                        simHit.direction(), 0.5_um);
+    auto result = surface.globalToLocal(
+        gCtx, simHit.position(),
+        // simHit.direction(), 0.5_um);
+        simHit.direction(), 50_um);  // changed by xiaocong for telescope test
     if (result.ok()) {
       avgLocal += result.value();
     } else {
