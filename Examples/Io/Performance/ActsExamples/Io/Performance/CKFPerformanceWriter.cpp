@@ -203,7 +203,20 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   std::vector<float> inputFeatures(3);
 
   for (const auto& track : tracks) {
-    if (track.nMeasurements() < m_cfg.nMeasurementsCut) {
+    // The number of measurements on this track excluding the specified layer
+    unsigned int nMeasurementsExcluded = 0;
+    for (const auto& state : track.trackStatesReversed()) {
+      const auto& surface = state.referenceSurface();
+      // get the geometry ID
+      auto geoID = surface.geometryId();
+      if (static_cast<int>(geoID.layer()) != m_cfg.excludedLayer) {
+        if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+          nMeasurementsExcluded++;
+        }
+      }
+    }
+
+    if (nMeasurementsExcluded < m_cfg.nMeasurementsCut) {
       continue;
     }
     // Check if the reco track has fitted track parameters
@@ -221,7 +234,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
                                 track.nSharedHits());
 
     // Get the majority truth particle to this track
-    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
+    identifyContributingParticles(hitParticlesMap, track, m_cfg.excludedLayer,
+                                  particleHitCounts);
     if (particleHitCounts.empty()) {
       ACTS_DEBUG(
           "No truth particle associated with this trajectory with tip index = "
@@ -236,19 +250,46 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         particleHitCounts.front().particleId;
     std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
+    // Check if the hit on the specified layer is same as majorityParticle
+    bool specifiedMatched = false;
+    for (const auto& state : track.trackStatesReversed()) {
+      const auto& surface = state.referenceSurface();
+      // get the geometry ID
+      auto geoID = surface.geometryId();
+      if (static_cast<int>(geoID.layer()) != m_cfg.matchedLayer)
+        continue;
+      if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        auto sl =
+            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+        std::vector<ParticleHitCount> stateParticleHitCounts;
+        identifyContributingParticles(hitParticlesMap, sl,
+                                      stateParticleHitCounts);
+        for (const auto& hitCount : stateParticleHitCounts) {
+          if (hitCount.particleId == majorityParticleId) {
+            specifiedMatched = true;
+            break;
+          }
+        }
+      }
+    }
+
     // Check if the trajectory is matched with truth.
     // If not, it will be class ified as 'fake'
     const bool recoMatched =
-        static_cast<float>(nMajorityHits) / track.nMeasurements() >=
+        static_cast<float>(nMajorityHits) / nMeasurementsExcluded >=
         m_cfg.truthMatchProbMin;
     const bool truthMatched =
         static_cast<float>(nMajorityHits) /
             particleTruthHitCount.at(majorityParticleId) >=
         m_cfg.truthMatchProbMin;
+    // If the specified layer is -1, it means no requirement
+    const bool dutMatched =
+        (m_cfg.matchedLayer != -1 ? specifiedMatched : true);
     bool isFake = false;
-    if (!m_cfg.doubleMatching && recoMatched) {
+    if (!m_cfg.doubleMatching && recoMatched && dutMatched) {
       matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
-    } else if (m_cfg.doubleMatching && recoMatched && truthMatched) {
+    } else if (m_cfg.doubleMatching && recoMatched && truthMatched &&
+               dutMatched) {
       matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
     } else {
       isFake = true;

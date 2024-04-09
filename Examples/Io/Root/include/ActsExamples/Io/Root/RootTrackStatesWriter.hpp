@@ -69,6 +69,8 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
     std::string treeName = "trackstates";
     /// file access mode.
     std::string fileMode = "RECREATE";
+    /// Layer excluded
+    int excludedLayer = -1;
   };
 
   /// Constructor
@@ -148,6 +150,36 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   unsigned int m_nStates{0};
   /// number of states with measurements
   unsigned int m_nMeasurements{0};
+  /// number of states that are outliers
+  unsigned int m_nOutliers{0};
+  /// number of states that are holes
+  unsigned int m_nHoles{0};
+  /// number of states that are shared
+  unsigned int m_nSharedHits{0};
+  /// number of dnf
+  unsigned int m_NDF{0};
+  /// sum of chisq for the track
+  unsigned int m_chi2Sum{0};
+  /// number of majorityHits
+  unsigned int m_nMajorityHits{0};
+  /// majorityParticleId
+  uint64_t m_majorityParticleId;
+
+  /// number of states with measurements excluding the specified layer
+  unsigned int m_nMeasurementsExcluded{0};
+  /// number of states that are outlier excluding the specified layer
+  unsigned int m_nOutliersExcluded{0};
+  /// number of states that are hole excluding the specified layer
+  unsigned int m_nHolesExcluded{0};
+
+  /// matching status of the state:
+  /// 0: measurement matched to majorityParticle;
+  /// 1: measurement not matched to a majority particle;
+  /// 2: hole
+  /// 3: outlier
+  /// -1: none of the above status
+  std::vector<int> m_status;
+
   /// volume identifier
   std::vector<int> m_volumeID;
   /// layer identifier

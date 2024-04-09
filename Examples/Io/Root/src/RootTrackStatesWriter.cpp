@@ -111,6 +111,16 @@ ActsExamples::RootTrackStatesWriter::RootTrackStatesWriter(
 
     m_outputTree->Branch("nStates", &m_nStates);
     m_outputTree->Branch("nMeasurements", &m_nMeasurements);
+    m_outputTree->Branch("nOutliers", &m_nOutliers);
+    m_outputTree->Branch("nHoles", &m_nHoles);
+    m_outputTree->Branch("nMeasurementsExcluded", &m_nMeasurementsExcluded);
+    m_outputTree->Branch("nOutliersExcluded", &m_nOutliersExcluded);
+    m_outputTree->Branch("nHolesExcluded", &m_nHolesExcluded);
+    m_outputTree->Branch("nSharedHits", &m_nSharedHits);
+    m_outputTree->Branch("NDF", &m_NDF);
+    m_outputTree->Branch("chi2Sum", &m_chi2Sum);
+    m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
+    m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
     m_outputTree->Branch("volume_id", &m_volumeID);
     m_outputTree->Branch("layer_id", &m_layerID);
     m_outputTree->Branch("module_id", &m_moduleID);
@@ -127,6 +137,7 @@ ActsExamples::RootTrackStatesWriter::RootTrackStatesWriter(
     m_outputTree->Branch("pull_x_hit", &m_pull_x_hit);
     m_outputTree->Branch("pull_y_hit", &m_pull_y_hit);
     m_outputTree->Branch("dim_hit", &m_dim_hit);
+    m_outputTree->Branch("status", &m_status);
 
     m_outputTree->Branch("nPredicted", &m_nParams[ePredicted]);
     m_outputTree->Branch("predicted", &m_hasParams[ePredicted]);
@@ -313,13 +324,22 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
     // Collect the track summary info
     m_nMeasurements = track.nMeasurements();
     m_nStates = track.nTrackStates();
+    m_nOutliers = track.nOutliers();
+    m_nHoles = track.nHoles();
+    m_nSharedHits = track.nSharedHits();
+    m_chi2Sum = track.chi2();
+    m_NDF = track.nDoF();
 
     // Get the majority truth particle to this track
     int truthQ = 1.;
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
+    m_majorityParticleId = nan;
+    m_nMajorityHits = nan;
     if (!particleHitCounts.empty()) {
       // Get the barcode of the majority truth particle
       auto barcode = particleHitCounts.front().particleId;
+      m_majorityParticleId = barcode.value();
+      m_nMajorityHits = particleHitCounts.front().hitCount;
       // Find the truth particle via the barcode
       auto ip = particles.find(barcode);
       if (ip != particles.end()) {
@@ -337,17 +357,53 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
     // Get the trackStates on the trajectory
     m_nParams = {0, 0, 0, 0};
 
+    int nMeasurementsExcluded = 0;
+    int nOutliersExcluded = 0;
+    int nHolesExcluded = 0;
     for (const auto& state : track.trackStatesReversed()) {
       const auto& surface = state.referenceSurface();
-
       // get the geometry ID
       auto geoID = surface.geometryId();
+
+      if (static_cast<int>(geoID.layer()) != m_cfg.excludedLayer) {
+        if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+          nMeasurementsExcluded++;
+        } else if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+          nOutliersExcluded++;
+        } else if (state.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
+          nHolesExcluded++;
+        }
+      }
+
       m_volumeID.push_back(geoID.volume());
       m_layerID.push_back(geoID.layer());
       m_moduleID.push_back(geoID.sensitive());
 
       // get the path length
       m_pathLength.push_back(state.pathLength());
+
+      // get the status
+      int status = -1;
+      if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        bool matched = false;
+        auto sl =
+            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+        std::vector<ParticleHitCount> stateParticleHitCounts;
+        identifyContributingParticles(hitParticlesMap, sl,
+                                      stateParticleHitCounts);
+        for (const auto& hitCount : stateParticleHitCounts) {
+          if (hitCount.particleId == m_majorityParticleId) {
+            matched = true;
+            break;
+          }
+        }
+        status = matched ? 0 : 1;
+      } else if (state.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
+        status = 2;
+      } else if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+        status = 3;
+      }
+      m_status.push_back(status);
 
       // fill the chi2
       m_chi2.push_back(state.chi2());
@@ -573,6 +629,27 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
             Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0)));
 
         if (!state.hasUncalibratedSourceLink()) {
+          m_res_eLOC0[ipar].push_back(nan);
+          m_res_eLOC1[ipar].push_back(nan);
+          m_res_ePHI[ipar].push_back(nan);
+          m_res_eTHETA[ipar].push_back(nan);
+          m_res_eQOP[ipar].push_back(nan);
+          m_res_eT[ipar].push_back(nan);
+          m_pull_eLOC0[ipar].push_back(nan);
+          m_pull_eLOC1[ipar].push_back(nan);
+          m_pull_ePHI[ipar].push_back(nan);
+          m_pull_eTHETA[ipar].push_back(nan);
+          m_pull_eQOP[ipar].push_back(nan);
+          m_pull_eT[ipar].push_back(nan);
+          if (ipar == ePredicted) {
+            m_res_x_hit.push_back(nan);
+            m_err_x_hit.push_back(nan);
+            m_pull_x_hit.push_back(nan);
+            m_res_y_hit.push_back(nan);
+            m_err_y_hit.push_back(nan);
+            m_pull_y_hit.push_back(nan);
+            m_dim_hit.push_back(0);
+          }
           continue;
         }
 
@@ -645,6 +722,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
       }
     }
 
+    m_nMeasurementsExcluded = nMeasurementsExcluded;
+    m_nOutliersExcluded = nOutliersExcluded;
+    m_nHolesExcluded = nHolesExcluded;
+
     // fill the variables for one track to tree
     m_outputTree->Fill();
 
@@ -679,6 +760,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
     m_pull_x_hit.clear();
     m_pull_y_hit.clear();
     m_dim_hit.clear();
+    m_status.clear();
 
     for (unsigned int ipar = 0; ipar < eSize; ++ipar) {
       m_hasParams[ipar].clear();

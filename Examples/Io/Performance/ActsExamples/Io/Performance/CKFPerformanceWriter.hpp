@@ -67,14 +67,21 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
     DuplicationPlotTool::Config duplicationPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
 
-    /// Whether to do double matching or not
-    bool doubleMatching = false;
-
     /// Min reco-truth matching probability
     double truthMatchProbMin = 0.5;
 
+    /// Whether to do double matching or not
+    bool doubleMatching = false;
+
     /// nMeasurementsCut
     unsigned int nMeasurementsCut = 4;
+
+    /// Layer to exclude when counting the measurements
+    int excludedLayer = -1;
+
+    /// When looking at efficiency, require the hit is same as the
+    /// majorityParticle on this layer
+    int matchedLayer = -1;
 
     /// Write additional matching details to a TTree
     bool writeMatchingDetails = false;

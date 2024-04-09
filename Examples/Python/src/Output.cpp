@@ -324,7 +324,7 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackStatesWriter, mex, "RootTrackStatesWriter",
       inputTracks, inputParticles, inputSimHits, inputMeasurementParticlesMap,
-      inputMeasurementSimHitsMap, filePath, treeName, fileMode);
+      inputMeasurementSimHitsMap, filePath, treeName, fileMode, excludedLayer);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackSummaryWriter, mex, "RootTrackSummaryWriter",
@@ -381,8 +381,8 @@ void addOutput(Context& ctx) {
       inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
       fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
       duplicationPlotToolConfig, trackSummaryPlotToolConfig,
-      duplicatedPredictor, truthMatchProbMin, doubleMatching,
-      writeMatchingDetails);
+      duplicatedPredictor, truthMatchProbMin, doubleMatching, nMeasurementsCut,
+      excludedLayer, matchedLayer, writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,
