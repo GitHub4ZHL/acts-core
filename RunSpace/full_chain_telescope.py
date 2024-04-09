@@ -199,7 +199,12 @@ for multiplicity in range(1, max_multiplicity+1):
     trackingGeometry,
     field, 
     CkfConfig(
-        chi2CutOff=50,
+        #http://courses.atlas.illinois.edu/spring2016/STAT/STAT200/pchisq.html 
+        #p-Value here means the probability of rejecting a good hit 
+        #13.82 and 16.27 correpsonds to p-Value of 0.001 for chisq with 2 and 3 degree of freedom, respectively
+        #18.42 and 21.11 correpsonds to p-Value of 0.0001 for chisq with 2 and 3 degree of freedom, respectively
+        #19.81 and 22.55 correpsonds to p-Value of 0.00005 for chisq with 2 and 3 degree of freedom, respectively
+        chi2CutOff=18.42, 
         numMeasurementsCutOff=1,
     ),
     outputDirRoot=outputDir,
