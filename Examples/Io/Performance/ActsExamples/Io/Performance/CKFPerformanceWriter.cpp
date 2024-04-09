@@ -356,6 +356,14 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // These are filled w.r.t. truth particle seed info
   for (const auto& particle : particles) {
     auto particleId = particle.particleId();
+    if (particleTruthHitCount.find(particleId) == particleTruthHitCount.end()) {
+      ACTS_WARNING("The particle does not have simulated hits on detector.");
+      continue;
+    } else {
+      if (particleTruthHitCount.at(particleId) < m_cfg.nSimHitsCut) {
+        continue;
+      }
+    }
     // Investigate the truth-matched tracks
     std::size_t nMatchedTracks = 0;
     bool isReconstructed = false;

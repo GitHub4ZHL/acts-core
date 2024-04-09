@@ -121,6 +121,7 @@ ActsExamples::RootTrackStatesWriter::RootTrackStatesWriter(
     m_outputTree->Branch("chi2Sum", &m_chi2Sum);
     m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
     m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
+    m_outputTree->Branch("nSimHits", &m_nSimHits);
     m_outputTree->Branch("volume_id", &m_volumeID);
     m_outputTree->Branch("layer_id", &m_layerID);
     m_outputTree->Branch("module_id", &m_moduleID);
@@ -308,6 +309,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
   const auto& simHits = m_inputSimHits(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
   const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
+  // compute particle_id -> {hit_id...} map from the
+  // hit_id -> {particle_id...} map on the fly.
+  const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -334,12 +338,16 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
     int truthQ = 1.;
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     m_majorityParticleId = nan;
-    m_nMajorityHits = nan;
+    m_nMajorityHits = 0;
+    m_nSimHits = 0;
     if (!particleHitCounts.empty()) {
       // Get the barcode of the majority truth particle
       auto barcode = particleHitCounts.front().particleId;
       m_majorityParticleId = barcode.value();
       m_nMajorityHits = particleHitCounts.front().hitCount;
+      const auto& hits = makeRange(particleHitsMap.equal_range(barcode));
+      m_nSimHits = hits.size();
+
       // Find the truth particle via the barcode
       auto ip = particles.find(barcode);
       if (ip != particles.end()) {

@@ -164,6 +164,8 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   unsigned int m_nMajorityHits{0};
   /// majorityParticleId
   uint64_t m_majorityParticleId;
+  /// number of truth hits from this majorityParticle
+  uint64_t m_nSimHits{0};
 
   /// number of states with measurements excluding the specified layer
   unsigned int m_nMeasurementsExcluded{0};

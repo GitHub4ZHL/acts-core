@@ -73,6 +73,9 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
     /// Whether to do double matching or not
     bool doubleMatching = false;
 
+    /// Number of simulated hits cut
+    unsigned int nSimHitsCut = 0;
+
     /// nMeasurementsCut
     unsigned int nMeasurementsCut = 4;
 
