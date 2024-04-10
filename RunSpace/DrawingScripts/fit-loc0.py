@@ -1,8 +1,8 @@
 import ROOT
 
 # Get root files
-file_path_wot = "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_20/trackstates_ckf.root"
-file_path_wt = "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_20/trackstates_ckf.root"
+file_path_wot = "/home/haolin/HEP-Software/ACTS/acts/RunSpace/wot_multiplicity_20/trackstates_ckf.root"
+file_path_wt = "/home/haolin/HEP-Software/ACTS/acts/RunSpace/wt_multiplicity_20/trackstates_ckf.root"
 file_wot = ROOT.TFile.Open(file_path_wot, "READ")
 file_wt = ROOT.TFile.Open(file_path_wt, "READ")
 
@@ -11,14 +11,14 @@ c1 = ROOT.TCanvas("c1", "Canvas for DUT Resolution loc0", 800, 600)
 
 # Get histogram
 trackstates_wot= file_wot.Get("trackstates")
-trackstates_wot.Draw("res_eLOC0_ubs>>hist_DUT_Res_wot(150, -0.05, 0.05)", "layer_id==8 && nMeasurements>=4")
+trackstates_wot.Draw("res_eLOC0_ubs>>hist_DUT_Res_wot(150, -0.05, 0.05)", "layer_id==8 && nMeasurementsExcluded>=4")
 hist_DUT_Res_wot = ROOT.gDirectory.Get("hist_DUT_Res_wot")
 #hist_DUT_Res_wot.SetStats(False)
 hist_DUT_Res_wot.GetXaxis().SetTitle("Resolution")
 hist_DUT_Res_wot.GetYaxis().SetTitle("Entries")
 
 trackstates_wt= file_wt.Get("trackstates")
-trackstates_wt.Draw("res_eLOC0_ubs>>hist_DUT_Res_wt(150, -0.05, 0.05)", "layer_id==8 && nMeasurements>=4")
+trackstates_wt.Draw("res_eLOC0_ubs>>hist_DUT_Res_wt(150, -0.05, 0.05)", "layer_id==8 && nMeasurementsExcluded>=4")
 hist_DUT_Res_wt = ROOT.gDirectory.Get("hist_DUT_Res_wt")
 
 hist_DUT_Res_wot.SetTitle("DUT loc0 resolution w/wo time")

@@ -1180,9 +1180,6 @@ def addCKFTracks(
 gsfOptions = {
     "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
     "maxComponents": 4,
-    #"abortOnError": False,
-    #"disableAllMaterialHandling": False,
-    #"finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
     "weightCutoff": 1.0e-4,
     "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
     "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
@@ -1200,7 +1197,6 @@ def addGSFTracks(
     s.addAlgorithm(
         acts.examples.RefittingAlgorithm(
             acts.logging.INFO,
-            #field,
             inputTracks="ckfTracks",
             outputTracks="gsfTracks",
             fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
@@ -1210,7 +1206,6 @@ def addGSFTracks(
         s,
         name="gsf",
         tracks="gsfTracks",
-        outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=False,
         writeSummary=True,
@@ -1218,7 +1213,7 @@ def addGSFTracks(
         writeFinderPerformance=False,
         writeFitterPerformance=True,
         logLevel=logLevel,
-        writeCovMat=writeCovMat,
+        #writeCovMat=writeCovMat,
     )
 
     return 0
@@ -1286,6 +1281,10 @@ def addTrackWriters(
                 inputParticles="particles_selected",
                 inputTracks=tracks,
                 inputMeasurementParticlesMap="measurement_particles_map",
+                nMeasurementsCut=4,
+                nSimHitsCut=4,
+                excludedLayer=8,
+                matchedLayer=8,
                 filePath=str(outputDirRoot / f"performance_{name}.root"),
             )
             s.addWriter(ckfPerfWriter)

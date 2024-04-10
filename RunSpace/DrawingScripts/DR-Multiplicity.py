@@ -1,33 +1,12 @@
 import ROOT
 
-# 文件路径列表
-file_paths_wot = [
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_1/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_2/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_4/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_6/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_8/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_10/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_12/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_14/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_16/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_18/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wot_multiplicity_20/performance_ckf.root"
-]
+# File Path
+base_path = "/home/haolin/HEP-Software/ACTS/acts/RunSpace/"
+max_mul = 20
+multiplicity_range = range(1, max_mul+1, 1) #(begin number, final number + 1, step length)
+file_paths_wot = [f"{base_path}wot_multiplicity_{mult}/performance_ckf.root" for mult in multiplicity_range]
+file_paths_wt = [f"{base_path}wt_multiplicity_{mult}/performance_ckf.root" for mult in multiplicity_range]
 
-file_paths_wt = [
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_1/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_2/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_4/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_6/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_8/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_10/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_12/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_14/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_16/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_18/performance_ckf.root",
-    "/home/ZhangHaolin/ACTS/acts/RunSpace/wt_multiplicity_20/performance_ckf.root"
-]
 
 # Build a TCanvas
 canvas = ROOT.TCanvas("canvas", "Scatter Plot Comparison", 800, 600)
@@ -51,11 +30,11 @@ for file_path in file_paths_wot:
     DRErr_WoT.append(drerr_wot)
     file.Close()
 
-n_points = len(multiplicity)
+n_points = len(multiplicity_range)
 
 graph1 = ROOT.TGraphErrors(n_points)
 
-for i, (x, y) in enumerate(zip(multiplicity, dr_wotime)):
+for i, (x, y) in enumerate(zip(multiplicity_range, dr_wotime)):
     graph1.SetPoint(i, x, y)
 for i, (e) in enumerate(zip(DRErr_WoT)):
     graph1.SetPointError(i, 0, DRErr_WoT[i-1])
@@ -63,7 +42,7 @@ for i, (e) in enumerate(zip(DRErr_WoT)):
 graph1.SetMarkerStyle(ROOT.kFullCircle)
 graph1.SetMarkerSize(0.6)
 graph1.SetMarkerColor(ROOT.kBlue)
-graph1.GetXaxis().SetRangeUser(0, 20)
+graph1.GetXaxis().SetRangeUser(0, 21)
 graph1.GetYaxis().SetRangeUser(0, 0.025)
 graph1.SetLineStyle(1)
 graph1.SetLineColor(ROOT.kBlue)
@@ -81,11 +60,11 @@ for file_path in file_paths_wt:
     dr_wtime.append(value)
     DRErr_WT.append(drerr_wt)
     file.Close()
-n_points = len(multiplicity)
+n_points = len(multiplicity_range)
 
 graph2 = ROOT.TGraphErrors(n_points)
 
-for i, (x, y) in enumerate(zip(multiplicity, dr_wtime)):
+for i, (x, y) in enumerate(zip(multiplicity_range, dr_wtime)):
     graph2.SetPoint(i, x, y)
 for i, (e) in enumerate(zip(DRErr_WT)):
     graph2.SetPointError(i, 0, DRErr_WT[i-1])
@@ -93,7 +72,7 @@ for i, (e) in enumerate(zip(DRErr_WT)):
 graph2.SetMarkerStyle(ROOT.kFullSquare)
 graph2.SetMarkerSize(0.6)
 graph2.SetMarkerColor(ROOT.kRed)
-graph2.GetXaxis().SetRangeUser(0, 20)
+graph2.GetXaxis().SetRangeUser(0, 21)
 graph2.GetYaxis().SetRangeUser(0, 0.025)
 graph2.SetLineStyle(1)
 graph2.SetLineColor(ROOT.kRed)

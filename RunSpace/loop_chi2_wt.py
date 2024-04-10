@@ -48,12 +48,12 @@ detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
     binValue=0,
 )
 
-max_multiplicity = int(input("Loop multiplicity from 1 to "))
+max_chi2 = int(input("Loop chi2 from 10 to "))
 
 # Begin multiplicity loop
-for multiplicity in range(1, max_multiplicity+1):
+for chi2 in range(10, max_chi2+5, 5):
     # Without time
-    outputDir = Path.cwd() / f"wot_multiplicity_{multiplicity}"
+    outputDir = Path.cwd() / f"wt_1_chi2_{chi2}"
     if not outputDir.exists():
         outputDir.mkdir()
     s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
@@ -64,7 +64,7 @@ for multiplicity in range(1, max_multiplicity+1):
     EtaConfig(-0.0113, 0.0113, uniform=True),
     PhiConfig(-0.0 * u.degree, 0.649 * u.degree),
     ParticleConfig(1, acts.PdgParticle.eElectron, randomizeCharge=False),
-    multiplicity=multiplicity,
+    multiplicity=1,
     rnd=rnd,
     vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0.*u.mm, 3.04*u.mm, 3.04*u.mm, 1.52*u.ns)),
     #logLevel=acts.logging.VERBOSE,
@@ -94,7 +94,7 @@ for multiplicity in range(1, max_multiplicity+1):
     s,
     trackingGeometry,
     field,
-    digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-digi-config-telescope.json"),
+    digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-digi-config-telescope-time.json"),
     outputDirRoot=outputDir,
     rnd=rnd,
     #logLevel=acts.logging.VERBOSE
@@ -114,7 +114,7 @@ for multiplicity in range(1, max_multiplicity+1):
     trackingGeometry,
     field,
     CkfConfig(
-        chi2CutOff=18.42,
+        chi2CutOff=chi2,
         numMeasurementsCutOff=1,
     ),
     outputDirRoot=outputDir,
@@ -122,13 +122,12 @@ for multiplicity in range(1, max_multiplicity+1):
     )
 
     s.run()
-    print(f"Finished telescope simulation and reconstruction without time of multiplicity = {multiplicity}")
 # End multiplicity loop
 
 # Begin multiplicity loop
-for multiplicity in range(1, max_multiplicity+1):
+for chi2 in range(10, max_chi2+5, 5):
     # With time
-    outputDir = Path.cwd() / f"wt_multiplicity_{multiplicity}"
+    outputDir = Path.cwd() / f"wt_15_chi2_{chi2}"
     if not outputDir.exists():
         outputDir.mkdir()
     s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
@@ -139,7 +138,7 @@ for multiplicity in range(1, max_multiplicity+1):
     EtaConfig(-0.0113, 0.0113, uniform=True),
     PhiConfig(-0.0 * u.degree, 0.649 * u.degree),
     ParticleConfig(1, acts.PdgParticle.eElectron, randomizeCharge=False),
-    multiplicity=multiplicity,
+    multiplicity=15,
     rnd=rnd,
     vtxGen=acts.examples.GaussianVertexGenerator(
         mean=acts.Vector4(0, 0, 0, 0),
@@ -196,7 +195,7 @@ for multiplicity in range(1, max_multiplicity+1):
         #13.82 and 16.27 correpsonds to p-Value of 0.001 for chisq with 2 and 3 degree of freedom, respectively
         #18.42 and 21.11 correpsonds to p-Value of 0.0001 for chisq with 2 and 3 degree of freedom, respectively
         #19.81 and 22.55 correpsonds to p-Value of 0.00005 for chisq with 2 and 3 degree of freedom, respectively
-        chi2CutOff=21.11, 
+        chi2CutOff=chi2, 
         numMeasurementsCutOff=1,
     ),
     outputDirRoot=outputDir,
@@ -204,7 +203,6 @@ for multiplicity in range(1, max_multiplicity+1):
     )
 
     s.run()
-    print(f"Finished telescope simulation and reconstruction with time of multiplicity = {multiplicity}")
 
 # End multiplicity loop
 print("All OK!")
