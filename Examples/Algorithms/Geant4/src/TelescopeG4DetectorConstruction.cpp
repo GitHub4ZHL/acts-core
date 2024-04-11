@@ -106,12 +106,12 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
 
   // Envelope 1
   //
-  G4Box* solidEnv1 =
-      new G4Box("Envelope1 Solid",                                 // its name
-                0.5 * envSizeX, 0.5 * envSizeY, 0.5 * envSizeZ + center);  // its size
+  G4Box* solidEnv1 = new G4Box("Envelope1 Solid",  // its name
+                               0.5 * envSizeX, 0.5 * envSizeY,
+                               0.5 * envSizeZ + center);  // its size
 
   G4LogicalVolume* logicEnv1 =
-      new G4LogicalVolume(solidEnv1,              // its solid
+      new G4LogicalVolume(solidEnv1,             // its solid
                           air,                   // its material
                           "Envelope #1 Logic");  // its name
 
@@ -127,12 +127,11 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
 
   // Envelope 2
   //
-  G4Box* solidEnv2 =
-	  new G4Box("Envelope2 Solid",
-				0.5 * envSizeX, 0.5 * envSizeY, 0.5 * envSizeZ);
+  G4Box* solidEnv2 = new G4Box("Envelope2 Solid", 0.5 * envSizeX,
+                               0.5 * envSizeY, 0.5 * envSizeZ);
 
   G4LogicalVolume* logicEnv2 =
-      new G4LogicalVolume(solidEnv2,              // its solid
+      new G4LogicalVolume(solidEnv2,             // its solid
                           air,                   // its material
                           "Envelope #2 Logic");  // its name
 
