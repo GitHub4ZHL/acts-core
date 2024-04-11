@@ -63,6 +63,19 @@ struct BoundParametersSmearer {
   Result operator()(generator_t& rng, const Hit& hit,
                     const Acts::Surface& surface,
                     const Acts::GeometryContext& geoCtx) const {
+    ParametersVector par = ParametersVector::Zero();
+    CovarianceMatrix cov = CovarianceMatrix::Zero();
+    if (static_cast<int>(kSize) == 1 and indices.front() == Acts::eBoundTime) {
+      auto res = smearFunctions[0](hit.time(), rng);
+      if (!res.ok()) {
+        return Result::failure(res.error());
+      }
+      auto [value, stddev] = res.value();
+      par[0] = value;
+      cov(0, 0) = stddev * stddev;
+      return Result::success(std::make_pair(par, cov));
+    }
+
     // We use the thickness of the detector element as tolerance, because Geant4
     // treats the Surfaces as volumes and thus it is not ensured, that each hit
     // lies exactly on the Acts::Surface
@@ -84,8 +97,6 @@ struct BoundParametersSmearer {
 
     const auto& boundParams = *boundParamsRes;
 
-    ParametersVector par = ParametersVector::Zero();
-    CovarianceMatrix cov = CovarianceMatrix::Zero();
     for (int i = 0; i < static_cast<int>(kSize); ++i) {
       auto res = smearFunctions[i](boundParams[indices[i]], rng);
       if (!res.ok()) {
