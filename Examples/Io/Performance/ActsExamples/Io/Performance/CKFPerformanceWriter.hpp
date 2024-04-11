@@ -12,6 +12,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -55,6 +56,8 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
+    /// Input collection of simulated hits.
+    std::string inputSimHits;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
     /// Output filename.
@@ -74,7 +77,7 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
     bool doubleMatching = false;
 
     /// Number of simulated hits cut
-    unsigned int nSimHitsCut = 0;
+    unsigned int nSimHitsCut = 5;
 
     /// nMeasurementsCut
     unsigned int nMeasurementsCut = 4;
@@ -146,6 +149,7 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
   std::size_t m_nTotalFakeParticles = 0;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
 };

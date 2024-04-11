@@ -1279,6 +1279,7 @@ def addTrackWriters(
             ckfPerfWriter = acts.examples.CKFPerformanceWriter(
                 level=customLogLevel(),
                 inputParticles="particles_selected",
+                inputSimHits="simhits",
                 inputTracks=tracks,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 nMeasurementsCut=4,

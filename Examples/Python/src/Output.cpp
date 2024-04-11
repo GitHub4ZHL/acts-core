@@ -378,8 +378,8 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
-      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
-      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
+      inputTracks, inputParticles, inputSimHits, inputMeasurementParticlesMap,
+      filePath, fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
       duplicationPlotToolConfig, trackSummaryPlotToolConfig,
       duplicatedPredictor, truthMatchProbMin, doubleMatching, nSimHitsCut,
       nMeasurementsCut, excludedLayer, matchedLayer, writeMatchingDetails);

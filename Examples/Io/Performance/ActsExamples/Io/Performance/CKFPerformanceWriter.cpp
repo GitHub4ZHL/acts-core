@@ -50,6 +50,9 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
+  if (m_cfg.inputSimHits.empty()) {
+    throw std::invalid_argument("Missing simulated hits input collection");
+  }
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
@@ -58,6 +61,7 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // the output file can not be given externally since TFile accesses to the
@@ -182,7 +186,11 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
 
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
+  const auto& simHits = m_inputSimHits(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  // compute particle_id -> {hit_id...} map from the
+  // hit_id -> {particle_id...} map on the fly.
+  const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
 
   std::map<ActsFatras::Barcode, std::size_t> particleTruthHitCount;
   for (const auto& [_, pid] : hitParticlesMap) {
@@ -359,11 +367,28 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     if (particleTruthHitCount.find(particleId) == particleTruthHitCount.end()) {
       ACTS_WARNING("The particle does not have simulated hits on detector.");
       continue;
-    } else {
-      if (particleTruthHitCount.at(particleId) < m_cfg.nSimHitsCut) {
-        continue;
+    }
+    const auto& hits = makeRange(particleHitsMap.equal_range(particleId));
+    std::size_t nSimHits = particleTruthHitCount.at(particleId);
+    if (nSimHits < m_cfg.nSimHitsCut) {
+      continue;
+    }
+    bool hasHitOnFirstLayer = false;
+    for (const auto& hitIdx : hits) {
+      const auto& simHit = *simHits.nth(hitIdx.second);
+      const auto& geoId = simHit.geometryId();
+      if (geoId.layer() == 2) {
+        hasHitOnFirstLayer = true;
+        break;
       }
     }
+    if (not hasHitOnFirstLayer) {
+      ACTS_WARNING("The particle have "
+                   << nSimHits
+                   << " but does have a hit on first telescope plane?");
+      continue;
+    }
+
     // Investigate the truth-matched tracks
     std::size_t nMatchedTracks = 0;
     bool isReconstructed = false;
