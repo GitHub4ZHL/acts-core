@@ -22,7 +22,7 @@ for file_path in file_paths_wot:
     tefficiency_name = "perfSummary"
     tefficiency = file.Get(tefficiency_name)
     value = tefficiency.GetEfficiency(2)
-    print(value)
+    #print(value)
     frerr_wot = (tefficiency.GetEfficiencyErrorLow(2)+tefficiency.GetEfficiencyErrorUp(2))/2
     fr_wotime.append(value)
     FRErr_WoT.append(frerr_wot)
@@ -41,7 +41,7 @@ graph1.SetMarkerStyle(ROOT.kFullCircle)
 graph1.SetMarkerSize(0.6)
 graph1.SetMarkerColor(ROOT.kBlue)
 graph1.GetXaxis().SetRangeUser(0, 21)
-graph1.GetYaxis().SetRangeUser(0, 0.4)
+graph1.GetYaxis().SetRangeUser(0, 0.01)
 graph1.SetLineStyle(1)
 graph1.SetLineColor(ROOT.kBlue)
 graph1.SetTitle("Fake Rate Compare about Multiplicity")
@@ -54,7 +54,7 @@ for file_path in file_paths_wt:
     tefficiency_name = "perfSummary"
     tefficiency = file.Get(tefficiency_name)
     value = tefficiency.GetEfficiency(2)
-    print(value)
+    #print(value)
     frerr_wt = (tefficiency.GetEfficiencyErrorLow(2)+tefficiency.GetEfficiencyErrorUp(2))/2
     fr_wtime.append(value)
     FRErr_WT.append(frerr_wt)
@@ -72,7 +72,7 @@ graph2.SetMarkerStyle(ROOT.kFullSquare)
 graph2.SetMarkerSize(0.6)
 graph2.SetMarkerColor(ROOT.kRed)
 graph2.GetXaxis().SetRangeUser(0, 21)
-graph2.GetYaxis().SetRangeUser(0, 0.4)
+graph2.GetYaxis().SetRangeUser(0, 0.01)
 graph2.SetLineStyle(1)
 graph2.SetLineColor(ROOT.kRed)
 graph2.Draw("PL same") 
@@ -92,5 +92,5 @@ canvas.Draw()
 # Title
 canvas.SetTitle("Fake Rate Compare about Multiplicity")
 
-canvas.SaveAs("FR-Multiplicity.pdf")
-
+#canvas.SaveAs("FR-Multiplicity.pdf")
+canvas.SaveAs("FR-Multiplicity.png")

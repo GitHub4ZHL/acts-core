@@ -77,17 +77,17 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
     bool doubleMatching = false;
 
     /// Number of simulated hits cut
-    unsigned int nSimHitsCut = 5;
+    unsigned int nSimHitsCut = 4;
 
     /// nMeasurementsCut
     unsigned int nMeasurementsCut = 4;
 
     /// Layer to exclude when counting the measurements
-    int excludedLayer = -1;
+    int excludedLayer = 8;
 
     /// When looking at efficiency, require the hit is same as the
     /// majorityParticle on this layer
-    int matchedLayer = -1;
+    int matchedLayer = 8;
 
     /// Write additional matching details to a TTree
     bool writeMatchingDetails = false;

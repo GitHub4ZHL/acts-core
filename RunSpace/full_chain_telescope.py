@@ -34,14 +34,14 @@ field = acts.ConstantBField(acts.Vector3(0, 0, 0)) # u.T
 rnd = acts.examples.RandomNumbers(seed=42)
 
 teleG4Config=TelescopeDetector.Config();
-teleG4Config.bounds=[14.08, 28.04]
+teleG4Config.bounds=[14.08, 28.16]
 teleG4Config.positions=[30, 60, 90, 105, 120, 150, 180]
 teleG4Config.stereos=[0, 0, 0, 0, 0, 0, 0]
 teleG4Config.thickness = [80*u.um, 80*u.um, 80*u.um, 1*u.um, 80*u.um, 80*u.um, 80*u.um]
 teleG4Config.binValue=0
 
 detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
-    bounds=[14.08, 28.04],
+    bounds=[14.08, 28.16],
     positions=[30, 60, 90, 105, 120, 150, 180],
     stereos=[0, 0, 0, 0, 0, 0, 0],
     thickness=[80*u.um, 80*u.um, 80*u.um, 1*u.um, 80*u.um, 80*u.um, 80*u.um],
@@ -56,7 +56,7 @@ for multiplicity in range(1, max_multiplicity+1):
     outputDir = Path.cwd() / f"wot_multiplicity_{multiplicity}"
     if not outputDir.exists():
         outputDir.mkdir()
-    s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
+    s = acts.examples.Sequencer(events=10000, numThreads=1, outputDir=str(outputDir))
 
     addParticleGun(
     s,
@@ -128,10 +128,10 @@ for multiplicity in range(1, max_multiplicity+1):
 # Begin multiplicity loop
 for multiplicity in range(1, max_multiplicity+1):
     # With time
-    outputDir = Path.cwd() / f"wt_multiplicity_{multiplicity}"
+    outputDir = Path.cwd() / f"wt_multiplicity_{multiplicity}_200ps"
     if not outputDir.exists():
         outputDir.mkdir()
-    s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
+    s = acts.examples.Sequencer(events=10000, numThreads=1, outputDir=str(outputDir))
 
     addParticleGun(
     s,

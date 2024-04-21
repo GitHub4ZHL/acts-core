@@ -37,7 +37,7 @@
           "charge-smearing": { "mean" : 0.0, "stddev" : 0.01, "type" : "Gauss" }
         },
         "smearing" : [
-          {"index" : 5, "mean" : 0.0, "stddev" : 14.99, "type" : "Gauss"}
+          {"index" : 5, "mean" : 0.0, "stddev" : 59.96, "type" : "Gauss"}
         ]
       },
       "volume": 1

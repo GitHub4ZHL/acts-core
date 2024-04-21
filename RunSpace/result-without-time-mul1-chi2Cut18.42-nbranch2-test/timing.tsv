@@ -1,0 +1,13 @@
+identifier	time_total_s	time_perevent_s
+Reader:EventGenerator	0.05835	5.835e-06
+Algorithm:ParticleSelector	0.02568	2.568e-06
+Algorithm:Geant4Simulation	2.168	0.0002168
+Writer:RootParticleWriter	0.3926	3.926e-05
+Writer:RootSimHitWriter	0.1551	1.551e-05
+Algorithm:DigitizationAlgorithm	0.1982	1.982e-05
+Writer:RootMeasurementWriter	0.261	2.61e-05
+Algorithm:TelescopeSeedingAlgorithm	0.02611	2.611e-06
+Algorithm:TrackFindingAlgorithm	1.281	0.0001281
+Writer:RootTrackStatesWriter	1.698	0.0001698
+Writer:RootTrackSummaryWriter	0.3279	3.279e-05
+Writer:CKFPerformanceWriter	0.1231	1.231e-05

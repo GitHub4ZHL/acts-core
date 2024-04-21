@@ -48,12 +48,12 @@ detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
     binValue=0,
 )
 
-max_chi2 = int(input("Loop chi2 from 10 to "))
+max_nmea = int(input("Loop nmea from 1 to "))
 
 # Begin multiplicity loop
-for chi2 in range(10, max_chi2+5, 5):
+for nmea in range(1, max_nmea+1, 1):
     # Without time
-    outputDir = Path.cwd() / f"wot_1_chi2_{chi2}"
+    outputDir = Path.cwd() / f"wot_1_nmea_{nmea}"
     if not outputDir.exists():
         outputDir.mkdir()
     s = acts.examples.Sequencer(events=10000, numThreads=1, outputDir=str(outputDir))
@@ -114,8 +114,8 @@ for chi2 in range(10, max_chi2+5, 5):
     trackingGeometry,
     field,
     CkfConfig(
-        chi2CutOff=chi2,
-        numMeasurementsCutOff=1,
+        chi2CutOff=18.42,
+        numMeasurementsCutOff=nmea,
     ),
     outputDirRoot=outputDir,
     #logLevel=acts.logging.VERBOSE,
@@ -125,9 +125,9 @@ for chi2 in range(10, max_chi2+5, 5):
 # End multiplicity loop
 
 # Begin multiplicity loop
-for chi2 in range(10, max_chi2+5, 5):
+for nmea in range(1, max_nmea+1, 1):
     # With time
-    outputDir = Path.cwd() / f"wot_15_chi2_{chi2}"
+    outputDir = Path.cwd() / f"wot_15_nmea_{nmea}"
     if not outputDir.exists():
         outputDir.mkdir()
     s = acts.examples.Sequencer(events=10000, numThreads=1, outputDir=str(outputDir))
@@ -195,8 +195,8 @@ for chi2 in range(10, max_chi2+5, 5):
         #13.82 and 16.27 correpsonds to p-Value of 0.001 for chisq with 2 and 3 degree of freedom, respectively
         #18.42 and 21.11 correpsonds to p-Value of 0.0001 for chisq with 2 and 3 degree of freedom, respectively
         #19.81 and 22.55 correpsonds to p-Value of 0.00005 for chisq with 2 and 3 degree of freedom, respectively
-        chi2CutOff=chi2, 
-        numMeasurementsCutOff=1,
+        chi2CutOff=18.42, 
+        numMeasurementsCutOff=nmea,
     ),
     outputDirRoot=outputDir,
     #logLevel=acts.logging.VERBOSE,
@@ -205,4 +205,5 @@ for chi2 in range(10, max_chi2+5, 5):
     s.run()
 
 # End multiplicity loop
+
 print("All OK!")
