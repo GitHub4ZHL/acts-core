@@ -1,6 +1,8 @@
 installed
 *~*
 ._*
+#result
+result*/
 #cmt
 cmt/*.sh
 cmt/Make*
@@ -23,6 +25,8 @@ wt*
 
 #json output
 #*.json
+#csv output
+*.csv
 #root output
 *.root
 #csv output
